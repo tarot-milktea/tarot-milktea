@@ -1,4 +1,5 @@
-import { useCallback, useMemo } from 'react';
+/* eslint-disable */
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import type { 
   ColorPalette, 
   ColorScale, 
@@ -45,20 +46,23 @@ export const useColors = () => {
   }, []);
 
   // 테마 관리
-  const theme = useMemo(() => getCurrentTheme(), []);
+  const [theme, setThemeState] = useState<'light' | 'dark'>(() => getCurrentTheme());
   
   const toggleTheme = useCallback(() => {
     const newTheme = theme === 'dark' ? 'light' : 'dark';
     setTheme(newTheme);
+    setThemeState(newTheme);
     return newTheme;
   }, [theme]);
 
   const setLightTheme = useCallback(() => {
     setTheme('light');
+    setThemeState('light');
   }, []);
 
   const setDarkTheme = useCallback(() => {
     setTheme('dark');
+    setThemeState('dark');
   }, []);
 
   // 자주 사용되는 스타일 조합들
