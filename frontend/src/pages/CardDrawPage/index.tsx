@@ -1,90 +1,245 @@
-import { useColors } from '../../hooks/useColors';
-import styles from './CardDrawPage.module.css';
+import styled from '@emotion/styled';
+import { useCardStore } from '../../store/cardStore';
+import TarotCard from '../../components/TarotCard';
 
 function CardDrawPage() {
-  const { styles: globalStyles, getColor } = useColors();
+  const { selectedCards, isRevealing, startReveal, revealCard, resetSelection } = useCardStore();
+
+  const handleReset = () => {
+    resetSelection();
+  };
+
+  const handleConfirm = () => {
+    if (selectedCards.length === 3) {
+      startReveal();
+      
+      // 순차적으로 카드 뒤집기
+      selectedCards.forEach((card, index) => {
+        setTimeout(() => {
+          revealCard(card.id);
+        }, index * 800);
+      });
+    }
+  };
 
   return (
-    <div 
-      className={styles.container}
-      style={{
-        ...globalStyles.container
-      }}
-    >
-      {/* 캐릭터 영역 - 나중에 실제 캐릭터 애니메이션으로 대체 */}
-      <div 
-        className={styles.character}
-        style={{
-          background: `linear-gradient(135deg, ${getColor('accent', '400')} 0%, ${getColor('accent', '600')} 100%)`,
-          boxShadow: `0 0 50px ${getColor('accent', '400')}40`
-        }}
-      >
+    <Container>
+      <Character>
         🔮
-      </div>
+      </Character>
 
-      <h1 
-        className={styles.title}
-        style={{
-          ...globalStyles.heading,
-          color: getColor('primary', '200')
-        }}
-      >
+      <Title>
         카드를 선택해주세요
-      </h1>
+      </Title>
       
-      <p 
-        className={styles.description}
-        style={{
-          ...globalStyles.body,
-          color: getColor('primary', '300')
-        }}
-      >
+      <Description>
         72장의 카드 중 3장을 선택하시면 과거, 현재, 미래를 알려드립니다
-      </p>
+      </Description>
 
-      {/* 카드 그리드 - 나중에 실제 카드 애니메이션으로 대체 */}
-      <div 
-        className={styles.cardGrid}
-        style={{
-          background: `${getColor('primary', '900')}80`
-        }}
-      >
-        {Array.from({ length: 72 }, (_, index) => (
-          <div
-            key={index}
-            className={styles.card}
-            style={{
-              background: `linear-gradient(135deg, ${getColor('primary', '800')} 0%, ${getColor('primary', '700')} 100%)`,
-              border: `2px solid ${getColor('primary', '600')}`,
-              color: getColor('primary', '400'),
-              boxShadow: `0 5px 20px ${getColor('accent', '400')}40`
-            }}
-          >
-            {index + 1}
-          </div>
-        ))}
-      </div>
+      <CardSection>
+        {!isRevealing ? (
+          <>
+            <CardGrid>
+              {Array.from({ length: 72 }, (_, index) => (
+                <TarotCard key={index + 1} cardId={index + 1} size="small" />
+              ))}
+            </CardGrid>
+            
+          </>
+        ) : (
+          <RevealSection>
+            <RevealTitle>선택하신 카드입니다</RevealTitle>
+            <RevealGrid>
+              {selectedCards.map((selectedCard) => (
+                <RevealCardContainer key={selectedCard.id}>
+                  <TarotCard cardId={selectedCard.id} size="large" />
+                </RevealCardContainer>
+              ))}
+            </RevealGrid>
+            <ResetButton onClick={handleReset}>
+              다시 선택하기
+            </ResetButton>
+          </RevealSection>
+        )}
+      </CardSection>
 
-      <div 
-        className={styles.hint}
-        style={{
-          ...globalStyles.card,
-          background: `${getColor('accent', '400')}20`,
-          border: `1px solid ${getColor('accent', '400')}60`
-        }}
+      <Hint 
+        onClick={selectedCards.length === 3 ? handleConfirm : undefined}
+        isClickable={selectedCards.length === 3}
       >
-        <p 
-          className={styles.hintText}
-          style={{
-            ...globalStyles.body,
-            color: getColor('accent', '300')
-          }}
-        >
-          💡 카드를 클릭하면 선택됩니다. 총 3장을 선택해주세요.
-        </p>
-      </div>
-    </div>
+        <HintText>
+          {selectedCards.length < 3 
+            ? `💡 카드를 클릭하면 선택됩니다. ${selectedCards.length}/3 선택됨`
+            : '🎉 3장이 모두 선택되었습니다! 여기를 클릭하여 카드를 뒤집어주세요.'
+          }
+        </HintText>
+      </Hint>
+    </Container>
   );
 }
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 20px;
+  min-height: 100vh;
+  background-color: var(--color-background);
+  color: var(--color-text);
+`;
+
+const Character = styled.div`
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  margin-bottom: 40px;
+  background: linear-gradient(135deg, 
+    var(--color-accent-400) 0%, 
+    var(--color-accent-600) 100%
+  );
+  box-shadow: 0 0 50px var(--color-accent-400);
+`;
+
+const Title = styled.h1`
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  color: var(--color-primary-200);
+  font-weight: 700;
+`;
+
+const Description = styled.p`
+  font-size: 1.2rem;
+  margin-bottom: 40px;
+  max-width: 600px;
+  color: var(--color-primary-300);
+  line-height: 1.6;
+`;
+
+const CardSection = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const CardGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  gap: 8px;
+  max-width: 1200px;
+  width: 100%;
+  max-height: 600px;
+  overflow-y: auto;
+  padding: 20px;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  background: var(--color-primary-900);
+  opacity: 0.8;
+  
+  /* 스크롤바 스타일링 */
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 237, 77, 0.1);
+    border-radius: 4px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-accent-400);
+    border-radius: 4px;
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--color-accent-500);
+  }
+`;
+
+const RevealSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  width: 100%;
+`;
+
+const RevealTitle = styled.h2`
+  font-size: 2rem;
+  color: var(--color-text-accent);
+  margin: 0;
+  font-weight: 600;
+`;
+
+const RevealGrid = styled.div`
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 350px;
+`;
+
+const RevealCardContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+`;
+
+const ResetButton = styled.button`
+  background: var(--color-button-primary);
+  color: var(--color-button-primary-text);
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: var(--color-button-primary-hover);
+    transform: translateY(-2px);
+  }
+`;
+
+const Hint = styled.div<{ isClickable: boolean }>`
+  margin-top: 30px;
+  padding: 20px;
+  border-radius: 12px;
+  background: rgba(255, 237, 77, 0.15);
+  border: 1px solid var(--color-accent-400);
+  transition: all 0.3s ease;
+  
+  ${props => props.isClickable && `
+    cursor: pointer;
+    background: rgba(255, 237, 77, 0.25);
+    border: 2px solid var(--color-accent-400);
+    
+    &:hover {
+      background: rgba(255, 237, 77, 0.35);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px var(--color-accent-400);
+    }
+    
+    &:active {
+      transform: translateY(0px);
+    }
+  `}
+`;
+
+const HintText = styled.p`
+  margin: 0;
+  color: var(--color-text-accent);
+  line-height: 1.6;
+  font-weight: 500;
+`;
 
 export default CardDrawPage;
