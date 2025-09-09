@@ -1,0 +1,39 @@
+pipeline {
+  agent any
+
+  environment {
+    APP_NAME = "spring-app"
+    IMAGE_TAG = "latest"
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        git branch: 'back', url: 'https://lab.ssafy.com/s13-ai-image-sub1/S13P21A601.git'
+      }
+    }
+
+    stage('Build Docker Image') {
+      steps {
+        sh """
+          docker build -t ${APP_NAME}:${IMAGE_TAG} .
+        """
+      }
+    }
+
+    stage('Deploy (dev)') {
+      steps {
+        sh """
+          docker rm -f ${APP_NAME}-dev || true
+          docker run -d --name ${APP_NAME}-dev \
+            -p 8080:8080 \
+            -e SPRING_DATASOURCE_URL=jdbc:mysql://mysql-dev:3306/devdb \
+            -e SPRING_DATASOURCE_USERNAME=devuser \
+            -e SPRING_DATASOURCE_PASSWORD=dev_pw \
+            --network $(docker network ls --format '{{.Name}}' | head -n1) \
+            ${APP_NAME}:${IMAGE_TAG}
+        """
+      }
+    }
+  }
+}
