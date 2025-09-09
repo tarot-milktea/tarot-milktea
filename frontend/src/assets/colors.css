@@ -153,6 +153,14 @@
   --color-selection: var(--color-accent-200);          /* 텍스트 선택 */
   --color-selection-text: var(--color-primary-900);    /* 선택된 텍스트 */
 
+  /* 타로 카드 전용 컬러 */
+  --color-card-front-bg: #ffffff;                      /* 카드 앞면 배경 */
+  --color-card-front-border: #e0e0e0;                  /* 카드 앞면 테두리 */
+  --color-card-placeholder-border: #dddddd;            /* 카드 이미지 플레이스홀더 테두리 */
+  --color-card-placeholder-text: #999999;              /* 카드 이미지 플레이스홀더 텍스트 */
+  --color-card-pattern-element: rgba(255, 237, 77, 0.3); /* 카드 뒷면 패턴 요소 */
+  --color-card-number: rgba(255, 237, 77, 0.7);        /* 카드 번호 */
+
   /* 그라데이션 */
   --gradient-primary: linear-gradient(135deg, var(--color-primary-600), var(--color-primary-800));
   --gradient-accent: linear-gradient(135deg, var(--color-accent-400), var(--color-accent-600));
@@ -181,6 +189,12 @@
   --color-text-muted: var(--color-neutral-500);
   --color-text-accent: var(--color-accent-600);
   --color-text-gold: var(--color-gold-600);
+  
+  /* 라이트 테마에서의 카드 색상 조정 */
+  --color-card-front-bg: #ffffff;
+  --color-card-front-border: #e0e0e0;
+  --color-card-placeholder-border: #cccccc;
+  --color-card-placeholder-text: #666666;
 }
 
 /* 전역 레이아웃 */
