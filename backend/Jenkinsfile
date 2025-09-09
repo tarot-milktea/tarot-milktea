@@ -4,6 +4,7 @@ pipeline {
   environment {
     APP_NAME = "spring-app"
     IMAGE_TAG = "latest"
+    
   }
 
   stages {
@@ -37,3 +38,5 @@ pipeline {
     }
   }
 }
+
+//빌드 테스트용 텍스트 추가
