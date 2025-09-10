@@ -4,7 +4,12 @@ pipeline {
   environment {
     APP_NAME = "spring-app"
     IMAGE_TAG = "latest"
-    
+    MYSQL_CONTAINER = "mysql-prod"
+    MYSQL_IMAGE = "mysql:8.0"
+    MYSQL_PORT = "3306"
+    MYSQL_DB = "taro" 
+    MYSQL_USER = "taro"
+    MYSQL_PASSWORD = "taro1234"
   }
 
   stages {
@@ -22,22 +27,34 @@ pipeline {
       }
     }
 
-    stage('Deploy (dev)') {
+    stage('Start MySQL') {
+      steps {
+        sh """
+          docker rm -f ${MYSQL_CONTAINER} || true
+          docker run -d --name ${MYSQL_CONTAINER} \
+            -e MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD} \
+            -e MYSQL_DATABASE=${MYSQL_DB} \
+            -e MYSQL_USER=${MYSQL_USER} \
+            -e MYSQL_PASSWORD=${MYSQL_PASSWORD} \
+            -p ${MYSQL_PORT}:3306 \
+            ${MYSQL_IMAGE}
+        """
+      }
+    }
+
+    stage('Deploy Spring App') {
       steps {
         sh """
           docker rm -f ${APP_NAME}-dev || true
           docker run -d --name ${APP_NAME}-dev \
             -p 8080:8080 \
-            -e SPRING_DATASOURCE_URL=jdbc:mysql://mysql-dev:3306/devdb \
-            -e SPRING_DATASOURCE_USERNAME=devuser \
-            -e SPRING_DATASOURCE_PASSWORD=dev_pw \
-            --network $(docker network ls --format '{{.Name}}' | head -n1) \
+            -e SPRING_DATASOURCE_URL=jdbc:mysql://${MYSQL_CONTAINER}:${MYSQL_PORT}/${MYSQL_DB} \
+            -e SPRING_DATASOURCE_USERNAME=${MYSQL_USER} \
+            -e SPRING_DATASOURCE_PASSWORD=${MYSQL_PASSWORD} \
+            --network bridge \
             ${APP_NAME}:${IMAGE_TAG}
         """
       }
     }
   }
 }
-
-//빌드 테스트용 텍스트 추가
-//두번째 테스트
