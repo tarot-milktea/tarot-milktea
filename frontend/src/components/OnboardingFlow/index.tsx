@@ -18,7 +18,19 @@ function OnboardingFlow() {
   const [currentPage, setCurrentPage] = useState<PageType>('onboarding1');
 
   // 결과 페이지로 이동하는 함수
-  const goToResult = (tarotResult: unknown) => {
+  const goToResult = () => {
+    // 카드 스토어에서 선택된 카드들 가져오기
+    const selectedCards = JSON.parse(localStorage.getItem('selectedCards') || '[]');
+    
+    // 결과 데이터 구조 생성
+    const tarotResult = {
+      cards: selectedCards.map((card: any, index: number) => ({
+        id: card.id,
+        position: ['past', 'present', 'future'][index] as 'past' | 'present' | 'future',
+        orientation: card.orientation || 'upright'
+      }))
+    };
+    
     // 고유 ID 생성
     const resultId = Date.now().toString(36) + Math.random().toString(36).substr(2);
     
@@ -36,7 +48,7 @@ function OnboardingFlow() {
     onboarding4: { title: '온보딩4', component: <Onboarding4Page onNext={() => setCurrentPage('onboarding5')} onPrev={() => setCurrentPage('onboarding3')} /> },
     onboarding5: { title: '온보딩5', component: <Onboarding5Page onNext={() => setCurrentPage('cardDraw')} onPrev={() => setCurrentPage('onboarding4')} /> },
     cardDraw: { title: '카드뽑기', component: <CardDrawPage onNext={() => setCurrentPage('loading')} onPrev={() => setCurrentPage('onboarding5')} /> },
-    loading: { title: '로딩', component: <LoadingPage onComplete={() => goToResult({ cards: ['card1', 'card2', 'card3'] })} /> }
+    loading: { title: '로딩', component: <LoadingPage onComplete={goToResult} /> }
   };
 
   return (
