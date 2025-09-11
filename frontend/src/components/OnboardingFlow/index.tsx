@@ -18,7 +18,7 @@ function OnboardingFlow() {
   const [currentPage, setCurrentPage] = useState<PageType>('onboarding1');
 
   // 결과 페이지로 이동하는 함수
-  const goToResult = (tarotResult: any) => {
+  const goToResult = (tarotResult: unknown) => {
     // 고유 ID 생성
     const resultId = Date.now().toString(36) + Math.random().toString(36).substr(2);
     

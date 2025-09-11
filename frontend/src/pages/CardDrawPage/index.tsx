@@ -41,7 +41,7 @@ function CardDrawPage() {
           <>
             <CardGrid>
               {Array.from({ length: 72 }, (_, index) => (
-                <TarotCard key={index + 1} cardId={index + 1} size="small" />
+                <TarotCard key={index + 1} cardId={index + 1} size="small" showOrientationToggle={true} />
               ))}
             </CardGrid>
             
@@ -52,7 +52,7 @@ function CardDrawPage() {
             <RevealGrid>
               {selectedCards.map((selectedCard) => (
                 <RevealCardContainer key={selectedCard.id}>
-                  <TarotCard cardId={selectedCard.id} size="large" />
+                  <TarotCard cardId={selectedCard.id} size="large" showOrientationToggle={false} />
                 </RevealCardContainer>
               ))}
             </RevealGrid>
@@ -240,6 +240,33 @@ const HintText = styled.p`
   color: var(--color-text-accent);
   line-height: 1.6;
   font-weight: 500;
+`;
+
+const CardInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  margin-top: 15px;
+`;
+
+const CardPosition = styled.div`
+  background: var(--color-button-primary);
+  color: var(--color-button-primary-text);
+  padding: 6px 16px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+`;
+
+const CardOrientation = styled.div<{ isReversed: boolean }>`
+  background: ${props => props.isReversed ? 'var(--color-gold-400)' : 'var(--color-accent-400)'};
+  color: var(--color-primary-900);
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 2px solid ${props => props.isReversed ? 'var(--color-gold-600)' : 'var(--color-accent-600)'};
 `;
 
 export default CardDrawPage;

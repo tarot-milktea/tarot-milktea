@@ -5,10 +5,11 @@ import { useCardStore } from '../../store/cardStore';
 interface TarotCardProps {
   cardId: number;
   size?: 'small' | 'large';
+  showOrientationToggle?: boolean; // 방향 토글 버튼 표시 여부
 }
 
-const TarotCard: React.FC<TarotCardProps> = ({ cardId, size = 'small' }) => {
-  const { selectedCards, selectCard, deselectCard, isRevealing, revealedCards } = useCardStore();
+const TarotCard: React.FC<TarotCardProps> = ({ cardId, size = 'small', showOrientationToggle = false }) => {
+  const { selectedCards, selectCard, deselectCard, toggleOrientation, isRevealing, revealedCards } = useCardStore();
   
   const cardState = useMemo(() => {
     const isSelected = selectedCards.some(card => card.id === cardId);
@@ -35,6 +36,13 @@ const TarotCard: React.FC<TarotCardProps> = ({ cardId, size = 'small' }) => {
     }
   };
 
+  const handleOrientationToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isSelected && !isFlipped) {
+      toggleOrientation(cardId);
+    }
+  };
+
   return (
     <CardContainer 
       onClick={handleClick}
@@ -42,8 +50,8 @@ const TarotCard: React.FC<TarotCardProps> = ({ cardId, size = 'small' }) => {
       isSelected={isSelected}
       isRevealing={isRevealing}
     >
-      <CardInner isFlipped={isFlipped}>
-        <CardBack isSelected={isSelected}>
+      <CardInner isFlipped={isFlipped} isReversed={selectedCard?.orientation === 'reversed'}>
+        <CardBack isSelected={isSelected} isReversed={selectedCard?.orientation === 'reversed'}>
           <CardPattern>
             <PatternElement />
             <PatternElement />
@@ -52,13 +60,18 @@ const TarotCard: React.FC<TarotCardProps> = ({ cardId, size = 'small' }) => {
           </CardPattern>
           <CardNumber>{cardId}</CardNumber>
         </CardBack>
-        <CardFront>
+        <CardFront isReversed={selectedCard?.orientation === 'reversed'}>
           {selectedCard && (
-            <PositionLabel>
-              {selectedCard.position === 'past' && '과거'}
-              {selectedCard.position === 'present' && '현재'} 
-              {selectedCard.position === 'future' && '미래'}
-            </PositionLabel>
+            <>
+              <PositionLabel>
+                {selectedCard.position === 'past' && '과거'}
+                {selectedCard.position === 'present' && '현재'} 
+                {selectedCard.position === 'future' && '미래'}
+              </PositionLabel>
+              <OrientationIndicator isReversed={selectedCard.orientation === 'reversed'}>
+                {selectedCard.orientation === 'upright' ? '정방향' : '역방향'}
+              </OrientationIndicator>
+            </>
           )}
           {/* 
             백엔드 연동 시 수정 필요:
@@ -71,6 +84,12 @@ const TarotCard: React.FC<TarotCardProps> = ({ cardId, size = 'small' }) => {
           <CardImage />
         </CardFront>
       </CardInner>
+      
+      {showOrientationToggle && isSelected && !isFlipped && (
+        <OrientationToggle onClick={handleOrientationToggle}>
+          🔄
+        </OrientationToggle>
+      )}
     </CardContainer>
   );
 };
@@ -106,7 +125,7 @@ const CardContainer = styled.div<{
   }
 `;
 
-const CardInner = styled.div<{ isFlipped: boolean }>`
+const CardInner = styled.div<{ isFlipped: boolean; isReversed?: boolean }>`
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
@@ -114,12 +133,17 @@ const CardInner = styled.div<{ isFlipped: boolean }>`
   position: relative;
   
   ${props => props.isFlipped && `
-    transform: rotateY(180deg);
+    transform: rotateY(180deg) ${props.isReversed ? 'rotateZ(180deg)' : ''};
+  `}
+  
+  ${props => !props.isFlipped && props.isReversed && `
+    transform: rotateZ(180deg);
   `}
 `;
 
 const CardBack = styled.div<{
   isSelected: boolean;
+  isReversed?: boolean;
 }>`
   position: absolute;
   top: 0;
@@ -142,19 +166,19 @@ const CardBack = styled.div<{
   box-sizing: border-box;
   
   ${props => props.isSelected && `
-    border-color: var(--color-accent-400);
+    border-color: ${props.isReversed ? 'var(--color-gold-400)' : 'var(--color-accent-400)'};
     background: linear-gradient(135deg, 
       var(--color-primary-700) 0%, 
       var(--color-primary-600) 50%,
       var(--color-primary-700) 100%
     );
     box-shadow: 
-      0 0 30px var(--color-accent-400),
-      inset 0 0 20px var(--color-accent-400);
+      0 0 30px ${props.isReversed ? 'var(--color-gold-400)' : 'var(--color-accent-400)'},
+      inset 0 0 20px ${props.isReversed ? 'var(--color-gold-400)' : 'var(--color-accent-400)'};
   `}
 `;
 
-const CardFront = styled.div`
+const CardFront = styled.div<{ isReversed?: boolean }>`
   position: absolute;
   top: 0;
   left: 0;
@@ -170,6 +194,14 @@ const CardFront = styled.div`
   justify-content: center;
   border: 2px solid var(--color-card-front-border);
   box-sizing: border-box;
+  
+  ${props => props.isReversed && `
+    border-color: var(--color-gold-400);
+    background: linear-gradient(135deg, 
+      var(--color-card-front-bg) 0%, 
+      rgba(255, 237, 77, 0.1) 100%
+    );
+  `}
 `;
 
 const CardPattern = styled.div`
@@ -236,6 +268,48 @@ const CardImage = styled.div`
   
   &::before {
     content: '카드 이미지';
+  }
+`;
+
+const OrientationIndicator = styled.div<{ isReversed: boolean }>`
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: ${props => props.isReversed ? 'var(--color-gold-400)' : 'var(--color-accent-400)'};
+  color: var(--color-primary-900);
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 0.6rem;
+  font-weight: 600;
+`;
+
+const OrientationToggle = styled.button`
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-accent-400);
+  border: 3px solid var(--color-primary-900);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  
+  &:hover {
+    background: var(--color-accent-500);
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  }
+  
+  &:active {
+    transform: scale(0.95);
   }
 `;
 
