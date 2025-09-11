@@ -18,7 +18,19 @@ function OnboardingFlow() {
   const [currentPage, setCurrentPage] = useState<PageType>('onboarding1');
 
   // 결과 페이지로 이동하는 함수
-  const goToResult = (tarotResult: unknown) => {
+  const goToResult = () => {
+    // 카드 스토어에서 선택된 카드들 가져오기
+    const selectedCards = JSON.parse(localStorage.getItem('selectedCards') || '[]');
+    
+    // 결과 데이터 구조 생성
+    const tarotResult = {
+      cards: selectedCards.map((card: any, index: number) => ({
+        id: card.id,
+        position: ['past', 'present', 'future'][index] as 'past' | 'present' | 'future',
+        orientation: card.orientation || 'upright'
+      }))
+    };
+    
     // 고유 ID 생성
     const resultId = Date.now().toString(36) + Math.random().toString(36).substr(2);
     
@@ -30,13 +42,13 @@ function OnboardingFlow() {
   };
 
   const pages: Record<PageType, { title: string; component: JSX.Element }> = {
-    onboarding1: { title: '온보딩1', component: <Onboarding1Page /> },
-    onboarding2: { title: '온보딩2', component: <Onboarding2Page /> },
-    onboarding3: { title: '온보딩3', component: <Onboarding3Page /> },
-    onboarding4: { title: '온보딩4', component: <Onboarding4Page /> },
-    onboarding5: { title: '온보딩5', component: <Onboarding5Page /> },
-    cardDraw: { title: '카드뽑기', component: <CardDrawPage /> },
-    loading: { title: '로딩', component: <LoadingPage onComplete={() => goToResult({ cards: ['card1', 'card2', 'card3'] })} /> }
+    onboarding1: { title: '온보딩1', component: <Onboarding1Page onNext={() => setCurrentPage('onboarding2')} /> },
+    onboarding2: { title: '온보딩2', component: <Onboarding2Page onNext={() => setCurrentPage('onboarding3')} onPrev={() => setCurrentPage('onboarding1')} /> },
+    onboarding3: { title: '온보딩3', component: <Onboarding3Page onNext={() => setCurrentPage('onboarding4')} onPrev={() => setCurrentPage('onboarding2')} /> },
+    onboarding4: { title: '온보딩4', component: <Onboarding4Page onNext={() => setCurrentPage('onboarding5')} onPrev={() => setCurrentPage('onboarding3')} /> },
+    onboarding5: { title: '온보딩5', component: <Onboarding5Page onNext={() => setCurrentPage('cardDraw')} onPrev={() => setCurrentPage('onboarding4')} /> },
+    cardDraw: { title: '카드뽑기', component: <CardDrawPage onNext={() => setCurrentPage('loading')} onPrev={() => setCurrentPage('onboarding5')} /> },
+    loading: { title: '로딩', component: <LoadingPage onComplete={goToResult} /> }
   };
 
   return (
@@ -54,36 +66,6 @@ function OnboardingFlow() {
         {theme === 'dark' ? '☀️ 라이트' : '🌙 다크'}
       </button>
 
-      {/* Page Navigation (개발용) */}
-      <div className={styles.pageNavigation}>
-        {Object.entries(pages).map(([pageKey, pageData]) => (
-          <button
-            key={pageKey}
-            onClick={() => setCurrentPage(pageKey as PageType)}
-            className={`${styles.navButton} ${currentPage === pageKey ? styles.active : ''}`}
-            style={{
-              border: `1px solid ${getColor('primary', '700')}`,
-              background: currentPage === pageKey ? getColor('accent', '400') : getColor('primary', '800'),
-              color: currentPage === pageKey ? getColor('primary', '900') : getColor('primary', '300')
-            }}
-          >
-            {pageData.title}
-          </button>
-        ))}
-        
-        {/* 결과 페이지 테스트 버튼 */}
-        <button
-          onClick={() => goToResult({ cards: ['test1', 'test2', 'test3'] })}
-          className={styles.testButton}
-          style={{
-            border: `1px solid ${getColor('gold', '400')}`,
-            background: getColor('gold', '400'),
-            color: getColor('primary', '900')
-          }}
-        >
-          결과 테스트
-        </button>
-      </div>
 
       {/* 현재 페이지 */}
       {pages[currentPage].component}

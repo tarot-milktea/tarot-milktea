@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import styled from '@emotion/styled';
 import { useCardStore } from '../../store/cardStore';
+import CardVideo from '../CardVideo';
 
 interface TarotCardProps {
   cardId: number;
@@ -73,15 +74,17 @@ const TarotCard: React.FC<TarotCardProps> = ({ cardId, size = 'small', showOrien
               </OrientationIndicator>
             </>
           )}
-          {/* 
-            백엔드 연동 시 수정 필요:
-            - CardImage를 실제 이미지 태그로 교체
-            - 백엔드에서 받은 이미지 URL 사용
-            - 로딩 스피너 또는 플레이스홀더 추가
-            - 카드 제목과 설명 텍스트 표시 영역 추가
-            - AI 해석 결과 표시 영역 추가
-          */}
-          <CardImage />
+          {/* 카드가 뒤집힌 상태에서만 비디오 표시 */}
+          {isFlipped ? (
+            <CardVideo 
+              cardId={cardId}
+              isReversed={selectedCard?.orientation === 'reversed'}
+              size={size}
+              autoPlay={true}
+            />
+          ) : (
+            <CardImagePlaceholder />
+          )}
         </CardFront>
       </CardInner>
       
@@ -254,7 +257,7 @@ const PositionLabel = styled.div`
   font-weight: 600;
 `;
 
-const CardImage = styled.div`
+const CardImagePlaceholder = styled.div`
   width: 80%;
   height: 60%;
   background: var(--color-card-front-bg);
@@ -267,7 +270,7 @@ const CardImage = styled.div`
   font-size: 0.75rem;
   
   &::before {
-    content: '카드 이미지';
+    content: '카드 영상';
   }
 `;
 

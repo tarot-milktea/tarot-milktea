@@ -1,7 +1,14 @@
 import { useColors } from '../../hooks/useColors';
+import Button from '../../components/Button';
+import ButtonGroup from '../../components/ButtonGroup';
 import styles from './Onboarding3Page.module.css';
 
-function Onboarding3Page() {
+interface Onboarding3PageProps {
+  onNext: () => void;
+  onPrev: () => void;
+}
+
+function Onboarding3Page({ onNext, onPrev }: Onboarding3PageProps) {
   const { styles: globalStyles, getColor } = useColors();
 
   const selectedTopic = '연애';
@@ -58,14 +65,22 @@ function Onboarding3Page() {
         ))}
       </div>
 
-      <button 
-        className={styles.nextButton}
-        style={{
-          ...globalStyles.primaryButton
-        }}
-      >
-        다음
-      </button>
+      <ButtonGroup gap="large">
+        <Button 
+          variant="secondary"
+          size="large"
+          onClick={onPrev}
+        >
+          이전
+        </Button>
+        <Button 
+          variant="primary"
+          size="large"
+          onClick={onNext}
+        >
+          다음
+        </Button>
+      </ButtonGroup>
     </div>
   );
 }

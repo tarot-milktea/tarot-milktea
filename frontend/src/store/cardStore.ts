@@ -76,6 +76,9 @@ export const useCardStore = create<CardState>((set, get) => ({
     const { selectedCards } = get();
     
     if (selectedCards.length === 3) {
+      // localStorage에 선택된 카드 정보 저장
+      localStorage.setItem('selectedCards', JSON.stringify(selectedCards));
+      
       set({ 
         isRevealing: true,      
         revealedCards: []       

@@ -1,7 +1,14 @@
 import { useColors } from '../../hooks/useColors';
+import Button from '../../components/Button';
+import ButtonGroup from '../../components/ButtonGroup';
 import styles from './Onboarding2Page.module.css';
 
-function Onboarding2Page() {
+interface Onboarding2PageProps {
+  onNext: () => void;
+  onPrev: () => void;
+}
+
+function Onboarding2Page({ onNext, onPrev }: Onboarding2PageProps) {
   const { styles: globalStyles, getColor } = useColors();
 
   const topics = ['취업', '연애', '금전', '건강', '인간관계', '학업'];
@@ -49,14 +56,22 @@ function Onboarding2Page() {
         ))}
       </div>
 
-      <button 
-        className={styles.nextButton}
-        style={{
-          ...globalStyles.primaryButton
-        }}
-      >
-        다음
-      </button>
+      <ButtonGroup gap="large">
+        <Button 
+          variant="secondary"
+          size="large"
+          onClick={onPrev}
+        >
+          이전
+        </Button>
+        <Button 
+          variant="primary"
+          size="large"
+          onClick={onNext}
+        >
+          다음
+        </Button>
+      </ButtonGroup>
     </div>
   );
 }

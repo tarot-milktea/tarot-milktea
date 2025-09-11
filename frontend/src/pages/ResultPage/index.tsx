@@ -1,10 +1,18 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import styled from '@emotion/styled';
 import { useColors } from '../../hooks/useColors';
-import styles from './ResultPage.module.css';
+import { useCardStore } from '../../store/cardStore';
+import CardVideo from '../../components/CardVideo';
+import Button from '../../components/Button';
+import ButtonGroup from '../../components/ButtonGroup';
 
 interface TarotResult {
-  cards: string[];
+  cards: Array<{
+    id: number;
+    position: 'past' | 'present' | 'future';
+    orientation: 'upright' | 'reversed';
+  }>;
   nickname?: string;
   topic?: string;
   question?: string;
@@ -13,7 +21,8 @@ interface TarotResult {
 function ResultPage() {
   const { resultId } = useParams<{ resultId: string }>();
   const navigate = useNavigate();
-  const { styles: globalStyles, getColor } = useColors();
+  const { getColor, theme, toggleTheme } = useColors();
+  const { resetSelection } = useCardStore();
   const [result, setResult] = useState<TarotResult | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -64,196 +73,278 @@ function ResultPage() {
 
   if (loading) {
     return (
-      <div style={{
-        ...globalStyles.container,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh'
-      }}>
-        <p style={{
-          ...globalStyles.body,
-          color: getColor('primary', '300'),
-          fontSize: '1.2rem'
-        }}>
-          결과를 불러오는 중...
-        </p>
-      </div>
+      <LoadingContainer>
+        <LoadingText>결과를 불러오는 중...</LoadingText>
+      </LoadingContainer>
     );
   }
 
   if (!result) {
     return (
-      <div style={{
-        ...globalStyles.container,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-        textAlign: 'center'
-      }}>
-        <div>
-          <p style={{
-            ...globalStyles.body,
-            color: getColor('primary', '300'),
-            fontSize: '1.2rem',
-            marginBottom: '20px'
-          }}>
-            결과를 찾을 수 없습니다.
-          </p>
-          <button
-            onClick={() => navigate('/')}
-            style={{
-              ...globalStyles.primaryButton,
-              padding: '12px 24px'
-            }}
-          >
-            새로운 타로 보기
-          </button>
-        </div>
-      </div>
+      <ErrorContainer>
+        <ErrorText>결과를 찾을 수 없습니다.</ErrorText>
+        <Button
+          variant="primary"
+          size="large"
+          onClick={() => {
+            resetSelection(); // 카드 선택 상태 초기화
+            navigate('/');
+          }}
+        >
+          새로운 타로 보기
+        </Button>
+      </ErrorContainer>
     );
   }
 
   return (
-    <div 
-      className={styles.container}
-      style={{
-        ...globalStyles.container
-      }}
-    >
-      <div className={styles.content}>
-        <h1 
-          className={styles.title}
-          style={{
-            ...globalStyles.heading,
-            color: getColor('primary', '200')
-          }}
-        >
-          🔮 타로 해석 결과
-        </h1>
+    <Container>
+      {/* 테마 토글 버튼 */}
+      <ThemeToggle
+        onClick={toggleTheme}
+        style={{
+          border: `2px solid ${getColor('accent', '400')}`,
+          background: theme === 'dark' ? getColor('primary', '900') : getColor('primary', '100'),
+          color: getColor('accent', '400')
+        }}
+      >
+        {theme === 'dark' ? '☀️ 라이트' : '🌙 다크'}
+      </ThemeToggle>
+
+      <Content>
+        <Title>🔮 타로 해석 결과</Title>
 
         {/* 영상 플레이어 영역 - 나중에 실제 영상 플레이어로 대체 */}
-        <div 
-          className={styles.videoPlayer}
-          style={{
-            ...globalStyles.card,
-            background: `linear-gradient(135deg, ${getColor('primary', '900')} 0%, ${getColor('primary', '800')} 100%)`,
-            border: `2px solid ${getColor('accent', '400')}40`
-          }}
-        >
-          <div 
-            className={styles.playIcon}
-            style={{
-              color: getColor('accent', '400')
-            }}
-          >
-            ▶️
-          </div>
-          <p 
-            className={styles.videoLabel}
-            style={{
-              ...globalStyles.body,
-              color: getColor('primary', '300')
-            }}
-          >
-            AI가 생성한 맞춤형 타로 해석 영상
-          </p>
-        </div>
+        <VideoPlayerSection>
+          <PlayIcon>▶️</PlayIcon>
+          <VideoLabel>AI가 생성한 맞춤형 타로 해석 영상</VideoLabel>
+        </VideoPlayerSection>
 
-        {/* 카드 정보 */}
-        <div className={styles.cardGrid}>
-          {[
-            { period: '과거', card: 'The Fool', meaning: '새로운 시작과 모험' },
-            { period: '현재', card: 'The Lovers', meaning: '선택과 관계의 조화' },
-            { period: '미래', card: 'The Star', meaning: '희망과 영감' }
-          ].map((cardInfo, index) => (
-            <div 
-              key={index} 
-              className={styles.cardInfo}
-              style={{
-                ...globalStyles.card,
-                background: `linear-gradient(135deg, ${getColor('primary', '900')}90 0%, ${getColor('primary', '800')}50 100%)`
-              }}
-            >
-              <div 
-                className={styles.cardImage}
-                style={{
-                  background: `linear-gradient(135deg, ${getColor('accent', '400')} 0%, ${getColor('accent', '600')} 100%)`,
-                  boxShadow: `0 4px 20px ${getColor('accent', '400')}40`
-                }}
-              >
-                🃏
-              </div>
-              
-              <h3 
-                className={styles.cardPeriod}
-                style={{
-                  ...globalStyles.subheading,
-                  color: getColor('accent', '300')
-                }}
-              >
-                {cardInfo.period}
-              </h3>
-              
-              <h4 
-                className={styles.cardName}
-                style={{
-                  ...globalStyles.body,
-                  color: getColor('primary', '200')
-                }}
-              >
-                {cardInfo.card}
-              </h4>
-              
-              <p 
-                className={styles.cardMeaning}
-                style={{
-                  ...globalStyles.body,
-                  color: getColor('primary', '400')
-                }}
-              >
-                {cardInfo.meaning}
-              </p>
-            </div>
-          ))}
-        </div>
+        {/* 선택된 카드들 */}
+        <CardGrid>
+          {result.cards && result.cards.map((card, index) => {
+            const positions = ['과거', '현재', '미래'];
+            return (
+              <CardInfo key={card.id}>
+                <CardVideoContainer>
+                  <CardVideo 
+                    cardId={card.id}
+                    isReversed={card.orientation === 'reversed'}
+                    size="large"
+                    autoPlay={true}
+                    context="result-page"
+                  />
+                </CardVideoContainer>
+                
+                <CardPeriod>
+                  {positions[index] || '미래'}
+                </CardPeriod>
+                
+                <OrientationBadge isReversed={card.orientation === 'reversed'}>
+                  {card.orientation === 'upright' ? '정방향' : '역방향'}
+                </OrientationBadge>
+                
+                <CardMeaning>
+                  {card.orientation === 'reversed' 
+                    ? '역방향 해석이 필요한 카드입니다' 
+                    : '정방향의 긍정적 의미를 담고 있습니다'
+                  }
+                </CardMeaning>
+              </CardInfo>
+            );
+          })}
+        </CardGrid>
 
         {/* 액션 버튼들 */}
-        <div className={styles.actionButtons}>
-          <button 
-            className={styles.actionButton}
-            onClick={() => navigate('/')}
-            style={{
-              ...globalStyles.primaryButton
+        <ButtonGroup gap="large" align="center">
+          <Button 
+            variant="primary"
+            size="large"
+            onClick={() => {
+              resetSelection(); // 카드 선택 상태 초기화
+              navigate('/');
             }}
           >
             다시 타로보기
-          </button>
+          </Button>
           
-          <button 
-            className={styles.actionButton}
+          <Button 
+            variant="secondary"
+            size="large"
             onClick={shareResult}
-            style={{
-              ...globalStyles.secondaryButton
-            }}
           >
             결과 공유하기
-          </button>
+          </Button>
           
-          <button 
-            className={styles.actionButton}
+          <Button 
+            variant="ghost"
+            size="large"
             onClick={downloadVideo}
-            style={{
-              ...globalStyles.secondaryButton
-            }}
           >
             영상 다운로드
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </ButtonGroup>
+      </Content>
+    </Container>
   );
 }
+
+const Container = styled.div`
+  min-height: 100vh;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  padding: 40px 20px;
+  position: relative;
+`;
+
+const ThemeToggle = styled.button`
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  z-index: 10;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 237, 77, 0.3);
+  }
+  
+  &:active {
+    transform: translateY(0px);
+  }
+`;
+
+const Content = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+`;
+
+const Title = styled.h1`
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--color-primary-200);
+  text-align: center;
+  margin: 0;
+`;
+
+const LoadingContainer = styled.div`
+  min-height: 100vh;
+  background-color: var(--color-background);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const LoadingText = styled.p`
+  color: var(--color-primary-300);
+  font-size: 1.2rem;
+`;
+
+const ErrorContainer = styled.div`
+  min-height: 100vh;
+  background-color: var(--color-background);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+`;
+
+const ErrorText = styled.p`
+  color: var(--color-primary-300);
+  font-size: 1.2rem;
+  margin: 0;
+`;
+
+const VideoPlayerSection = styled.div`
+  background: linear-gradient(135deg, var(--color-primary-900) 0%, var(--color-primary-800) 100%);
+  border: 2px solid rgba(255, 237, 77, 0.4);
+  border-radius: 16px;
+  padding: 60px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  backdrop-filter: blur(10px);
+`;
+
+const PlayIcon = styled.div`
+  font-size: 4rem;
+  color: var(--color-accent-400);
+  text-shadow: 0 0 20px var(--color-accent-400);
+`;
+
+const VideoLabel = styled.p`
+  color: var(--color-primary-300);
+  font-size: 1.1rem;
+  margin: 0;
+  text-align: center;
+`;
+
+const CardGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+`;
+
+const CardInfo = styled.div`
+  background: linear-gradient(135deg, rgba(30, 30, 46, 0.9) 0%, rgba(45, 45, 69, 0.5) 100%);
+  border: 1px solid var(--color-primary-600);
+  border-radius: 16px;
+  padding: 24px;
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+`;
+
+const CardVideoContainer = styled.div`
+  width: 200px;
+  height: 300px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+`;
+
+const CardPeriod = styled.h3`
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-accent-300);
+  margin: 0;
+`;
+
+const OrientationBadge = styled.div<{ isReversed: boolean }>`
+  background: ${props => props.isReversed ? 'var(--color-gold-400)' : 'var(--color-accent-400)'};
+  color: var(--color-primary-900);
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 2px solid ${props => props.isReversed ? 'var(--color-gold-600)' : 'var(--color-accent-600)'};
+`;
+
+const CardMeaning = styled.p`
+  color: var(--color-primary-400);
+  text-align: center;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 280px;
+`;
 
 export default ResultPage;

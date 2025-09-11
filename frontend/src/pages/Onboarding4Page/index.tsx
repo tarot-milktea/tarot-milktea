@@ -1,7 +1,14 @@
 import { useColors } from '../../hooks/useColors';
+import Button from '../../components/Button';
+import ButtonGroup from '../../components/ButtonGroup';
 import styles from './Onboarding4Page.module.css';
 
-function Onboarding4Page() {
+interface Onboarding4PageProps {
+  onNext: () => void;
+  onPrev: () => void;
+}
+
+function Onboarding4Page({ onNext, onPrev }: Onboarding4PageProps) {
   const { styles: globalStyles, getColor } = useColors();
 
   const questions = [
@@ -71,14 +78,22 @@ function Onboarding4Page() {
         />
       </div>
 
-      <button 
-        className={styles.nextButton}
-        style={{
-          ...globalStyles.primaryButton
-        }}
-      >
-        다음
-      </button>
+      <ButtonGroup gap="large">
+        <Button 
+          variant="secondary"
+          size="large"
+          onClick={onPrev}
+        >
+          이전
+        </Button>
+        <Button 
+          variant="primary"
+          size="large"
+          onClick={onNext}
+        >
+          다음
+        </Button>
+      </ButtonGroup>
     </div>
   );
 }
