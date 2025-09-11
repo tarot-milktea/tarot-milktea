@@ -1,7 +1,12 @@
 import { useColors } from '../../hooks/useColors';
+import Button from '../../components/Button';
 import styles from './Onboarding1Page.module.css';
 
-function Onboarding1Page() {
+interface Onboarding1PageProps {
+  onNext: () => void;
+}
+
+function Onboarding1Page({ onNext }: Onboarding1PageProps) {
   const { styles: globalStyles, getColor } = useColors();
 
   return (
@@ -48,14 +53,13 @@ function Onboarding1Page() {
           }}
         />
         
-        <button 
-          className={styles.startButton}
-          style={{
-            ...globalStyles.primaryButton
-          }}
+        <Button 
+          variant="primary"
+          size="large"
+          onClick={onNext}
         >
           시작하기
-        </button>
+        </Button>
       </div>
     </div>
   );

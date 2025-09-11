@@ -1,7 +1,14 @@
 import { useColors } from '../../hooks/useColors';
+import Button from '../../components/Button';
+import ButtonGroup from '../../components/ButtonGroup';
 import styles from './Onboarding5Page.module.css';
 
-function Onboarding5Page() {
+interface Onboarding5PageProps {
+  onNext: () => void;
+  onPrev: () => void;
+}
+
+function Onboarding5Page({ onNext, onPrev }: Onboarding5PageProps) {
   const { styles: globalStyles, getColor } = useColors();
 
   const characters = [
@@ -93,14 +100,22 @@ function Onboarding5Page() {
         ))}
       </div>
 
-      <button 
-        className={styles.nextButton}
-        style={{
-          ...globalStyles.primaryButton
-        }}
-      >
-        다음
-      </button>
+      <ButtonGroup gap="large">
+        <Button 
+          variant="secondary"
+          size="large"
+          onClick={onPrev}
+        >
+          이전
+        </Button>
+        <Button 
+          variant="primary"
+          size="large"
+          onClick={onNext}
+        >
+          다음
+        </Button>
+      </ButtonGroup>
     </div>
   );
 }

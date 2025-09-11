@@ -1,8 +1,15 @@
 import styled from '@emotion/styled';
 import { useCardStore } from '../../store/cardStore';
 import TarotCard from '../../components/TarotCard';
+import Button from '../../components/Button';
+import ButtonGroup from '../../components/ButtonGroup';
 
-function CardDrawPage() {
+interface CardDrawPageProps {
+  onNext: () => void;
+  onPrev: () => void;
+}
+
+function CardDrawPage({ onNext, onPrev }: CardDrawPageProps) {
   const { selectedCards, isRevealing, startReveal, revealCard, resetSelection } = useCardStore();
 
   const handleReset = () => {
@@ -56,24 +63,34 @@ function CardDrawPage() {
                 </RevealCardContainer>
               ))}
             </RevealGrid>
-            <ResetButton onClick={handleReset}>
-              다시 선택하기
-            </ResetButton>
+            <ButtonGroup gap="large">
+              <Button variant="ghost" size="medium" onClick={onPrev}>
+                이전
+              </Button>
+              <Button variant="secondary" size="medium" onClick={handleReset}>
+                다시 선택하기
+              </Button>
+              <Button variant="primary" size="medium" onClick={onNext}>
+                결과 해석하기
+              </Button>
+            </ButtonGroup>
           </RevealSection>
         )}
       </CardSection>
 
-      <Hint 
-        onClick={selectedCards.length === 3 ? handleConfirm : undefined}
-        isClickable={selectedCards.length === 3}
-      >
-        <HintText>
-          {selectedCards.length < 3 
-            ? `💡 카드를 클릭하면 선택됩니다. ${selectedCards.length}/3 선택됨`
-            : '🎉 3장이 모두 선택되었습니다! 여기를 클릭하여 카드를 뒤집어주세요.'
-          }
-        </HintText>
-      </Hint>
+      {!isRevealing && (
+        <Hint 
+          onClick={selectedCards.length === 3 ? handleConfirm : undefined}
+          isClickable={selectedCards.length === 3}
+        >
+          <HintText>
+            {selectedCards.length < 3 
+              ? `💡 카드를 클릭하면 선택됩니다. ${selectedCards.length}/3 선택됨`
+              : '🎉 3장이 모두 선택되었습니다! 여기를 클릭하여 카드를 뒤집어주세요.'
+            }
+          </HintText>
+        </Hint>
+      )}
     </Container>
   );
 }
@@ -193,22 +210,6 @@ const RevealCardContainer = styled.div`
   gap: 10px;
 `;
 
-const ResetButton = styled.button`
-  background: var(--color-button-primary);
-  color: var(--color-button-primary-text);
-  border: none;
-  border-radius: 8px;
-  padding: 12px 24px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: var(--color-button-primary-hover);
-    transform: translateY(-2px);
-  }
-`;
 
 const Hint = styled.div<{ isClickable: boolean }>`
   margin-top: 30px;
@@ -242,31 +243,5 @@ const HintText = styled.p`
   font-weight: 500;
 `;
 
-const CardInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: center;
-  margin-top: 15px;
-`;
-
-const CardPosition = styled.div`
-  background: var(--color-button-primary);
-  color: var(--color-button-primary-text);
-  padding: 6px 16px;
-  border-radius: 12px;
-  font-size: 0.9rem;
-  font-weight: 600;
-`;
-
-const CardOrientation = styled.div<{ isReversed: boolean }>`
-  background: ${props => props.isReversed ? 'var(--color-gold-400)' : 'var(--color-accent-400)'};
-  color: var(--color-primary-900);
-  padding: 4px 12px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  border: 2px solid ${props => props.isReversed ? 'var(--color-gold-600)' : 'var(--color-accent-600)'};
-`;
 
 export default CardDrawPage;
