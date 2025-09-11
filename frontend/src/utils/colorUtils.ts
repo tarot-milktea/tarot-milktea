@@ -3,13 +3,8 @@
  * CSS-in-JS, styled-components, emotion 등에서 사용할 수 있습니다.
  */
 
+import type { ColorScale } from '../types/colors';
 import { 
-  ColorPalette, 
-  ColorScale, 
-  SemanticColor, 
-  GradientType, 
-  ShadowType, 
-  TransitionType,
   getColorVariable,
   getSemanticColorVariable,
   getGradientVariable,
@@ -284,14 +279,14 @@ export const keyframes = {
 /**
  * 스타일을 조건부로 적용하는 헬퍼 함수
  */
-export const conditionalStyle = (condition: boolean, trueStyle: any, falseStyle: any = {}) => {
+export const conditionalStyle = (condition: boolean, trueStyle: Record<string, unknown>, falseStyle: Record<string, unknown> = {}) => {
   return condition ? trueStyle : falseStyle;
 };
 
 /**
  * 여러 스타일을 병합하는 헬퍼 함수
  */
-export const mergeStyles = (...styles: any[]) => {
+export const mergeStyles = (...styles: Record<string, unknown>[]) => {
   return Object.assign({}, ...styles);
 };
 

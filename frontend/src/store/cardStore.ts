@@ -3,6 +3,7 @@ import { create } from 'zustand';
 export interface SelectedCard {
   id: number;                           // 카드 고유 ID (1~72)
   position: 'past' | 'present' | 'future'; // 카드가 나타내는 시간대
+  orientation: 'upright' | 'reversed';  // 카드 방향 (정방향/역방향)
 }
 
 interface CardState {
@@ -12,6 +13,7 @@ interface CardState {
   
   selectCard: (cardId: number) => void;    // 카드 선택하기
   deselectCard: (cardId: number) => void;  // 카드 선택 취소하기
+  toggleOrientation: (cardId: number) => void; // 카드 방향 토글하기
   startReveal: () => void;                 // 뒤집기 애니메이션 시작
   revealCard: (cardId: number) => void;    // 특정 카드 뒤집기
   resetSelection: () => void;              // 모든 선택 초기화
@@ -34,7 +36,8 @@ export const useCardStore = create<CardState>((set, get) => ({
     const positions: ('past' | 'present' | 'future')[] = ['past', 'present', 'future'];
     const newCard: SelectedCard = {
       id: cardId,
-      position: positions[selectedCards.length]
+      position: positions[selectedCards.length],
+      orientation: 'upright' // 기본값은 정방향
     };
     
     set({ selectedCards: [...selectedCards, newCard] });
@@ -53,6 +56,20 @@ export const useCardStore = create<CardState>((set, get) => ({
     }));
     
     set({ selectedCards: repositionedCards });
+  },
+
+  toggleOrientation: (cardId: number) => {
+    const { selectedCards, isRevealing } = get();
+    
+    if (isRevealing) return;
+    
+    const updatedCards = selectedCards.map(card =>
+      card.id === cardId
+        ? { ...card, orientation: card.orientation === 'upright' ? 'reversed' : 'upright' }
+        : card
+    );
+    
+    set({ selectedCards: updatedCards });
   },
   
   startReveal: () => {
