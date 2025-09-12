@@ -1,14 +1,14 @@
 import { useState } from 'react';
+import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
-import { useColors } from '../../hooks/useColors';
-import Onboarding1Page from '../../pages/Onboarding1Page';
-import Onboarding2Page from '../../pages/Onboarding2Page';
-import Onboarding3Page from '../../pages/Onboarding3Page';
-import Onboarding4Page from '../../pages/Onboarding4Page';
-import Onboarding5Page from '../../pages/Onboarding5Page';
-import CardDrawPage from '../../pages/CardDrawPage';
-import LoadingPage from '../../pages/LoadingPage';
-import styles from './OnboardingFlow.module.css';
+import { useColors } from '../hooks/useColors';
+import Onboarding1Page from '../pages/Onboarding1Page';
+import Onboarding2Page from '../pages/Onboarding2Page';
+import Onboarding3Page from '../pages/Onboarding3Page';
+import Onboarding4Page from '../pages/Onboarding4Page';
+import Onboarding5Page from '../pages/Onboarding5Page';
+import CardDrawPage from '../pages/CardDrawPage';
+import LoadingPage from '../pages/LoadingPage';
 
 type PageType = 'onboarding1' | 'onboarding2' | 'onboarding3' | 'onboarding4' | 'onboarding5' | 'cardDraw' | 'loading';
 
@@ -52,11 +52,10 @@ function OnboardingFlow() {
   };
 
   return (
-    <div className={styles.container}>
+    <Container>
       {/* 테마 토글 버튼 */}
-      <button
+      <ThemeToggle
         onClick={toggleTheme}
-        className={styles.themeToggle}
         style={{
           border: `2px solid ${getColor('accent', '400')}`,
           background: theme === 'dark' ? getColor('primary', '900') : getColor('primary', '100'),
@@ -64,13 +63,35 @@ function OnboardingFlow() {
         }}
       >
         {theme === 'dark' ? '☀️ 라이트' : '🌙 다크'}
-      </button>
-
+      </ThemeToggle>
 
       {/* 현재 페이지 */}
       {pages[currentPage].component}
-    </div>
+    </Container>
   );
 }
+
+const Container = styled.div`
+  min-height: 100vh;
+  position: relative;
+`;
+
+const ThemeToggle = styled.button`
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  padding: 12px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+`;
 
 export default OnboardingFlow;

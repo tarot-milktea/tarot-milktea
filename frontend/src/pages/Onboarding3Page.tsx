@@ -1,7 +1,7 @@
-import { useColors } from '../../hooks/useColors';
-import Button from '../../components/Button';
-import ButtonGroup from '../../components/ButtonGroup';
-import styles from './Onboarding3Page.module.css';
+import styled from '@emotion/styled';
+import { useColors } from '../hooks/useColors';
+import Button from '../components/Button';
+import ButtonGroup from '../components/ButtonGroup';
 
 interface Onboarding3PageProps {
   onNext: () => void;
@@ -15,45 +15,36 @@ function Onboarding3Page({ onNext, onPrev }: Onboarding3PageProps) {
   const subTopics = ['현재 인연', '과거 인연', '미래 인연', '짝사랑', '이별', '복합'];
 
   return (
-    <div 
-      className={styles.container}
-      style={{
-        ...globalStyles.container
-      }}
-    >
-      <h1 
-        className={styles.title}
+    <Container style={globalStyles.container}>
+      <Title 
         style={{
           ...globalStyles.heading,
           color: getColor('primary', '200')
         }}
       >
         세부 주제를 선택해주세요
-      </h1>
+      </Title>
       
-      <div 
-        className={styles.selectedTopic}
+      <SelectedTopic 
         style={{
           ...globalStyles.card,
           background: `linear-gradient(135deg, ${getColor('accent', '400')}20 0%, ${getColor('accent', '300')}10 100%)`
         }}
       >
-        <p 
-          className={styles.selectedTopicText}
+        <SelectedTopicText 
           style={{
             ...globalStyles.body,
             color: getColor('accent', '300')
           }}
         >
           선택된 주제: <strong>{selectedTopic}</strong>
-        </p>
-      </div>
+        </SelectedTopicText>
+      </SelectedTopic>
 
-      <div className={styles.subtopicGrid}>
+      <SubtopicGrid>
         {subTopics.map((subTopic, index) => (
-          <button
+          <SubtopicButton
             key={index}
-            className={styles.subtopicButton}
             style={{
               ...globalStyles.card,
               border: `2px solid ${getColor('primary', '700')}`,
@@ -61,9 +52,9 @@ function Onboarding3Page({ onNext, onPrev }: Onboarding3PageProps) {
             }}
           >
             {subTopic}
-          </button>
+          </SubtopicButton>
         ))}
-      </div>
+      </SubtopicGrid>
 
       <ButtonGroup gap="large">
         <Button 
@@ -81,8 +72,56 @@ function Onboarding3Page({ onNext, onPrev }: Onboarding3PageProps) {
           다음
         </Button>
       </ButtonGroup>
-    </div>
+    </Container>
   );
 }
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 20px;
+`;
+
+const Title = styled.h1`
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+`;
+
+const SelectedTopic = styled.div`
+  padding: 20px 30px;
+  margin-bottom: 30px;
+  border-radius: 12px;
+`;
+
+const SelectedTopicText = styled.p`
+  font-size: 1.2rem;
+  margin: 0;
+`;
+
+const SubtopicGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 20px;
+  max-width: 800px;
+  width: 100%;
+  margin-bottom: 40px;
+`;
+
+const SubtopicButton = styled.button`
+  padding: 30px 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.1rem;
+  background: none;
+  border-radius: 12px;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+`;
 
 export default Onboarding3Page;

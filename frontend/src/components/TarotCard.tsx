@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import styled from '@emotion/styled';
-import { useCardStore } from '../../store/cardStore';
-import CardVideo from '../CardVideo';
+import { useCardStore } from '../store/cardStore';
+import CardVideo from './CardVideo';
 
 interface TarotCardProps {
   cardId: number;

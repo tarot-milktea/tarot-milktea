@@ -1,7 +1,7 @@
-import { useColors } from '../../hooks/useColors';
-import Button from '../../components/Button';
-import ButtonGroup from '../../components/ButtonGroup';
-import styles from './Onboarding5Page.module.css';
+import styled from '@emotion/styled';
+import { useColors } from '../hooks/useColors';
+import Button from '../components/Button';
+import ButtonGroup from '../components/ButtonGroup';
 
 interface Onboarding5PageProps {
   onNext: () => void;
@@ -25,80 +25,69 @@ function Onboarding5Page({ onNext, onPrev }: Onboarding5PageProps) {
     {
       type: 'TF',
       title: '균형잡힌 조언자', 
-      description: '이성과 감성의 균형을 맞춴 조화로운 해석을 제공합니다'
+      description: '이성과 감성의 균형을 맞춘 조화로운 해석을 제공합니다'
     }
   ];
 
   return (
-    <div 
-      className={styles.container}
-      style={{
-        ...globalStyles.container
-      }}
-    >
-      <h1 
-        className={styles.title}
+    <Container style={globalStyles.container}>
+      <Title 
         style={{
           ...globalStyles.heading,
           color: getColor('primary', '200')
         }}
       >
         타로를 봐줄 캐릭터를 선택하세요
-      </h1>
+      </Title>
       
-      <p 
-        className={styles.description}
+      <Description 
         style={{
           ...globalStyles.body,
           color: getColor('primary', '300')
         }}
       >
         어떤 스타일의 해석을 받고 싶으신가요?
-      </p>
+      </Description>
 
-      <div className={styles.characterGrid}>
+      <CharacterGrid>
         {characters.map((character, index) => (
-          <div
+          <CharacterCard
             key={index}
-            className={styles.characterCard}
             style={{
               ...globalStyles.card,
               border: `2px solid ${getColor('primary', '700')}`
             }}
           >
-            <div 
-              className={styles.characterAvatar}
+            <CharacterAvatar 
               style={{
                 background: `linear-gradient(135deg, ${getColor('accent', '400')} 0%, ${getColor('accent', '600')} 100%)`
               }}
             >
               {character.type}
-            </div>
+            </CharacterAvatar>
             
-            <div>
-              <h3 
-                className={styles.characterTitle}
+            <CharacterInfo>
+              <CharacterTitle 
                 style={{
                   ...globalStyles.subheading,
                   color: getColor('accent', '300')
                 }}
               >
                 {character.title}
-              </h3>
+              </CharacterTitle>
               
-              <p 
-                className={styles.characterDescription}
+              <CharacterDescription 
                 style={{
                   ...globalStyles.body,
                   color: getColor('primary', '400')
                 }}
               >
                 {character.description}
-              </p>
-            </div>
-          </div>
+              </CharacterDescription>
+            </CharacterInfo>
+          </CharacterCard>
         ))}
-      </div>
+      </CharacterGrid>
 
       <ButtonGroup gap="large">
         <Button 
@@ -116,8 +105,81 @@ function Onboarding5Page({ onNext, onPrev }: Onboarding5PageProps) {
           다음
         </Button>
       </ButtonGroup>
-    </div>
+    </Container>
   );
 }
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 20px;
+`;
+
+const Title = styled.h1`
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+`;
+
+const Description = styled.p`
+  font-size: 1.2rem;
+  margin-bottom: 40px;
+  max-width: 600px;
+`;
+
+const CharacterGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 25px;
+  max-width: 1000px;
+  width: 100%;
+  margin-bottom: 40px;
+`;
+
+const CharacterCard = styled.div`
+  padding: 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border-radius: 12px;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  }
+`;
+
+const CharacterAvatar = styled.div`
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--color-primary-900);
+  margin-bottom: 20px;
+`;
+
+const CharacterInfo = styled.div`
+  flex: 1;
+`;
+
+const CharacterTitle = styled.h3`
+  font-size: 1.4rem;
+  margin-bottom: 15px;
+`;
+
+const CharacterDescription = styled.p`
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0;
+`;
 
 export default Onboarding5Page;

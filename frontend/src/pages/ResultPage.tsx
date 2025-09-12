@@ -1,11 +1,11 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
-import { useColors } from '../../hooks/useColors';
-import { useCardStore } from '../../store/cardStore';
-import CardVideo from '../../components/CardVideo';
-import Button from '../../components/Button';
-import ButtonGroup from '../../components/ButtonGroup';
+import { useColors } from '../hooks/useColors';
+import { useCardStore } from '../store/cardStore';
+import CardVideo from '../components/CardVideo';
+import Button from '../components/Button';
+import ButtonGroup from '../components/ButtonGroup';
 
 interface TarotResult {
   cards: Array<{
