@@ -6,11 +6,10 @@ import CardVideo from './CardVideo';
 interface TarotCardProps {
   cardId: number;
   size?: 'small' | 'large';
-  showOrientationToggle?: boolean; // 방향 토글 버튼 표시 여부
 }
 
-const TarotCard: React.FC<TarotCardProps> = ({ cardId, size = 'small', showOrientationToggle = false }) => {
-  const { selectedCards, selectCard, deselectCard, toggleOrientation, isRevealing, revealedCards } = useCardStore();
+const TarotCard: React.FC<TarotCardProps> = ({ cardId, size = 'small' }) => {
+  const { selectedCards, selectCard, deselectCard, isRevealing, revealedCards } = useCardStore();
   
   const cardState = useMemo(() => {
     const isSelected = selectedCards.some(card => card.id === cardId);
@@ -37,12 +36,6 @@ const TarotCard: React.FC<TarotCardProps> = ({ cardId, size = 'small', showOrien
     }
   };
 
-  const handleOrientationToggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isSelected && !isFlipped) {
-      toggleOrientation(cardId);
-    }
-  };
 
   return (
     <CardContainer 
@@ -51,8 +44,8 @@ const TarotCard: React.FC<TarotCardProps> = ({ cardId, size = 'small', showOrien
       isSelected={isSelected}
       isRevealing={isRevealing}
     >
-      <CardInner isFlipped={isFlipped} isReversed={selectedCard?.orientation === 'reversed'}>
-        <CardBack isSelected={isSelected} isReversed={selectedCard?.orientation === 'reversed'}>
+      <CardInner isFlipped={isFlipped} isReversed={isFlipped && selectedCard?.orientation === 'reversed'}>
+        <CardBack isSelected={isSelected}>
           <CardPattern>
             <PatternElement />
             <PatternElement />
@@ -88,11 +81,6 @@ const TarotCard: React.FC<TarotCardProps> = ({ cardId, size = 'small', showOrien
         </CardFront>
       </CardInner>
       
-      {showOrientationToggle && isSelected && !isFlipped && (
-        <OrientationToggle onClick={handleOrientationToggle}>
-          🔄
-        </OrientationToggle>
-      )}
     </CardContainer>
   );
 };
@@ -146,7 +134,6 @@ const CardInner = styled.div<{ isFlipped: boolean; isReversed?: boolean }>`
 
 const CardBack = styled.div<{
   isSelected: boolean;
-  isReversed?: boolean;
 }>`
   position: absolute;
   top: 0;
@@ -169,15 +156,15 @@ const CardBack = styled.div<{
   box-sizing: border-box;
   
   ${props => props.isSelected && `
-    border-color: ${props.isReversed ? 'var(--color-gold-400)' : 'var(--color-accent-400)'};
+    border-color: var(--color-accent-400);
     background: linear-gradient(135deg, 
       var(--color-primary-700) 0%, 
       var(--color-primary-600) 50%,
       var(--color-primary-700) 100%
     );
     box-shadow: 
-      0 0 30px ${props.isReversed ? 'var(--color-gold-400)' : 'var(--color-accent-400)'},
-      inset 0 0 20px ${props.isReversed ? 'var(--color-gold-400)' : 'var(--color-accent-400)'};
+      0 0 30px var(--color-accent-400),
+      inset 0 0 20px var(--color-accent-400);
   `}
 `;
 
@@ -287,33 +274,5 @@ const OrientationIndicator = styled.div<{ isReversed: boolean }>`
   font-weight: 600;
 `;
 
-const OrientationToggle = styled.button`
-  position: absolute;
-  top: -12px;
-  right: -12px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--color-accent-400);
-  border: 3px solid var(--color-primary-900);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  transition: all 0.2s ease;
-  z-index: 10;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  
-  &:hover {
-    background: var(--color-accent-500);
-    transform: scale(1.1);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-  }
-  
-  &:active {
-    transform: scale(0.95);
-  }
-`;
 
 export default TarotCard;

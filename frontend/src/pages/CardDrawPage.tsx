@@ -48,7 +48,7 @@ function CardDrawPage({ onNext, onPrev }: CardDrawPageProps) {
           <>
             <CardGrid>
               {Array.from({ length: 72 }, (_, index) => (
-                <TarotCard key={index + 1} cardId={index + 1} size="small" showOrientationToggle={true} />
+                <TarotCard key={index + 1} cardId={index + 1} size="small" />
               ))}
             </CardGrid>
             
@@ -59,7 +59,7 @@ function CardDrawPage({ onNext, onPrev }: CardDrawPageProps) {
             <RevealGrid>
               {selectedCards.map((selectedCard) => (
                 <RevealCardContainer key={selectedCard.id}>
-                  <TarotCard cardId={selectedCard.id} size="large" showOrientationToggle={false} />
+                  <TarotCard cardId={selectedCard.id} size="large" />
                 </RevealCardContainer>
               ))}
             </RevealGrid>
