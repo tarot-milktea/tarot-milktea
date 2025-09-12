@@ -13,7 +13,6 @@ interface CardState {
   
   selectCard: (cardId: number) => void;    // 카드 선택하기
   deselectCard: (cardId: number) => void;  // 카드 선택 취소하기
-  toggleOrientation: (cardId: number) => void; // 카드 방향 토글하기
   startReveal: () => void;                 // 뒤집기 애니메이션 시작
   revealCard: (cardId: number) => void;    // 특정 카드 뒤집기
   resetSelection: () => void;              // 모든 선택 초기화
@@ -34,10 +33,12 @@ export const useCardStore = create<CardState>((set, get) => ({
     
     // 카드 순서대로 과거 → 현재 → 미래 위치 자동 할당
     const positions: ('past' | 'present' | 'future')[] = ['past', 'present', 'future'];
+    // 랜덤하게 정/역방향 결정 (50% 확률)
+    const randomOrientation: 'upright' | 'reversed' = Math.random() < 0.5 ? 'upright' : 'reversed';
     const newCard: SelectedCard = {
       id: cardId,
       position: positions[selectedCards.length],
-      orientation: 'upright' // 기본값은 정방향
+      orientation: randomOrientation
     };
     
     set({ selectedCards: [...selectedCards, newCard] });
@@ -58,19 +59,6 @@ export const useCardStore = create<CardState>((set, get) => ({
     set({ selectedCards: repositionedCards });
   },
 
-  toggleOrientation: (cardId: number) => {
-    const { selectedCards, isRevealing } = get();
-    
-    if (isRevealing) return;
-    
-    const updatedCards = selectedCards.map(card =>
-      card.id === cardId
-        ? { ...card, orientation: card.orientation === 'upright' ? 'reversed' : 'upright' }
-        : card
-    );
-    
-    set({ selectedCards: updatedCards });
-  },
   
   startReveal: () => {
     const { selectedCards } = get();
