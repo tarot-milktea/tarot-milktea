@@ -1,7 +1,7 @@
-import { useColors } from '../../hooks/useColors';
-import Button from '../../components/Button';
-import ButtonGroup from '../../components/ButtonGroup';
-import styles from './Onboarding4Page.module.css';
+import styled from '@emotion/styled';
+import { useColors } from '../hooks/useColors';
+import Button from '../components/Button';
+import ButtonGroup from '../components/ButtonGroup';
 
 interface Onboarding4PageProps {
   onNext: () => void;
@@ -20,27 +20,20 @@ function Onboarding4Page({ onNext, onPrev }: Onboarding4PageProps) {
   ];
 
   return (
-    <div 
-      className={styles.container}
-      style={{
-        ...globalStyles.container
-      }}
-    >
-      <h1 
-        className={styles.title}
+    <Container style={globalStyles.container}>
+      <Title 
         style={{
           ...globalStyles.heading,
           color: getColor('primary', '200')
         }}
       >
         구체적인 질문을 선택해주세요
-      </h1>
+      </Title>
 
-      <div className={styles.questionList}>
+      <QuestionList>
         {questions.map((question, index) => (
-          <button
+          <QuestionButton
             key={index}
-            className={styles.questionButton}
             style={{
               ...globalStyles.card,
               border: `2px solid ${getColor('primary', '700')}`,
@@ -48,35 +41,28 @@ function Onboarding4Page({ onNext, onPrev }: Onboarding4PageProps) {
             }}
           >
             {question}
-          </button>
+          </QuestionButton>
         ))}
-      </div>
+      </QuestionList>
 
-      <div 
-        className={styles.customInput}
-        style={{
-          ...globalStyles.card
-        }}
-      >
-        <p 
-          className={styles.customInputLabel}
+      <CustomInput style={globalStyles.card}>
+        <CustomInputLabel 
           style={{
             ...globalStyles.body,
             color: getColor('primary', '300')
           }}
         >
           직접 작성하기
-        </p>
-        <textarea
+        </CustomInputLabel>
+        <CustomTextarea
           placeholder="궤금한 질문을 자유롭게 작성해주세요..."
-          className={styles.textarea}
           style={{
             border: `2px solid ${getColor('primary', '700')}`,
             background: getColor('primary', '900'),
             color: getColor('primary', '200')
           }}
         />
-      </div>
+      </CustomInput>
 
       <ButtonGroup gap="large">
         <Button 
@@ -94,8 +80,69 @@ function Onboarding4Page({ onNext, onPrev }: Onboarding4PageProps) {
           다음
         </Button>
       </ButtonGroup>
-    </div>
+    </Container>
   );
 }
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 20px;
+`;
+
+const Title = styled.h1`
+  font-size: 2.5rem;
+  margin-bottom: 30px;
+`;
+
+const QuestionList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-width: 600px;
+  width: 100%;
+  margin-bottom: 30px;
+`;
+
+const QuestionButton = styled.button`
+  padding: 20px 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  text-align: left;
+  background: none;
+  border-radius: 12px;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+`;
+
+const CustomInput = styled.div`
+  padding: 30px;
+  max-width: 600px;
+  width: 100%;
+  margin-bottom: 40px;
+`;
+
+const CustomInputLabel = styled.p`
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+`;
+
+const CustomTextarea = styled.textarea`
+  width: 100%;
+  min-height: 100px;
+  padding: 15px;
+  font-size: 1rem;
+  border-radius: 8px;
+  resize: vertical;
+  font-family: inherit;
+  box-sizing: border-box;
+`;
 
 export default Onboarding4Page;

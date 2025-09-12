@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { useColors } from '../../hooks/useColors';
-import styles from './LoadingPage.module.css';
+import styled from '@emotion/styled';
+import { useColors } from '../hooks/useColors';
 
 interface LoadingPageProps {
   onComplete?: () => void;
@@ -21,42 +21,33 @@ function LoadingPage({ onComplete }: LoadingPageProps) {
   }, [onComplete]);
 
   return (
-    <div 
-      className={styles.container}
-      style={{
-        ...globalStyles.container
-      }}
-    >
+    <Container style={globalStyles.container}>
       {/* 배경 안개 효과 - 나중에 실제 안개 애니메이션으로 대체 */}
-      <div 
-        className={styles.backgroundFog}
+      <BackgroundFog 
         style={{
           background: `radial-gradient(ellipse at center, ${getColor('accent', '400')}15 0%, ${getColor('primary', '900')}90 50%, ${getColor('primary', '900')} 100%)`
         }}
       />
 
-      <div className={styles.content}>
+      <Content>
         {/* 로딩 스피너 */}
-        <div 
-          className={styles.spinner}
+        <Spinner 
           style={{
             border: `4px solid ${getColor('primary', '700')}`,
             borderTop: `4px solid ${getColor('accent', '400')}`
           }}
         />
 
-        <h1 
-          className={styles.title}
+        <Title 
           style={{
             ...globalStyles.heading,
             color: getColor('primary', '200')
           }}
         >
           결과를 생성 중입니다
-        </h1>
+        </Title>
         
-        <p 
-          className={styles.description}
+        <Description 
           style={{
             ...globalStyles.body,
             color: getColor('primary', '300')
@@ -64,36 +55,120 @@ function LoadingPage({ onComplete }: LoadingPageProps) {
         >
           선택하신 카드를 바탕으로 AI가 맞춤형 해석을 준비하고 있습니다.<br />
           잠시만 기다려주세요...
-        </p>
+        </Description>
 
         {/* 선택된 카드들 미리보기 */}
-        <div className={styles.cardPreview}>
+        <CardPreview>
           {['과거', '현재', '미래'].map((period, index) => (
-            <div key={index} className={styles.cardContainer}>
-              <div 
-                className={styles.card}
+            <CardContainer key={index}>
+              <Card 
                 style={{
                   background: `linear-gradient(135deg, ${getColor('accent', '400')} 0%, ${getColor('accent', '600')} 100%)`,
                   boxShadow: `0 4px 20px ${getColor('accent', '400')}40`
                 }}
               >
                 🃏
-              </div>
-              <span 
-                className={styles.cardLabel}
+              </Card>
+              <CardLabel 
                 style={{
                   ...globalStyles.body,
                   color: getColor('accent', '300')
                 }}
               >
                 {period}
-              </span>
-            </div>
+              </CardLabel>
+            </CardContainer>
           ))}
-        </div>
-      </div>
-    </div>
+        </CardPreview>
+      </Content>
+    </Container>
   );
 }
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 20px;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+`;
+
+const BackgroundFog = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  animation: pulse 3s ease-in-out infinite;
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+  }
+`;
+
+const Content = styled.div`
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+`;
+
+const Spinner = styled.div`
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  animation: spin 2s linear infinite;
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
+const Title = styled.h1`
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+`;
+
+const Description = styled.p`
+  font-size: 1.2rem;
+  max-width: 600px;
+  line-height: 1.7;
+`;
+
+const CardPreview = styled.div`
+  display: flex;
+  gap: 20px;
+  margin-top: 40px;
+`;
+
+const CardContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+`;
+
+const Card = styled.div`
+  width: 80px;
+  height: 120px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+`;
+
+const CardLabel = styled.span`
+  font-size: 0.9rem;
+  font-weight: 600;
+`;
 
 export default LoadingPage;

@@ -1,8 +1,8 @@
 import styled from '@emotion/styled';
-import { useCardStore } from '../../store/cardStore';
-import TarotCard from '../../components/TarotCard';
-import Button from '../../components/Button';
-import ButtonGroup from '../../components/ButtonGroup';
+import { useCardStore } from '../store/cardStore';
+import TarotCard from '../components/TarotCard';
+import Button from '../components/Button';
+import ButtonGroup from '../components/ButtonGroup';
 
 interface CardDrawPageProps {
   onNext: () => void;

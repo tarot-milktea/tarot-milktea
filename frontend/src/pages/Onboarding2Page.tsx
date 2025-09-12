@@ -1,7 +1,7 @@
-import { useColors } from '../../hooks/useColors';
-import Button from '../../components/Button';
-import ButtonGroup from '../../components/ButtonGroup';
-import styles from './Onboarding2Page.module.css';
+import styled from '@emotion/styled';
+import { useColors } from '../hooks/useColors';
+import Button from '../components/Button';
+import ButtonGroup from '../components/ButtonGroup';
 
 interface Onboarding2PageProps {
   onNext: () => void;
@@ -14,37 +14,29 @@ function Onboarding2Page({ onNext, onPrev }: Onboarding2PageProps) {
   const topics = ['취업', '연애', '금전', '건강', '인간관계', '학업'];
 
   return (
-    <div 
-      className={styles.container}
-      style={{
-        ...globalStyles.container
-      }}
-    >
-      <h1 
-        className={styles.title}
+    <Container style={globalStyles.container}>
+      <Title 
         style={{
           ...globalStyles.heading,
           color: getColor('primary', '200')
         }}
       >
         어떤 주제로 타로를 보시겠어요?
-      </h1>
+      </Title>
       
-      <p 
-        className={styles.description}
+      <Description 
         style={{
           ...globalStyles.body,
           color: getColor('primary', '300')
         }}
       >
         관심 있는 분야를 선택해주세요
-      </p>
+      </Description>
 
-      <div className={styles.topicGrid}>
+      <TopicGrid>
         {topics.map((topic, index) => (
-          <button
+          <TopicButton
             key={index}
-            className={styles.topicButton}
             style={{
               ...globalStyles.card,
               border: `2px solid ${getColor('primary', '700')}`,
@@ -52,9 +44,9 @@ function Onboarding2Page({ onNext, onPrev }: Onboarding2PageProps) {
             }}
           >
             {topic}
-          </button>
+          </TopicButton>
         ))}
-      </div>
+      </TopicGrid>
 
       <ButtonGroup gap="large">
         <Button 
@@ -72,8 +64,51 @@ function Onboarding2Page({ onNext, onPrev }: Onboarding2PageProps) {
           다음
         </Button>
       </ButtonGroup>
-    </div>
+    </Container>
   );
 }
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 20px;
+`;
+
+const Title = styled.h1`
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+`;
+
+const Description = styled.p`
+  font-size: 1.2rem;
+  margin-bottom: 40px;
+  max-width: 600px;
+`;
+
+const TopicGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 20px;
+  max-width: 800px;
+  width: 100%;
+  margin-bottom: 40px;
+`;
+
+const TopicButton = styled.button`
+  padding: 30px 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.2rem;
+  background: none;
+  border-radius: 12px;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+`;
 
 export default Onboarding2Page;
