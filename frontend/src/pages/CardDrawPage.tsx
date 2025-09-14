@@ -1,8 +1,18 @@
+import { useState, useEffect, useMemo, useRef } from 'react';
 import styled from '@emotion/styled';
+import { motion } from 'framer-motion';
 import { useCardStore } from '../store/cardStore';
 import TarotCard from '../components/TarotCard';
 import Button from '../components/Button';
 import ButtonGroup from '../components/ButtonGroup';
+import { calculateAllCardPositions, getResponsiveScale, calculateAnimationDelay, getScreenType } from '../utils/cardLayout';
+import { 
+  cardContainerVariants, 
+  cardVariants, 
+  shouldReduceMotion, 
+  reducedMotionVariants, 
+  reducedMotionCardVariants 
+} from '../utils/animations';
 
 interface CardDrawPageProps {
   onNext: () => void;
@@ -11,6 +21,57 @@ interface CardDrawPageProps {
 
 function CardDrawPage({ onNext, onPrev }: CardDrawPageProps) {
   const { selectedCards, isRevealing, startReveal, revealCard, resetSelection } = useCardStore();
+  const [scale, setScale] = useState(1);
+  const [isReducedMotion, setIsReducedMotion] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [screenType, setScreenType] = useState<'mobile' | 'tablet' | 'desktop'>(() => {
+    if (typeof window === 'undefined') return 'desktop';
+    return getScreenType();
+  });
+  
+  // 카드 위치 계산을 메모이제이션
+  const cardPositions = useMemo(() => calculateAllCardPositions(screenType), [screenType]);
+  
+  // 애니메이션 variants를 메모이제이션
+  const containerVariants = useMemo(() => 
+    isReducedMotion ? reducedMotionVariants : cardContainerVariants, 
+    [isReducedMotion]
+  );
+  
+  const itemVariants = useMemo(() => 
+    isReducedMotion ? reducedMotionCardVariants : cardVariants, 
+    [isReducedMotion]
+  );
+
+  useEffect(() => {
+    // 접근성을 위한 reduced motion 감지
+    setIsReducedMotion(shouldReduceMotion());
+    
+    // 터치 디바이스 감지
+    const detectTouchDevice = () => {
+      setIsTouchDevice(
+        'ontouchstart' in window ||
+        navigator.maxTouchPoints > 0 ||
+        (navigator as any).msMaxTouchPoints > 0
+      );
+    };
+    
+    // 반응형을 위한 리사이즈 핸들러
+    const handleResize = () => {
+      const containerWidth = window.innerWidth - 40; // padding 고려
+      setScale(getResponsiveScale(containerWidth));
+      
+      // 화면 타입에 따라 상태 업데이트
+      const currentScreenType = getScreenType();
+      setScreenType(currentScreenType);
+    };
+
+    detectTouchDevice(); // 터치 디바이스 감지
+    handleResize(); // 초기 설정
+    window.addEventListener('resize', handleResize);
+    
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleReset = () => {
     resetSelection();
@@ -42,17 +103,72 @@ function CardDrawPage({ onNext, onPrev }: CardDrawPageProps) {
       <Description>
         72장의 카드 중 3장을 선택하시면 과거, 현재, 미래를 알려드립니다
       </Description>
+      
+      {/* 접근성을 위한 숨겨진 설명 */}
+      <div id="card-selection-description" style={{ position: 'absolute', left: '-10000px' }}>
+        곡선으로 배치된 72장의 타로 카드가 있습니다. 카드를 클릭하거나 탭하여 3장을 선택하세요. 
+        선택된 카드는 각각 과거, 현재, 미래를 나타냅니다. {selectedCards.length}/3장 선택됨.
+      </div>
 
       <CardSection>
         {!isRevealing ? (
-          <>
-            <CardGrid>
-              {Array.from({ length: 72 }, (_, index) => (
-                <TarotCard key={index + 1} cardId={index + 1} size="small" />
-              ))}
-            </CardGrid>
-            
-          </>
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            role="grid"
+            aria-label="타로 카드 선택 영역"
+            aria-describedby="card-selection-description"
+            style={{
+              position: 'relative',
+              width: '100%',
+              height: '600px', // 높이 증가로 위로 이동된 카드들 수용
+              maxWidth: '1200px',
+              margin: '0 auto 80px auto', // 하단 마진 추가로 버튼과 안전 거리 확보
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'radial-gradient(ellipse at center, rgba(255, 237, 77, 0.05) 0%, rgba(255, 237, 77, 0.02) 50%, transparent 100%)',
+              borderRadius: '20px',
+              transform: `scale(${scale})`,
+            }}
+          >
+            {cardPositions.map((position, index) => {
+              const cardId = index + 1;
+              
+              return (
+                <motion.div
+                  key={cardId}
+                  variants={itemVariants}
+                  custom={{ 
+                    position: position,
+                    delay: calculateAnimationDelay(index)
+                  }}
+                  initial="hidden"
+                  animate="visible"
+                  whileHover={!isReducedMotion && !isTouchDevice ? "hover" : undefined}
+                  whileTap={!isReducedMotion ? "tap" : undefined}
+                  style={{
+                    position: 'absolute',
+                    left: '50%',
+                    top: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    transformOrigin: 'center',
+                    zIndex: 1,
+                    padding: '4px',
+                    minWidth: '44px',
+                    minHeight: '44px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <TarotCard cardId={cardId} size="small" />
+                </motion.div>
+              );
+            })}
+          </motion.div>
         ) : (
           <RevealSection>
             <RevealTitle>선택하신 카드입니다</RevealTitle>
@@ -145,39 +261,6 @@ const CardSection = styled.div`
   align-items: center;
 `;
 
-const CardGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-  gap: 8px;
-  max-width: 1200px;
-  width: 100%;
-  max-height: 600px;
-  overflow-y: auto;
-  padding: 20px;
-  border-radius: 12px;
-  backdrop-filter: blur(10px);
-  background: var(--color-primary-900);
-  opacity: 0.8;
-  
-  /* 스크롤바 스타일링 */
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-  
-  &::-webkit-scrollbar-track {
-    background: rgba(255, 237, 77, 0.1);
-    border-radius: 4px;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background: var(--color-accent-400);
-    border-radius: 4px;
-  }
-  
-  &::-webkit-scrollbar-thumb:hover {
-    background: var(--color-accent-500);
-  }
-`;
 
 const RevealSection = styled.div`
   display: flex;
