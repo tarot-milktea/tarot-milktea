@@ -36,7 +36,7 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({
         color: getColor('accent', '400')
       }}
     >
-      {theme === 'dark' ? '☀️ 라이트' : '🌙 다크'}
+      {theme === 'dark' ? '라이트' : '다크'}
     </StyledThemeToggle>
   );
 };
@@ -81,12 +81,6 @@ const StyledThemeToggle = styled.button<{
   &:focus-visible {
     outline: 2px solid var(--color-accent-400);
     outline-offset: 2px;
-  }
-
-  /* 모바일에서 더 큰 터치 영역 */
-  @media (max-width: 768px) {
-    padding: 14px 18px;
-    font-size: 1rem;
   }
 `;
 
