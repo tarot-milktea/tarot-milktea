@@ -2,6 +2,7 @@ import styled from '@emotion/styled';
 import { useColors } from '../hooks/useColors';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
+import Input from '../components/common/Input';
 
 interface Onboarding4PageProps {
   onNext: () => void;
@@ -54,13 +55,12 @@ function Onboarding4Page({ onNext, onPrev }: Onboarding4PageProps) {
         >
           직접 작성하기
         </CustomInputLabel>
-        <CustomTextarea
-          placeholder="궤금한 질문을 자유롭게 작성해주세요..."
-          style={{
-            border: `2px solid ${getColor('primary', '700')}`,
-            background: getColor('primary', '900'),
-            color: getColor('primary', '200')
-          }}
+        <Input
+          as="textarea"
+          placeholder="궁금한 질문을 자유롭게 작성해주세요..."
+          size="medium"
+          rows={4}
+          resize="vertical"
         />
       </CustomInput>
 
@@ -134,15 +134,5 @@ const CustomInputLabel = styled.p`
   margin-bottom: 15px;
 `;
 
-const CustomTextarea = styled.textarea`
-  width: 100%;
-  min-height: 100px;
-  padding: 15px;
-  font-size: 1rem;
-  border-radius: 8px;
-  resize: vertical;
-  font-family: inherit;
-  box-sizing: border-box;
-`;
 
 export default Onboarding4Page;

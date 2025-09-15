@@ -1,6 +1,7 @@
 import styled from '@emotion/styled';
 import { useColors } from '../hooks/useColors';
 import Button from '../components/common/Button/Button';
+import Input from '../components/common/Input';
 
 interface Onboarding1PageProps {
   onNext: () => void;
@@ -30,15 +31,13 @@ function Onboarding1Page({ onNext }: Onboarding1PageProps) {
       </Description>
 
       <InputCard style={globalStyles.card}>
-        <NicknameInput 
-          type="text" 
-          placeholder="닉네임 입력 (자동 생성됨)"
-          style={{
-            border: `2px solid ${getColor('primary', '700')}`,
-            background: getColor('primary', '900'),
-            color: getColor('primary', '200')
-          }}
-        />
+        <InputWrapper>
+          <Input 
+            type="text" 
+            placeholder="닉네임 입력 (자동 생성됨)"
+            size="large"
+          />
+        </InputWrapper>
         
         <Button 
           variant="primary"
@@ -78,13 +77,8 @@ const InputCard = styled.div`
   width: 100%;
 `;
 
-const NicknameInput = styled.input`
-  width: 100%;
-  padding: 16px;
-  font-size: 1.1rem;
-  border-radius: 8px;
+const InputWrapper = styled.div`
   margin-bottom: 20px;
-  box-sizing: border-box;
 `;
 
 export default Onboarding1Page;

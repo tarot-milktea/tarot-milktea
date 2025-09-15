@@ -2,6 +2,7 @@ import { useState } from 'react';
 import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { useColors } from '../hooks/useColors';
+import ThemeToggle from './etc/ThemeToggle';
 import Onboarding1Page from '../pages/Onboarding1Page';
 import Onboarding2Page from '../pages/Onboarding2Page';
 import Onboarding3Page from '../pages/Onboarding3Page';
@@ -14,7 +15,7 @@ type PageType = 'onboarding1' | 'onboarding2' | 'onboarding3' | 'onboarding4' | 
 
 function OnboardingFlow() {
   const navigate = useNavigate();
-  const { getColor, theme, toggleTheme } = useColors();
+  const { getColor } = useColors();
   const [currentPage, setCurrentPage] = useState<PageType>('onboarding1');
 
   // 결과 페이지로 이동하는 함수
@@ -54,16 +55,7 @@ function OnboardingFlow() {
   return (
     <Container>
       {/* 테마 토글 버튼 */}
-      <ThemeToggle
-        onClick={toggleTheme}
-        style={{
-          border: `2px solid ${getColor('accent', '400')}`,
-          background: theme === 'dark' ? getColor('primary', '900') : getColor('primary', '100'),
-          color: getColor('accent', '400')
-        }}
-      >
-        {theme === 'dark' ? '☀️ 라이트' : '🌙 다크'}
-      </ThemeToggle>
+      <ThemeToggle position="fixed" />
 
       {/* 현재 페이지 */}
       {pages[currentPage].component}
@@ -74,24 +66,6 @@ function OnboardingFlow() {
 const Container = styled.div`
   min-height: 100vh;
   position: relative;
-`;
-
-const ThemeToggle = styled.button`
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 1000;
-  padding: 12px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  }
 `;
 
 export default OnboardingFlow;
