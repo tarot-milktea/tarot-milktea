@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import styled from '@emotion/styled';
 import { motion } from 'framer-motion';
 import { useCardStore } from '../store/cardStore';
-import TarotCard from '../components/TarotCard';
-import Button from '../components/Button';
-import ButtonGroup from '../components/ButtonGroup';
+import TarotCard from '../components/TarotCard/TarotCard';
+import Button from '../components/common/Button/Button';
+import ButtonGroup from '../components/common/Button/ButtonGroup';
 import { calculateAllCardPositions, getResponsiveScale, calculateAnimationDelay, getScreenType } from '../utils/cardLayout';
 import { 
   cardContainerVariants, 

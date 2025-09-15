@@ -1,7 +1,7 @@
 import styled from '@emotion/styled';
 import { useColors } from '../hooks/useColors';
-import Button from '../components/Button';
-import ButtonGroup from '../components/ButtonGroup';
+import Button from '../components/common/Button/Button';
+import ButtonGroup from '../components/common/Button/ButtonGroup';
 
 interface Onboarding2PageProps {
   onNext: () => void;
