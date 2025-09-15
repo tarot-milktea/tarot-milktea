@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import { useColors } from '../hooks/useColors';
 import { useCardStore } from '../store/cardStore';
+import ThemeToggle from '../components/etc/ThemeToggle';
 import CardVideo from '../components/TarotCard/CardVideo';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
@@ -21,7 +22,7 @@ interface TarotResult {
 function ResultPage() {
   const { resultId } = useParams<{ resultId: string }>();
   const navigate = useNavigate();
-  const { getColor, theme, toggleTheme } = useColors();
+  const { getColor } = useColors();
   const { resetSelection } = useCardStore();
   const [result, setResult] = useState<TarotResult | null>(null);
   const [loading, setLoading] = useState(true);
@@ -100,16 +101,7 @@ function ResultPage() {
   return (
     <Container>
       {/* 테마 토글 버튼 */}
-      <ThemeToggle
-        onClick={toggleTheme}
-        style={{
-          border: `2px solid ${getColor('accent', '400')}`,
-          background: theme === 'dark' ? getColor('primary', '900') : getColor('primary', '100'),
-          color: getColor('accent', '400')
-        }}
-      >
-        {theme === 'dark' ? '☀️ 라이트' : '🌙 다크'}
-      </ThemeToggle>
+      <ThemeToggle position="absolute" />
 
       <Content>
         <Title>🔮 타로 해석 결과</Title>
@@ -195,29 +187,6 @@ const Container = styled.div`
   color: var(--color-text);
   padding: 40px 20px;
   position: relative;
-`;
-
-const ThemeToggle = styled.button`
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  padding: 12px 20px;
-  border-radius: 25px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  z-index: 10;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(255, 237, 77, 0.3);
-  }
-  
-  &:active {
-    transform: translateY(0px);
-  }
 `;
 
 const Content = styled.div`
