@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import { useColors } from '../hooks/useColors';
 import { useCardStore } from '../store/cardStore';
+import { showToast } from '../components/common/Toast';
 import ThemeToggle from '../components/etc/ThemeToggle';
 import CardVideo from '../components/TarotCard/CardVideo';
 import Button from '../components/common/Button/Button';
@@ -61,7 +62,7 @@ function ResultPage() {
       } else {
         // Web Share API 지원하지 않으면 클립보드에 복사
         navigator.clipboard.writeText(shareUrl).then(() => {
-          alert('링크가 클립보드에 복사되었습니다!');
+          showToast.success('링크가 클립보드에 복사되었습니다! 📋');
         });
       }
     }
@@ -69,7 +70,7 @@ function ResultPage() {
 
   const downloadVideo = () => {
     // TODO: 실제 영상 다운로드 구현
-    alert('영상 다운로드 기능은 준비중입니다.');
+    showToast.info('영상 다운로드 기능은 준비중입니다. 🚧');
   };
 
   if (loading) {
