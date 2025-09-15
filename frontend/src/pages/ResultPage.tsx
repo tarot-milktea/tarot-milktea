@@ -3,9 +3,9 @@ import { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import { useColors } from '../hooks/useColors';
 import { useCardStore } from '../store/cardStore';
-import CardVideo from '../components/CardVideo';
-import Button from '../components/Button';
-import ButtonGroup from '../components/ButtonGroup';
+import CardVideo from '../components/TarotCard/CardVideo';
+import Button from '../components/common/Button/Button';
+import ButtonGroup from '../components/common/Button/ButtonGroup';
 
 interface TarotResult {
   cards: Array<{
