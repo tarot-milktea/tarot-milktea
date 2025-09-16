@@ -19,7 +19,7 @@ interface CardDrawPageProps {
   onPrev: () => void;
 }
 
-function CardDrawPage({ onNext, onPrev }: CardDrawPageProps) {
+function CardDrawPage({ onNext }: CardDrawPageProps) {
   const { selectedCards, isRevealing, startReveal, revealCard, resetSelection } = useCardStore();
   const [scale, setScale] = useState(1);
   const [isReducedMotion, setIsReducedMotion] = useState(false);
@@ -97,12 +97,18 @@ function CardDrawPage({ onNext, onPrev }: CardDrawPageProps) {
       </Character>
 
       <Title>
-        카드를 선택해주세요
+        운명이 당신을 부르고 있습니다
       </Title>
-      
+
       <Description>
-        72장의 카드 중 3장을 선택하시면 과거, 현재, 미래를 알려드립니다
+        우주의 신비가 당신의 고민을 들었습니다.<br/>
+        이미 선택된 운명의 세 장이 기다리고 있어요.<br/>
+        카드를 선택하시면 과거, 현재, 미래의 진실이 드러납니다.
       </Description>
+
+      <MysticText>
+        🌙 당신의 내면 깊은 곳에서 울려오는 직감을 따라주세요 🌙
+      </MysticText>
       
       {/* 접근성을 위한 숨겨진 설명 */}
       <div id="card-selection-description" style={{ position: 'absolute', left: '-10000px' }}>
@@ -171,7 +177,10 @@ function CardDrawPage({ onNext, onPrev }: CardDrawPageProps) {
           </motion.div>
         ) : (
           <RevealSection>
-            <RevealTitle>선택하신 카드입니다</RevealTitle>
+            <RevealTitle>🔮 운명의 세 장이 드러났습니다 🔮</RevealTitle>
+            <RevealSubtitle>
+              당신이 선택한 것이 아닙니다. 운명이 당신을 선택한 것입니다.
+            </RevealSubtitle>
             <RevealGrid>
               {selectedCards.map((selectedCard) => (
                 <RevealCardContainer key={selectedCard.id}>
@@ -180,12 +189,12 @@ function CardDrawPage({ onNext, onPrev }: CardDrawPageProps) {
               ))}
             </RevealGrid>
             <ButtonGroup gap="large">
-              <Button variant="ghost" size="medium" onClick={onPrev}>
+              {/* <Button variant="ghost" size="medium" onClick={onPrev}>
                 이전
-              </Button>
-              <Button variant="secondary" size="medium" onClick={handleReset}>
+              </Button> */}
+              {/* <Button variant="secondary" size="medium" onClick={handleReset}>
                 다시 선택하기
-              </Button>
+              </Button> */}
               <Button variant="primary" size="medium" onClick={onNext}>
                 결과 해석하기
               </Button>
@@ -200,9 +209,9 @@ function CardDrawPage({ onNext, onPrev }: CardDrawPageProps) {
           isClickable={selectedCards.length === 3}
         >
           <HintText>
-            {selectedCards.length < 3 
-              ? `💡 카드를 클릭하면 선택됩니다. ${selectedCards.length}/3 선택됨`
-              : '🎉 3장이 모두 선택되었습니다! 여기를 클릭하여 카드를 뒤집어주세요.'
+            {selectedCards.length < 3
+              ? `✨ 당신의 마음이 이끄는 카드를 선택하세요 ${selectedCards.length}/3 ✨`
+              : '🌟 완벽합니다! 운명의 문이 열렸습니다. 여기를 클릭하여 진실을 마주하세요 🌟'
             }
           </HintText>
         </Hint>
@@ -248,10 +257,30 @@ const Title = styled.h1`
 
 const Description = styled.p`
   font-size: 1.2rem;
-  margin-bottom: 40px;
+  margin-bottom: 25px;
   max-width: 600px;
   color: var(--color-primary-300);
   line-height: 1.6;
+`;
+
+const MysticText = styled.p`
+  font-size: 1rem;
+  margin-bottom: 40px;
+  max-width: 500px;
+  color: var(--color-accent-300);
+  line-height: 1.5;
+  font-style: italic;
+  text-shadow: 0 0 10px var(--color-accent-400);
+`;
+
+const RevealSubtitle = styled.p`
+  font-size: 1.1rem;
+  color: var(--color-accent-300);
+  margin: -20px 0 20px 0;
+  font-style: italic;
+  text-shadow: 0 0 8px var(--color-accent-400);
+  max-width: 400px;
+  line-height: 1.5;
 `;
 
 const CardSection = styled.div`

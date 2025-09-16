@@ -28,7 +28,9 @@ const ButtonGroup: React.FC<ButtonGroupProps> = ({
   );
 };
 
-const StyledButtonGroup = styled.div<{
+const StyledButtonGroup = styled('div', {
+  shouldForwardProp: (prop) => !['align', 'direction', 'gap', 'wrap'].includes(prop),
+})<{
   align: 'left' | 'center' | 'right';
   direction: 'row' | 'column';
   gap: 'small' | 'medium' | 'large';

@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import styled from '@emotion/styled';
 import { useColors } from '../hooks/useColors';
+import { useSessionStore } from '../store/sessionStore';
 import Button from '../components/common/Button/Button';
-import Input from '../components/common/Input';
+import Input from '../components/common/Input/Input';
 
 interface Onboarding1PageProps {
   onNext: () => void;
@@ -9,6 +11,15 @@ interface Onboarding1PageProps {
 
 function Onboarding1Page({ onNext }: Onboarding1PageProps) {
   const { styles: globalStyles, getColor } = useColors();
+  const { nickname, setNickname } = useSessionStore();
+  const [localNickname, setLocalNickname] = useState(nickname);
+
+  const handleNext = () => {
+    if (localNickname.trim()) {
+      setNickname(localNickname.trim());
+      onNext();
+    }
+  };
 
   return (
     <Container style={globalStyles.container}>
@@ -18,7 +29,7 @@ function Onboarding1Page({ onNext }: Onboarding1PageProps) {
           color: getColor('primary', '200')
         }}
       >
-        🔮 타로 인사이트에 오신 것을 환영합니다
+        🔮 타로밀크티에 오신 것을 환영합니다
       </Title>
       
       <Description 
@@ -32,17 +43,20 @@ function Onboarding1Page({ onNext }: Onboarding1PageProps) {
 
       <InputCard style={globalStyles.card}>
         <InputWrapper>
-          <Input 
-            type="text" 
-            placeholder="닉네임 입력 (자동 생성됨)"
+          <Input
+            type="text"
+            placeholder="닉네임을 입력해주세요"
             size="large"
+            value={localNickname}
+            onChange={(e) => setLocalNickname(e.target.value)}
           />
         </InputWrapper>
-        
-        <Button 
+
+        <Button
           variant="primary"
           size="large"
-          onClick={onNext}
+          onClick={handleNext}
+          disabled={!localNickname.trim()}
         >
           시작하기
         </Button>

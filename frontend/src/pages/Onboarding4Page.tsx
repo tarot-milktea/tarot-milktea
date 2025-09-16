@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import styled from '@emotion/styled';
 import { useColors } from '../hooks/useColors';
+import { useSessionStore } from '../store/sessionStore';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
 import Input from '../components/common/Input';
@@ -11,14 +13,20 @@ interface Onboarding4PageProps {
 
 function Onboarding4Page({ onNext, onPrev }: Onboarding4PageProps) {
   const { styles: globalStyles, getColor } = useColors();
+  const { selectedTopic, selectedQuestion, setSelectedQuestion } = useSessionStore();
+  const [customQuestion, setCustomQuestion] = useState('');
 
-  const questions = [
-    '지금 인연과 미래를 기약해도 될까?',
-    '현재 연인과 헤어져야 할까?',
-    '새로운 만남이 언제 생길까?',
-    '짝사랑이 이루어질 수 있을까?',
-    '과거의 인연과 다시 만날 수 있을까?'
-  ];
+  const sampleQuestions = selectedTopic?.sampleQuestions || [];
+
+  const handleQuestionSelect = (question: string) => {
+    setSelectedQuestion(question);
+    setCustomQuestion('');
+  };
+
+  const handleCustomQuestionChange = (value: string) => {
+    setCustomQuestion(value);
+    setSelectedQuestion(value);
+  };
 
   return (
     <Container style={globalStyles.container}>
@@ -32,12 +40,21 @@ function Onboarding4Page({ onNext, onPrev }: Onboarding4PageProps) {
       </Title>
 
       <QuestionList>
-        {questions.map((question, index) => (
+        {sampleQuestions.map((question, index) => (
           <QuestionButton
             key={index}
+            onClick={() => handleQuestionSelect(question)}
+            isSelected={selectedQuestion === question && !customQuestion}
             style={{
               ...globalStyles.card,
-              border: `2px solid ${getColor('primary', '700')}`,
+              border: `2px solid ${
+                selectedQuestion === question && !customQuestion
+                  ? getColor('accent', '400')
+                  : getColor('primary', '700')
+              }`,
+              backgroundColor: selectedQuestion === question && !customQuestion
+                ? getColor('accent', '900')
+                : 'transparent',
               color: getColor('primary', '200')
             }}
           >
@@ -61,6 +78,8 @@ function Onboarding4Page({ onNext, onPrev }: Onboarding4PageProps) {
           size="medium"
           rows={4}
           resize="vertical"
+          value={customQuestion}
+          onChange={(e) => handleCustomQuestionChange(e.target.value)}
         />
       </CustomInput>
 
@@ -72,10 +91,11 @@ function Onboarding4Page({ onNext, onPrev }: Onboarding4PageProps) {
         >
           이전
         </Button>
-        <Button 
+        <Button
           variant="primary"
           size="large"
           onClick={onNext}
+          disabled={!selectedQuestion.trim()}
         >
           다음
         </Button>
@@ -107,7 +127,7 @@ const QuestionList = styled.div`
   margin-bottom: 30px;
 `;
 
-const QuestionButton = styled.button`
+const QuestionButton = styled.button<{ isSelected?: boolean }>`
   padding: 20px 25px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -115,7 +135,7 @@ const QuestionButton = styled.button`
   text-align: left;
   background: none;
   border-radius: 12px;
-  
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
