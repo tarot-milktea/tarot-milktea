@@ -395,7 +395,7 @@ public class MockDataService {
 
                 drawnCards.add(new TaroReadingResponse.DrawnCard(
                     position, card.getId(), card.getNameKo(), card.getNameEn(),
-                    orientation, card.getImageUrl(), card.getVideoUrl(), meaning
+                    orientation, card.getVideoUrl()
                 ));
             }
 

@@ -51,27 +51,19 @@ public class TaroReadingResponse {
         @Schema(description = "카드 방향", example = "upright", allowableValues = {"upright", "reversed"})
         private String orientation;
 
-        @Schema(description = "카드 이미지 URL", example = "https://example.com/card-major-1.jpg")
-        private String imageUrl;
-
         @Schema(description = "카드 비디오 URL", example = "https://j13a601.p.ssafy.io/media/major_arcana_fool.webm")
         private String videoUrl;
-
-        @Schema(description = "카드 의미 (방향에 따른)", example = "정방향: 바보의 긍정적 의미")
-        private String meaning;
 
         public DrawnCard() {}
 
         public DrawnCard(int position, int cardId, String nameKo, String nameEn,
-                        String orientation, String imageUrl, String videoUrl, String meaning) {
+                        String orientation, String videoUrl) {
             this.position = position;
             this.cardId = cardId;
             this.nameKo = nameKo;
             this.nameEn = nameEn;
             this.orientation = orientation;
-            this.imageUrl = imageUrl;
             this.videoUrl = videoUrl;
-            this.meaning = meaning;
         }
 
         public int getPosition() {
@@ -114,28 +106,12 @@ public class TaroReadingResponse {
             this.orientation = orientation;
         }
 
-        public String getImageUrl() {
-            return imageUrl;
-        }
-
-        public void setImageUrl(String imageUrl) {
-            this.imageUrl = imageUrl;
-        }
-
         public String getVideoUrl() {
             return videoUrl;
         }
 
         public void setVideoUrl(String videoUrl) {
             this.videoUrl = videoUrl;
-        }
-
-        public String getMeaning() {
-            return meaning;
-        }
-
-        public void setMeaning(String meaning) {
-            this.meaning = meaning;
         }
     }
 }
