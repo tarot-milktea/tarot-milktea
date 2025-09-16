@@ -3,13 +3,29 @@ import styled from '@emotion/styled';
 import { useCardStore } from '../../store/cardStore';
 import CardVideo from './CardVideo';
 
+// 임시 타입 정의 (sessionStore export 문제 해결 시 제거)
+interface PredefinedCard {
+  position: number;
+  cardId: number;
+  nameKo: string;
+  nameEn: string;
+  orientation: 'upright' | 'reversed';
+  videoUrl: string;
+}
+
 interface TarotCardProps {
   cardId: number;
   size?: 'small' | 'large';
+  predefinedCard?: PredefinedCard;
 }
 
-const TarotCard: React.FC<TarotCardProps> = ({ cardId, size = 'small' }) => {
+const TarotCard: React.FC<TarotCardProps> = ({ cardId, size = 'small', predefinedCard }) => {
   const { selectedCards, selectCard, deselectCard, isRevealing, revealedCards } = useCardStore();
+
+  // 디버깅: predefinedCard 정보 확인
+  if (predefinedCard) {
+    console.log(`🎴 Card ${cardId} predefined:`, predefinedCard);
+  }
   
   const cardState = useMemo(() => {
     const isSelected = selectedCards.some(card => card.id === cardId);
@@ -54,26 +70,28 @@ const TarotCard: React.FC<TarotCardProps> = ({ cardId, size = 'small' }) => {
           </CardPattern>
           <CardNumber>{cardId}</CardNumber>
         </CardBack>
-        <CardFront isReversed={selectedCard?.orientation === 'reversed'}>
+        <CardFront isReversed={predefinedCard?.orientation === 'reversed'}>
           {selectedCard && (
             <>
               <PositionLabel>
                 {selectedCard.position === 'past' && '과거'}
-                {selectedCard.position === 'present' && '현재'} 
+                {selectedCard.position === 'present' && '현재'}
                 {selectedCard.position === 'future' && '미래'}
               </PositionLabel>
-              <OrientationIndicator isReversed={selectedCard.orientation === 'reversed'}>
-                {selectedCard.orientation === 'upright' ? '정방향' : '역방향'}
+              <OrientationIndicator isReversed={predefinedCard?.orientation === 'reversed'}>
+                {predefinedCard?.orientation === 'upright' ? '정방향' : '역방향'}
               </OrientationIndicator>
             </>
           )}
           {/* 카드가 뒤집힌 상태에서만 비디오 표시 */}
           {isFlipped ? (
-            <CardVideo 
-              cardId={cardId}
-              isReversed={selectedCard?.orientation === 'reversed'}
+            <CardVideo
+              cardId={predefinedCard?.cardId || cardId}
+              isReversed={predefinedCard?.orientation === 'reversed'}
               size={size}
               autoPlay={true}
+              videoUrl={predefinedCard?.videoUrl}
+              cardName={predefinedCard?.nameKo}
             />
           ) : (
             <CardImagePlaceholder />

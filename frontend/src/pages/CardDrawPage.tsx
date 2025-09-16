@@ -2,16 +2,17 @@ import { useState, useEffect, useMemo } from 'react';
 import styled from '@emotion/styled';
 import { motion } from 'framer-motion';
 import { useCardStore } from '../store/cardStore';
+import { useSessionStore } from '../store/sessionStore';
 import TarotCard from '../components/TarotCard/TarotCard';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
 import { calculateAllCardPositions, getResponsiveScale, calculateAnimationDelay, getScreenType } from '../utils/cardLayout';
-import { 
-  cardContainerVariants, 
-  cardVariants, 
-  shouldReduceMotion, 
-  reducedMotionVariants, 
-  reducedMotionCardVariants 
+import {
+  cardContainerVariants,
+  cardVariants,
+  shouldReduceMotion,
+  reducedMotionVariants,
+  reducedMotionCardVariants
 } from '../utils/animations';
 
 interface CardDrawPageProps {
@@ -21,7 +22,11 @@ interface CardDrawPageProps {
 
 function CardDrawPage({ onNext }: CardDrawPageProps) {
   const { selectedCards, isRevealing, startReveal, revealCard, resetSelection } = useCardStore();
+  const { predefinedCards } = useSessionStore();
   const [scale, setScale] = useState(1);
+
+  // 디버깅: 미리 정해진 카드들 확인
+  console.log('🔍 Predefined cards:', predefinedCards);
   const [isReducedMotion, setIsReducedMotion] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const [screenType, setScreenType] = useState<'mobile' | 'tablet' | 'desktop'>(() => {
@@ -182,11 +187,20 @@ function CardDrawPage({ onNext }: CardDrawPageProps) {
               당신이 선택한 것이 아닙니다. 운명이 당신을 선택한 것입니다.
             </RevealSubtitle>
             <RevealGrid>
-              {selectedCards.map((selectedCard) => (
-                <RevealCardContainer key={selectedCard.id}>
-                  <TarotCard cardId={selectedCard.id} size="large" />
-                </RevealCardContainer>
-              ))}
+              {selectedCards.map((selectedCard, index) => {
+                // 미리 정해진 카드 정보를 TarotCard에 props로 전달
+                const predefinedCard = predefinedCards[index];
+
+                return (
+                  <RevealCardContainer key={selectedCard.id}>
+                    <TarotCard
+                      cardId={selectedCard.id}
+                      size="large"
+                      predefinedCard={predefinedCard}
+                    />
+                  </RevealCardContainer>
+                );
+              })}
             </RevealGrid>
             <ButtonGroup gap="large">
               {/* <Button variant="ghost" size="medium" onClick={onPrev}>

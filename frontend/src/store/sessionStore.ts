@@ -21,6 +21,15 @@ export interface Reader {
   imageUrl: string;
 }
 
+export interface PredefinedCard {
+  position: number;
+  cardId: number;
+  nameKo: string;
+  nameEn: string;
+  orientation: 'upright' | 'reversed';
+  videoUrl: string;
+}
+
 interface SessionData {
   nickname: string;
   selectedCategory: Category | null;
@@ -29,6 +38,7 @@ interface SessionData {
   selectedReader: Reader | null;
   currentStep: number;
   sessionId: string | null;
+  predefinedCards: PredefinedCard[];
 }
 
 interface SessionState extends SessionData {
@@ -41,9 +51,11 @@ interface SessionState extends SessionData {
   setSelectedReader: (reader: Reader | null) => void;
   setCurrentStep: (step: number) => void;
   setSessionId: (sessionId: string | null) => void;
+  setPredefinedCards: (cards: PredefinedCard[]) => void;
 
   createSession: () => Promise<void>;
   submitSessionData: () => Promise<void>;
+  fetchPredefinedCards: () => Promise<void>;
   clearSession: () => void;
   restoreFromStorage: () => void;
 }
@@ -84,6 +96,7 @@ const initialState: SessionData = {
   selectedReader: null,
   currentStep: 1,
   sessionId: null,
+  predefinedCards: [],
 };
 
 export const useSessionStore = create<SessionState>((set, get) => ({
@@ -149,6 +162,12 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     saveToSessionStorage(state);
   },
 
+  setPredefinedCards: (predefinedCards) => {
+    const state = { ...get(), predefinedCards };
+    set({ predefinedCards });
+    saveToSessionStorage(state);
+  },
+
   createSession: async () => {
     const { nickname } = get();
 
@@ -167,6 +186,9 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
       const data = await response.json();
       get().setSessionId(data.sessionId);
+
+      // 세션 생성 후 미리 정해진 카드들 가져오기
+      await get().fetchPredefinedCards();
 
       return data.sessionId;
     } catch (error) {
@@ -214,6 +236,30 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }
   },
 
+  fetchPredefinedCards: async () => {
+    const { sessionId } = get();
+
+    if (!sessionId) {
+      throw new Error('No session ID available');
+    }
+
+    try {
+      const response = await fetch(`https://j13a601.p.ssafy.io/api/sessions/${sessionId}/cards`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch predefined cards');
+      }
+
+      const data = await response.json();
+      get().setPredefinedCards(data.cards || []);
+
+      return data.cards;
+    } catch (error) {
+      console.error('Error fetching predefined cards:', error);
+      throw error;
+    }
+  },
+
   clearSession: () => {
     set({
       ...initialState,
@@ -234,6 +280,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         selectedReader: saved.selectedReader || null,
         currentStep: saved.currentStep || 1,
         sessionId: saved.sessionId || null,
+        predefinedCards: saved.predefinedCards || [],
         isSessionConfirmed,
       });
     }

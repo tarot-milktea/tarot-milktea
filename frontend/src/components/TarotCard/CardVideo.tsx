@@ -7,6 +7,8 @@ interface CardVideoProps {
   size?: 'small' | 'large';
   autoPlay?: boolean;
   context?: 'tarot-card' | 'result-page'; // 어디서 사용되는지 구분
+  videoUrl?: string; // 백엔드에서 받은 비디오 URL
+  cardName?: string; // 백엔드에서 받은 카드 이름
 }
 
 // 카드 ID에 따른 비디오 매핑
@@ -32,19 +34,30 @@ const getCardNameByVideoId = (videoId: number): string => {
   return nameMap[videoId] || 'Unknown Card';
 };
 
-const CardVideo: React.FC<CardVideoProps> = ({ 
-  cardId, 
-  isReversed = false, 
+const CardVideo: React.FC<CardVideoProps> = ({
+  cardId,
+  isReversed = false,
   size = 'large',
   autoPlay = true,
-  context = 'tarot-card'
+  context = 'tarot-card',
+  videoUrl,
+  cardName: propCardName
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
-  
-  const videoSrc = getVideoByCardId(cardId);
+
+  // 백엔드 videoUrl이 있으면 사용, 없으면 로컬 비디오 사용 (기존 로직)
+  const videoSrc = videoUrl || getVideoByCardId(cardId);
   const mappedId = ((cardId - 1) % 3) + 1;
-  const cardName = getCardNameByVideoId(mappedId);
+  const cardName = propCardName || getCardNameByVideoId(mappedId);
+
+  // 디버깅: 비디오 소스 확인
+  console.log(`🎥 Card ${cardId} video:`, {
+    videoUrl,
+    videoSrc,
+    cardName: propCardName,
+    usingBackend: !!videoUrl
+  });
 
   const handleVideoLoad = () => {
     setIsLoaded(true);

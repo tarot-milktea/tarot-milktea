@@ -13,10 +13,23 @@ interface Onboarding5PageProps {
 function Onboarding5Page({ onNext, onPrev }: Onboarding5PageProps) {
   const { styles: globalStyles, getColor } = useColors();
   const { readers, isLoading, error } = useDataStore();
-  const { selectedReader, setSelectedReader } = useSessionStore();
+  const { selectedReader, setSelectedReader, createSession } = useSessionStore();
 
   const handleReaderSelect = (reader: any) => {
     setSelectedReader(reader);
+  };
+
+  const handleNext = async () => {
+    if (!selectedReader) return;
+
+    try {
+      // 리더 선택 완료 후 세션 생성 (미리 정해진 카드들도 함께 가져옴)
+      await createSession();
+      onNext();
+    } catch (error) {
+      console.error('Failed to create session:', error);
+      // TODO: 에러 처리 (토스트 메시지 등)
+    }
   };
 
   return (
@@ -116,7 +129,7 @@ function Onboarding5Page({ onNext, onPrev }: Onboarding5PageProps) {
         <Button
           variant="primary"
           size="large"
-          onClick={onNext}
+          onClick={handleNext}
           disabled={!selectedReader}
         >
           다음

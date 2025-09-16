@@ -26,7 +26,7 @@ function ResultPage() {
   const navigate = useNavigate();
   const { getColor } = useColors();
   const { resetSelection } = useCardStore();
-  const { clearSession } = useSessionStore();
+  const { clearSession, predefinedCards } = useSessionStore();
   const [result, setResult] = useState<TarotResult | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -121,33 +121,34 @@ function ResultPage() {
 
         {/* 선택된 카드들 */}
         <CardGrid>
-          {result.cards && result.cards.map((card, index) => {
+          {predefinedCards && predefinedCards.map((card, index) => {
             const positions = ['과거', '현재', '미래'];
             return (
-              <CardInfo key={card.id}>
+              <CardInfo key={card.cardId}>
                 <CardVideoContainer>
-                  <CardVideo 
-                    cardId={card.id}
+                  <CardVideo
+                    cardId={card.cardId}
                     isReversed={card.orientation === 'reversed'}
                     size="large"
                     autoPlay={true}
                     context="result-page"
+                    videoUrl={card.videoUrl}
+                    cardName={card.nameKo}
                   />
                 </CardVideoContainer>
-                
+
                 <CardPeriod>
                   {positions[index] || '미래'}
                 </CardPeriod>
-                
+
                 <OrientationBadge isReversed={card.orientation === 'reversed'}>
                   {card.orientation === 'upright' ? '정방향' : '역방향'}
                 </OrientationBadge>
-                
+
                 <CardMeaning>
-                  {card.orientation === 'reversed' 
-                    ? '역방향 해석이 필요한 카드입니다' 
-                    : '정방향의 긍정적 의미를 담고 있습니다'
-                  }
+                  {card.meaning || (card.orientation === 'reversed'
+                    ? '역방향 해석이 필요한 카드입니다'
+                    : '정방향의 긍정적 의미를 담고 있습니다')}
                 </CardMeaning>
               </CardInfo>
             );

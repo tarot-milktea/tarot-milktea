@@ -53,12 +53,10 @@ export const useCardStore = create<CardState>((set, get) => ({
 
     // 카드 순서대로 과거 → 현재 → 미래 위치 자동 할당
     const positions: ('past' | 'present' | 'future')[] = ['past', 'present', 'future'];
-    // 랜덤하게 정/역방향 결정 (50% 확률)
-    const randomOrientation: 'upright' | 'reversed' = Math.random() < 0.5 ? 'upright' : 'reversed';
     const newCard: SelectedCard = {
       id: cardId,
       position: positions[selectedCards.length],
-      orientation: randomOrientation
+      orientation: 'upright' // 기본값, 실제로는 predefinedCard의 orientation 사용
     };
 
     set({ selectedCards: [...selectedCards, newCard] });
