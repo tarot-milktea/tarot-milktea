@@ -2,14 +2,7 @@ pipeline {
   agent any
 
   environment {
-    APP_NAME = "spring-app"
-    IMAGE_TAG = "latest"
-    MYSQL_CONTAINER = "mysql-prod"
-    MYSQL_IMAGE = "mysql:8.0"
-    MYSQL_PORT = "3306"
-    MYSQL_DB = "taro" 
-    MYSQL_USER = "taro"
-    MYSQL_PASSWORD = "taro1234"
+    APP_NAME = "backend-app"
   }
 
   stages {
@@ -19,42 +12,82 @@ pipeline {
       }
     }
 
-    stage('Build Docker Image') {
+    stage('Ensure MySQL is Running') {
       steps {
         sh """
-          docker build -t ${APP_NAME}:${IMAGE_TAG} .
+          # MySQL이 없으면 최초 1회만 시작
+          if ! docker ps | grep mysql-prod; then
+            echo "Starting MySQL for the first time..."
+            docker-compose up -d mysql
+            
+            # MySQL이 완전히 준비될 때까지 대기
+            echo "Waiting for MySQL to be ready..."
+            sleep 30
+          else
+            echo "MySQL is already running, keeping data intact"
+          fi
         """
       }
     }
 
-    stage('Start MySQL') {
+    stage('Stop Backend Only') {
       steps {
         sh """
-          docker rm -f ${MYSQL_CONTAINER} || true
-          docker run -d --name ${MYSQL_CONTAINER} \
-            -e MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD} \
-            -e MYSQL_DATABASE=${MYSQL_DB} \
-            -e MYSQL_USER=${MYSQL_USER} \
-            -e MYSQL_PASSWORD=${MYSQL_PASSWORD} \
-            -p ${MYSQL_PORT}:3306 \
-            ${MYSQL_IMAGE}
+          # 백엔드 컨테이너만 중지/삭제 (DB는 건드리지 않음)
+          docker stop ${APP_NAME} || true
+          docker rm ${APP_NAME} || true
         """
       }
     }
 
-    stage('Deploy Spring App') {
+    stage('Build & Deploy Backend') {
       steps {
         sh """
-          docker rm -f ${APP_NAME}-dev || true
-          docker run -d --name ${APP_NAME}-dev \
-            -p 8080:8080 \
-            -e SPRING_DATASOURCE_URL=jdbc:mysql://${MYSQL_CONTAINER}:${MYSQL_PORT}/${MYSQL_DB} \
-            -e SPRING_DATASOURCE_USERNAME=${MYSQL_USER} \
-            -e SPRING_DATASOURCE_PASSWORD=${MYSQL_PASSWORD} \
-            --network bridge \
-            ${APP_NAME}:${IMAGE_TAG}
+          # 백엔드만 새로 빌드 및 배포
+          docker-compose up -d --build spring-app
+          
+          # 상태 확인
+          docker-compose ps
         """
       }
+    }
+
+    stage('Health Check') {
+      steps {
+        script {
+          timeout(time: 3, unit: 'MINUTES') {
+            waitUntil {
+              script {
+                def result = sh(script: 'curl -f http://localhost:8080/actuator/health || exit 1', returnStatus: true)
+                return result == 0
+              }
+            }
+          }
+        }
+      }
+    }
+
+    stage('DB Schema Update') {
+      steps {
+        sh """
+          # Flyway 또는 Liquibase를 통한 스키마 업데이트
+          echo "Backend application will handle DB schema updates via JPA/Flyway"
+          
+          # 또는 수동 SQL 실행 (필요시)
+          # docker exec mysql-prod mysql -u taro -ptaro1234 taro < ./sql/migration.sql
+        """
+      }
+    }
+  }
+
+  post {
+    success {
+      echo 'Backend deployment successful! Database preserved.'
+      sh 'docker-compose logs --tail=50 backend-app'
+    }
+    failure {
+      echo 'Backend deployment failed!'
+      sh 'docker-compose logs backend-app'
     }
   }
 }
