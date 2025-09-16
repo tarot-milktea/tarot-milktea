@@ -34,26 +34,26 @@ import java.util.List;
                   "}")
 public class SubmitRequest {
     
-    @Schema(description = "선택한 카테고리 코드", example = "LOVE", required = true)
+    @Schema(description = "선택한 카테고리 코드", example = "LOVE")
     @NotBlank(message = "카테고리 코드는 필수입니다")
     @Pattern(regexp = "^(LOVE|JOB|MONEY)$", message = "유효하지 않은 카테고리 코드입니다. 사용 가능한 값: LOVE, JOB, MONEY")
     private String categoryCode;
     
-    @Schema(description = "선택한 주제 코드", example = "REUNION", required = true)
+    @Schema(description = "선택한 주제 코드", example = "REUNION")
     @NotBlank(message = "주제 코드는 필수입니다")
     private String topicCode;
     
-    @Schema(description = "사용자가 입력한 질문", example = "전 연인과 재회할 가능성이 있을까요?", required = true)
+    @Schema(description = "사용자가 입력한 질문", example = "전 연인과 재회할 가능성이 있을까요?")
     @NotBlank(message = "질문 텍스트는 필수입니다")
     @Size(max = 200, message = "질문은 200자 이하로 입력해주세요")
     private String questionText;
     
-    @Schema(description = "선택한 리더 타입", example = "F", required = true)
+    @Schema(description = "선택한 리더 타입", example = "F")
     @NotBlank(message = "리더 타입은 필수입니다")
     @Pattern(regexp = "^(F|T|FT)$", message = "유효하지 않은 리더 타입입니다. 사용 가능한 값: F, T, FT")
     private String readerType;
     
-    @Schema(description = "선택한 타로 카드 목록", required = true)
+    @Schema(description = "선택한 타로 카드 목록")
     @NotNull(message = "카드 선택은 필수입니다")
     @Size(min = 3, max = 3, message = "정확히 3장의 카드를 선택해야 합니다")
     @Valid
@@ -82,25 +82,25 @@ public class SubmitRequest {
 
     @Schema(description = "선택한 타로 카드 정보")
     public static class CardSelection {
-        @Schema(description = "카드 수트", example = "MAJOR", required = true,
+        @Schema(description = "카드 수트", example = "MAJOR",
                 allowableValues = {"MAJOR", "WANDS", "CUPS", "SWORDS", "PENTACLES"})
         @NotBlank(message = "카드 수트는 필수입니다")
         @Pattern(regexp = "^(MAJOR|WANDS|CUPS|SWORDS|PENTACLES)$", message = "유효하지 않은 카드 수트입니다")
         private String suit;
         
         @Schema(description = "카드 번호 (메이저: 1-22, 마이너: ACE,2-10,PAGE,KNIGHT,QUEEN,KING)",
-                example = "1", required = true)
+                example = "1")
         @NotBlank(message = "카드 번호는 필수입니다")
         private String number;
         
-        @Schema(description = "카드 위치", example = "1", required = true)
+        @Schema(description = "카드 위치", example = "1")
         @Min(value = 1, message = "카드 위치는 1 이상이어야 합니다")
         @Max(value = 3, message = "카드 위치는 3 이하여야 합니다")
         private int position;
         
         @Schema(description = "카드 방향 (선택사항)", example = "upright",
                 allowableValues = {"upright", "reversed"})
-        @Pattern(regexp = "^(upright|reversed)$", message = "카드 방향은 upright 또는 reversed만 허용됩니다", flags = Pattern.Flag.CASE_INSENSITIVE)
+        @Pattern(regexp = "^(upright|reversed)$", message = "카드 방향은 upright 또는 reversed만 허용됩니다")
         private String orientation;
 
         public CardSelection() {}
