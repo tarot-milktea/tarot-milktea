@@ -20,12 +20,13 @@ repositories {
 dependencies {
     // Spring Boot dependencies
     implementation libs.spring.boot.starter.web
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     testImplementation libs.spring.boot.starter.test
-    
+
     // Swagger/OpenAPI documentation
     implementation libs.springdoc.openapi.starter.webmvc.ui
-    
+
     // Use JUnit Jupiter for testing.
     testImplementation libs.junit.jupiter
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -37,8 +38,12 @@ dependencies {
 // Apply a specific Java toolchain to ease working on different environments.
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs += ['-Xlint:deprecation']
 }
 
 application {
