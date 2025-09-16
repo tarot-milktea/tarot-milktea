@@ -6,6 +6,9 @@ import org.com.taro.dto.TaroResultResponse;
 import org.com.taro.dto.SubmitRequest;
 import org.com.taro.dto.TaroCard;
 import org.com.taro.dto.TaroReadingResponse;
+import org.com.taro.exception.SessionNotFoundException;
+import org.com.taro.exception.TaroServiceException;
+import org.com.taro.constants.ValidationConstants;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -33,19 +36,23 @@ public class MockDataService {
     }
 
     private String generateSessionId() {
-        String chars = "abcdefghijklmnopqrstuvwxyz0123456789";
         Random random = new Random();
         StringBuilder sessionId = new StringBuilder();
-        
-        for (int i = 0; i < 7; i++) {
-            sessionId.append(chars.charAt(random.nextInt(chars.length())));
-        }
-        
-        // 중복 확인 및 재생성
-        if (sessions.containsKey(sessionId.toString())) {
-            return generateSessionId();
-        }
-        
+        int attempts = 0;
+        final int maxAttempts = 1000; // Prevent infinite loop
+
+        do {
+            sessionId.setLength(0); // Clear previous attempt
+            for (int i = 0; i < ValidationConstants.SESSION_ID_LENGTH; i++) {
+                sessionId.append(ValidationConstants.SESSION_ID_CHARS.charAt(random.nextInt(ValidationConstants.SESSION_ID_CHARS.length())));
+            }
+            attempts++;
+
+            if (attempts > maxAttempts) {
+                throw new TaroServiceException("Unable to generate unique session ID after " + maxAttempts + " attempts");
+            }
+        } while (sessions.containsKey(sessionId.toString()));
+
         return sessionId.toString();
     }
 
@@ -61,19 +68,23 @@ public class MockDataService {
         return readers;
     }
 
-    public TaroResultResponse generateTaroResult(String sessionId, String categoryCode, String topicCode, 
+    public TaroResultResponse generateTaroResult(String sessionId, String categoryCode, String topicCode,
                                                  String questionText, String readerType, List<SubmitRequest.CardSelection> selectedCards) {
         if (!sessionExists(sessionId)) {
-            return null;
+            throw new SessionNotFoundException(sessionId);
         }
 
-        List<TaroResultResponse.DrawnCard> drawnCards = createDrawnCardsFromSelection(selectedCards);
-        String interpretation = generateInterpretation(categoryCode, topicCode, questionText, drawnCards, readerType);
-        String readerMessage = generateReaderMessage(readerType);
-        int fortuneScore = generateFortuneScore();
-        String resultImageUrl = "https://example.com/result-" + sessionId + ".jpg";
+        try {
+            List<TaroResultResponse.DrawnCard> drawnCards = createDrawnCardsFromSelection(selectedCards);
+            String interpretation = generateInterpretation(categoryCode, topicCode, questionText, drawnCards, readerType);
+            String readerMessage = generateReaderMessage(readerType);
+            int fortuneScore = generateFortuneScore();
+            String resultImageUrl = "https://example.com/result-" + sessionId + ".jpg";
 
-        return new TaroResultResponse(sessionId, drawnCards, interpretation, readerMessage, fortuneScore, resultImageUrl);
+            return new TaroResultResponse(sessionId, drawnCards, interpretation, readerMessage, fortuneScore, resultImageUrl);
+        } catch (Exception e) {
+            throw new TaroServiceException("Failed to generate tarot result for session: " + sessionId, e);
+        }
     }
 
     private List<TaroResultResponse.DrawnCard> createDrawnCardsFromSelection(List<SubmitRequest.CardSelection> selectedCards) {
@@ -86,10 +97,10 @@ public class MockDataService {
                 String orientation = selection.getOrientation();
                 if (orientation == null) {
                     // orientation이 지정되지 않은 경우 랜덤으로 결정
-                    orientation = random.nextBoolean() ? "upright" : "reversed";
+                    orientation = random.nextBoolean() ? ValidationConstants.ORIENTATION_UPRIGHT : ValidationConstants.ORIENTATION_REVERSED;
                 }
 
-                String meaning = "upright".equals(orientation) ? card.getMeaningUpright() : card.getMeaningReversed();
+                String meaning = ValidationConstants.ORIENTATION_UPRIGHT.equals(orientation) ? card.getMeaningUpright() : card.getMeaningReversed();
 
                 drawnCards.add(new TaroResultResponse.DrawnCard(
                     selection.getPosition(), card.getId(), card.getNameKo(), card.getNameEn(),
@@ -105,30 +116,33 @@ public class MockDataService {
     }
 
     public boolean isValidCategoryCode(String categoryCode) {
-        return "LOVE".equals(categoryCode) || "JOB".equals(categoryCode) || "MONEY".equals(categoryCode);
+        return ValidationConstants.CATEGORY_LOVE.equals(categoryCode) ||
+               ValidationConstants.CATEGORY_JOB.equals(categoryCode) ||
+               ValidationConstants.CATEGORY_MONEY.equals(categoryCode);
     }
 
     public boolean isValidTopicCode(String categoryCode, String topicCode) {
-        if ("LOVE".equals(categoryCode)) {
+        if (ValidationConstants.CATEGORY_LOVE.equals(categoryCode)) {
             return Arrays.asList("REUNION", "NEW_LOVE", "CURRENT_RELATIONSHIP", "MARRIAGE", "BREAKUP").contains(topicCode);
-        } else if ("JOB".equals(categoryCode)) {
+        } else if (ValidationConstants.CATEGORY_JOB.equals(categoryCode)) {
             return Arrays.asList("JOB_CHANGE", "PROMOTION", "NEW_JOB", "CAREER_PATH", "WORKPLACE").contains(topicCode);
-        } else if ("MONEY".equals(categoryCode)) {
+        } else if (ValidationConstants.CATEGORY_MONEY.equals(categoryCode)) {
             return Arrays.asList("INVESTMENT", "SAVINGS", "DEBT", "INCOME", "BUSINESS").contains(topicCode);
         }
         return false;
     }
 
     public boolean isValidCard(String suit, String number) {
-        if ("MAJOR".equals(suit)) {
+        if (ValidationConstants.SUIT_MAJOR.equals(suit)) {
             try {
                 int num = Integer.parseInt(number);
                 return num >= 1 && num <= 22;
             } catch (NumberFormatException e) {
                 return false;
             }
-        } else if (Arrays.asList("WANDS", "CUPS", "SWORDS", "PENTACLES").contains(suit)) {
-            return Arrays.asList("ACE", "2", "3", "4", "5", "6", "7", "8", "9", "10", 
+        } else if (Arrays.asList(ValidationConstants.SUIT_WANDS, ValidationConstants.SUIT_CUPS,
+                                ValidationConstants.SUIT_SWORDS, ValidationConstants.SUIT_PENTACLES).contains(suit)) {
+            return Arrays.asList("ACE", "2", "3", "4", "5", "6", "7", "8", "9", "10",
                                 "PAGE", "KNIGHT", "QUEEN", "KING").contains(number);
         }
         return false;
@@ -316,8 +330,8 @@ public class MockDataService {
         };
 
         for (int i = 0; i < majorArcana.length; i++) {
-            String videoUrl = "https://j13a601.p.ssafy.io/media/" + majorArcanaVideoFiles[i];
-            cards.add(new TaroCard(cardId++, majorArcana[i], majorArcanaEn[i], "MAJOR", String.valueOf(i + 1),
+            String videoUrl = ValidationConstants.VIDEO_BASE_URL + majorArcanaVideoFiles[i];
+            cards.add(new TaroCard(cardId++, majorArcana[i], majorArcanaEn[i], ValidationConstants.SUIT_MAJOR, String.valueOf(i + 1),
                 "https://example.com/card-major-" + (i + 1) + ".jpg", videoUrl,
                 "정방향: " + majorArcana[i] + "의 긍정적 의미", "역방향: " + majorArcana[i] + "의 도전적 의미"));
         }
@@ -347,7 +361,7 @@ public class MockDataService {
 
                 // 비디오 URL 생성
                 String videoFileName = "minor_arcana_" + suitNameLower + "_" + numberVideo + ".webm";
-                String videoUrl = "https://j13a601.p.ssafy.io/media/" + videoFileName;
+                String videoUrl = ValidationConstants.VIDEO_BASE_URL + videoFileName;
 
                 cards.add(new TaroCard(cardId++, nameKo, nameEn, suit, number,
                     "https://example.com/card-" + suit.toLowerCase() + "-" + number.toLowerCase() + ".jpg", videoUrl,
@@ -359,33 +373,36 @@ public class MockDataService {
     }
 
     public TaroReadingResponse generateTaroReading(String sessionId) {
-        // TODO: 추후 제거 예정 - 현재는 더미에서 그냥 리턴
-        // if (!sessionExists(sessionId)) {
-        //     return null;
-        // }
-
-        Random random = new Random();
-        List<TaroReadingResponse.DrawnCard> drawnCards = new ArrayList<>();
-        Set<Integer> usedCards = new HashSet<>();
-
-        for (int position = 1; position <= 3; position++) {
-            int cardIndex;
-            do {
-                cardIndex = random.nextInt(taroCards.size());
-            } while (usedCards.contains(cardIndex));
-
-            usedCards.add(cardIndex);
-            TaroCard card = taroCards.get(cardIndex);
-            String orientation = random.nextBoolean() ? "upright" : "reversed";
-            String meaning = orientation.equals("upright") ? card.getMeaningUpright() : card.getMeaningReversed();
-
-            drawnCards.add(new TaroReadingResponse.DrawnCard(
-                position, card.getId(), card.getNameKo(), card.getNameEn(),
-                orientation, card.getImageUrl(), card.getVideoUrl(), meaning
-            ));
+        if (!sessionExists(sessionId)) {
+            throw new SessionNotFoundException(sessionId);
         }
 
-        return new TaroReadingResponse(sessionId, drawnCards);
+        try {
+            Random random = new Random();
+            List<TaroReadingResponse.DrawnCard> drawnCards = new ArrayList<>();
+            Set<Integer> usedCards = new HashSet<>();
+
+            for (int position = ValidationConstants.PAST_POSITION; position <= ValidationConstants.FUTURE_POSITION; position++) {
+                int cardIndex;
+                do {
+                    cardIndex = random.nextInt(taroCards.size());
+                } while (usedCards.contains(cardIndex));
+
+                usedCards.add(cardIndex);
+                TaroCard card = taroCards.get(cardIndex);
+                String orientation = random.nextBoolean() ? ValidationConstants.ORIENTATION_UPRIGHT : ValidationConstants.ORIENTATION_REVERSED;
+                String meaning = ValidationConstants.ORIENTATION_UPRIGHT.equals(orientation) ? card.getMeaningUpright() : card.getMeaningReversed();
+
+                drawnCards.add(new TaroReadingResponse.DrawnCard(
+                    position, card.getId(), card.getNameKo(), card.getNameEn(),
+                    orientation, card.getImageUrl(), card.getVideoUrl(), meaning
+                ));
+            }
+
+            return new TaroReadingResponse(sessionId, drawnCards);
+        } catch (Exception e) {
+            throw new TaroServiceException("Failed to generate tarot reading for session: " + sessionId, e);
+        }
     }
 
     private String generateInterpretation(String categoryCode, String topicCode, String questionText, 
@@ -433,16 +450,32 @@ public class MockDataService {
 
     private int generateFortuneScore() {
         Random random = new Random();
-        return 60 + random.nextInt(40); // 60-99 사이의 점수
+        return ValidationConstants.MIN_FORTUNE_SCORE + random.nextInt(
+            ValidationConstants.MAX_FORTUNE_SCORE - ValidationConstants.MIN_FORTUNE_SCORE + 1
+        );
     }
 
     private static class SessionData {
-        String sessionId;
-        String nickname;
+        final String sessionId;
+        final String nickname;
+        final long createdAt;
 
         SessionData(String sessionId, String nickname) {
             this.sessionId = sessionId;
             this.nickname = nickname;
+            this.createdAt = System.currentTimeMillis();
+        }
+
+        public String getSessionId() {
+            return sessionId;
+        }
+
+        public String getNickname() {
+            return nickname;
+        }
+
+        public long getCreatedAt() {
+            return createdAt;
         }
     }
 }
