@@ -183,6 +183,41 @@ public class TaroController {
         return "F".equals(readerType) || "T".equals(readerType) || "FT".equals(readerType);
     }
 
+    @GetMapping("/sessions/{sessionId}/cards")
+    @Operation(summary = "세션별 타로 카드 3장 생성", description = "세션 생성 시 자동으로 과거/현재/미래 카드 3장을 랜덤으로 생성합니다")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "타로 카드 3장 생성 성공",
+                    content = @Content(schema = @Schema(implementation = TaroReadingResponse.class))),
+            @ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<?> getSessionCards(
+            @Parameter(description = "세션 ID", required = true)
+            @PathVariable String sessionId) {
+        try {
+            // TODO: 추후 제거 예정 - 현재는 모든 sessionId 허용
+            // 세션 존재 여부 확인
+            // if (!mockDataService.sessionExists(sessionId)) {
+            //     return ResponseEntity.status(404)
+            //             .body(new ErrorResponse(404, "세션을 찾을 수 없습니다", "sessionId: " + sessionId));
+            // }
+
+            TaroReadingResponse result = mockDataService.generateTaroReading(sessionId);
+
+            if (result == null) {
+                return ResponseEntity.status(404)
+                        .body(new ErrorResponse(404, "세션을 찾을 수 없습니다", "sessionId: " + sessionId));
+            }
+
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(new ErrorResponse(500, "타로 카드 생성 실패", e.getMessage()));
+        }
+    }
+
     private String getAvailableTopics(String categoryCode) {
         switch (categoryCode) {
             case "LOVE":

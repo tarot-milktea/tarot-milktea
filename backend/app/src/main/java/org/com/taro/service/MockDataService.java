@@ -4,6 +4,8 @@ import org.com.taro.dto.TopicResponse;
 import org.com.taro.dto.ReaderResponse;
 import org.com.taro.dto.TaroResultResponse;
 import org.com.taro.dto.SubmitRequest;
+import org.com.taro.dto.TaroCard;
+import org.com.taro.dto.TaroReadingResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -15,7 +17,7 @@ public class MockDataService {
     private final Map<String, SessionData> sessions = new ConcurrentHashMap<>();
     private final List<TopicResponse.Category> categories;
     private final List<ReaderResponse.Reader> readers;
-    private final List<Card> taroCards;
+    private final List<TaroCard> taroCards;
     
     public MockDataService() {
         this.categories = initializeCategories();
@@ -79,19 +81,19 @@ public class MockDataService {
         Random random = new Random();
         
         for (SubmitRequest.CardSelection selection : selectedCards) {
-            Card card = findCard(selection.getSuit(), selection.getNumber());
+            TaroCard card = findCard(selection.getSuit(), selection.getNumber());
             if (card != null) {
                 String orientation = selection.getOrientation();
                 if (orientation == null) {
                     // orientation이 지정되지 않은 경우 랜덤으로 결정
                     orientation = random.nextBoolean() ? "upright" : "reversed";
                 }
-                
-                String meaning = "upright".equals(orientation) ? card.meaningUpright : card.meaningReversed;
-                
+
+                String meaning = "upright".equals(orientation) ? card.getMeaningUpright() : card.getMeaningReversed();
+
                 drawnCards.add(new TaroResultResponse.DrawnCard(
-                    selection.getPosition(), card.id, card.nameKo, card.nameEn, 
-                    orientation, card.imageUrl, meaning
+                    selection.getPosition(), card.getId(), card.getNameKo(), card.getNameEn(),
+                    orientation, card.getImageUrl(), meaning
                 ));
             }
         }
@@ -132,9 +134,9 @@ public class MockDataService {
         return false;
     }
 
-    public Card findCard(String suit, String number) {
+    public TaroCard findCard(String suit, String number) {
         return taroCards.stream()
-                .filter(card -> suit.equals(card.suit) && number.equals(card.number))
+                .filter(card -> suit.equals(card.getSuit()) && number.equals(card.getNumber()))
                 .findFirst()
                 .orElse(null);
     }
@@ -286,10 +288,10 @@ public class MockDataService {
         );
     }
 
-    private List<Card> initializeTaroCards() {
-        List<Card> cards = new ArrayList<>();
+    private List<TaroCard> initializeTaroCards() {
+        List<TaroCard> cards = new ArrayList<>();
         int cardId = 1;
-        
+
         // 메이저 아르카나 (22장)
         String[] majorArcana = {
             "바보", "마법사", "여교황", "여황제", "황제", "교황", "연인", "전차",
@@ -302,10 +304,21 @@ public class MockDataService {
             "Wheel of Fortune", "Justice", "The Hanged Man", "Death", "Temperance",
             "The Devil", "The Tower", "The Star", "The Moon", "The Sun", "Judgement", "The World"
         };
-        
+        String[] majorArcanaVideoFiles = {
+            "major_arcana_fool.webm", "major_arcana_magician.webm", "major_arcana_priestess.webm",
+            "major_arcana_empress.webm", "major_arcana_emperor.webm", "major_arcana_hierophant.webm",
+            "major_arcana_lovers.webm", "major_arcana_chariot.webm", "major_arcana_strength.webm",
+            "major_arcana_hermit.webm", "major_arcana_fortune.webm", "major_arcana_justice.webm",
+            "major_arcana_hanged.webm", "major_arcana_death.webm", "major_arcana_temperance.webm",
+            "major_arcana_devil.webm", "major_arcana_tower.webm", "major_arcana_star.webm",
+            "major_arcana_moon.webm", "major_arcana_sun.webm", "major_arcana_judgement.webm",
+            "major_arcana_world.webm"
+        };
+
         for (int i = 0; i < majorArcana.length; i++) {
-            cards.add(new Card(cardId++, majorArcana[i], majorArcanaEn[i], "MAJOR", String.valueOf(i + 1),
-                "https://example.com/card-major-" + (i + 1) + ".jpg",
+            String videoUrl = "https://j13a601.p.ssafy.io/media/" + majorArcanaVideoFiles[i];
+            cards.add(new TaroCard(cardId++, majorArcana[i], majorArcanaEn[i], "MAJOR", String.valueOf(i + 1),
+                "https://example.com/card-major-" + (i + 1) + ".jpg", videoUrl,
                 "정방향: " + majorArcana[i] + "의 긍정적 의미", "역방향: " + majorArcana[i] + "의 도전적 의미"));
         }
         
@@ -313,23 +326,31 @@ public class MockDataService {
         String[] suits = {"WANDS", "CUPS", "SWORDS", "PENTACLES"};
         String[] suitNamesKo = {"완드", "컵", "소드", "펜타클"};
         String[] suitNamesEn = {"Wands", "Cups", "Swords", "Pentacles"};
+        String[] suitNamesLower = {"wands", "cups", "swords", "pentacles"};
         String[] numbers = {"ACE", "2", "3", "4", "5", "6", "7", "8", "9", "10", "PAGE", "KNIGHT", "QUEEN", "KING"};
         String[] numbersKo = {"에이스", "2", "3", "4", "5", "6", "7", "8", "9", "10", "페이지", "나이트", "퀸", "킹"};
-        
+        String[] numbersVideo = {"ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "page", "knight", "queen", "king"};
+
         for (int suitIndex = 0; suitIndex < suits.length; suitIndex++) {
             String suit = suits[suitIndex];
             String suitNameKo = suitNamesKo[suitIndex];
             String suitNameEn = suitNamesEn[suitIndex];
-            
+            String suitNameLower = suitNamesLower[suitIndex];
+
             for (int numIndex = 0; numIndex < numbers.length; numIndex++) {
                 String number = numbers[numIndex];
                 String numberKo = numbersKo[numIndex];
-                
+                String numberVideo = numbersVideo[numIndex];
+
                 String nameKo = suitNameKo + " " + numberKo;
-                String nameEn = number + " of " + suitNameEn;
-                
-                cards.add(new Card(cardId++, nameKo, nameEn, suit, number,
-                    "https://example.com/card-" + suit.toLowerCase() + "-" + number.toLowerCase() + ".jpg",
+                String nameEn = numberKo.equals("킹") ? "King of " + suitNameEn : number + " of " + suitNameEn;
+
+                // 비디오 URL 생성
+                String videoFileName = "minor_arcana_" + suitNameLower + "_" + numberVideo + ".webm";
+                String videoUrl = "https://j13a601.p.ssafy.io/media/" + videoFileName;
+
+                cards.add(new TaroCard(cardId++, nameKo, nameEn, suit, number,
+                    "https://example.com/card-" + suit.toLowerCase() + "-" + number.toLowerCase() + ".jpg", videoUrl,
                     "정방향: " + nameKo + "의 긍정적 에너지", "역방향: " + nameKo + "의 도전과 성장"));
             }
         }
@@ -337,28 +358,34 @@ public class MockDataService {
         return cards;
     }
 
-    private List<TaroResultResponse.DrawnCard> drawRandomCards() {
+    public TaroReadingResponse generateTaroReading(String sessionId) {
+        // TODO: 추후 제거 예정 - 현재는 더미에서 그냥 리턴
+        // if (!sessionExists(sessionId)) {
+        //     return null;
+        // }
+
         Random random = new Random();
-        List<TaroResultResponse.DrawnCard> drawnCards = new ArrayList<>();
+        List<TaroReadingResponse.DrawnCard> drawnCards = new ArrayList<>();
         Set<Integer> usedCards = new HashSet<>();
-        
+
         for (int position = 1; position <= 3; position++) {
             int cardIndex;
             do {
                 cardIndex = random.nextInt(taroCards.size());
             } while (usedCards.contains(cardIndex));
-            
+
             usedCards.add(cardIndex);
-            Card card = taroCards.get(cardIndex);
+            TaroCard card = taroCards.get(cardIndex);
             String orientation = random.nextBoolean() ? "upright" : "reversed";
-            String meaning = orientation.equals("upright") ? card.meaningUpright : card.meaningReversed;
-            
-            drawnCards.add(new TaroResultResponse.DrawnCard(
-                position, card.id, card.nameKo, card.nameEn, orientation, card.imageUrl, meaning
+            String meaning = orientation.equals("upright") ? card.getMeaningUpright() : card.getMeaningReversed();
+
+            drawnCards.add(new TaroReadingResponse.DrawnCard(
+                position, card.getId(), card.getNameKo(), card.getNameEn(),
+                orientation, card.getImageUrl(), card.getVideoUrl(), meaning
             ));
         }
-        
-        return drawnCards;
+
+        return new TaroReadingResponse(sessionId, drawnCards);
     }
 
     private String generateInterpretation(String categoryCode, String topicCode, String questionText, 
@@ -412,33 +439,10 @@ public class MockDataService {
     private static class SessionData {
         String sessionId;
         String nickname;
-        
+
         SessionData(String sessionId, String nickname) {
             this.sessionId = sessionId;
             this.nickname = nickname;
-        }
-    }
-
-    private static class Card {
-        int id;
-        String nameKo;
-        String nameEn;
-        String suit;
-        String number;
-        String imageUrl;
-        String meaningUpright;
-        String meaningReversed;
-        
-        Card(int id, String nameKo, String nameEn, String suit, String number,
-             String imageUrl, String meaningUpright, String meaningReversed) {
-            this.id = id;
-            this.nameKo = nameKo;
-            this.nameEn = nameEn;
-            this.suit = suit;
-            this.number = number;
-            this.imageUrl = imageUrl;
-            this.meaningUpright = meaningUpright;
-            this.meaningReversed = meaningReversed;
         }
     }
 }
