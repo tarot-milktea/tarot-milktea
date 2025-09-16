@@ -26,7 +26,6 @@ pipeline {
     stage('Ensure MySQL is Running') {
       steps {
         sh '''
-          # mysql-prod 컨테이너가 떠있는지 체크
           if ! docker ps --format '{{.Names}}' | grep -q '^mysql-prod$'; then
             echo "[INFO] Starting MySQL via compose..."
             $COMPOSE_CMD up -d mysql
@@ -58,9 +57,7 @@ pipeline {
     stage('Build & Deploy Backend') {
       steps {
         sh '''
-          # 백엔드 서비스 빌드/배포
           $COMPOSE_CMD up -d --build $SERVICE_NAME
-          # 상태 확인
           $COMPOSE_CMD ps
         '''
       }
@@ -72,7 +69,15 @@ pipeline {
           timeout(time: 3, unit: 'MINUTES') {
             waitUntil {
               script {
-                def rc = sh(script: 'curl -fsS http://localhost:8080/actuator/health | grep -q UP', returnStatus: true)
+                def rc = sh(
+                  script: '''
+                    set -e
+                    HOST_IP=$(ip -4 route show default | awk '{print $3}')
+                    echo "[INFO] Checking health at http://$HOST_IP:8080/actuator/health"
+                    curl -fsS http://$HOST_IP:8080/actuator/health | grep -q UP
+                  ''',
+                  returnStatus: true
+                )
                 return rc == 0
               }
             }
@@ -85,8 +90,6 @@ pipeline {
       steps {
         sh '''
           echo "[INFO] DB schema migration handled by app (JPA/Flyway)."
-          # 필요 시 수동 SQL:
-          # docker exec mysql-prod mysql -utaro -ptaro1234 taro < ./sql/migration.sql
         '''
       }
     }
