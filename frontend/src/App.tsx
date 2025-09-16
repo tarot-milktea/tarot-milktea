@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import OnboardingFlow from './components/OnboardingFlow';
 import ResultPage from './pages/ResultPage';
+import ErrorPage from './pages/ErrorPage';
 
 function App() {
   return (
@@ -11,6 +12,9 @@ function App() {
         
         {/* 결과 페이지만 라우팅 */}
         <Route path="/result/:resultId" element={<ResultPage />} />
+
+        {/* 에러 페이지 */}
+        <Route path="*" element={<ErrorPage />} />
       </Routes>
     </BrowserRouter>
   );
