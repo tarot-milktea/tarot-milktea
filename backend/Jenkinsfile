@@ -2,18 +2,15 @@ pipeline {
   agent any
 
   environment {
-    SERVICE_NAME   = "spring-app"      // docker-compose 서비스 이름
-    CONTAINER_NAME = "backend-app"     // compose에서 만들어질 컨테이너 이름
-    COMPOSE_FILE   = "./docker-compose.yml"
-    COMPOSE_CMD    = "docker compose -f ./docker-compose.yml"
+    SERVICE_NAME   = "spring-app"                      // compose 서비스명
+    CONTAINER_NAME = "backend-app"                     // 컨테이너명
+    COMPOSE_FILE   = "${WORKSPACE}/backend/docker-compose.yml"
+    COMPOSE_CMD    = "docker compose -f ${WORKSPACE}/backend/docker-compose.yml"
   }
 
   stages {
     stage('Checkout') {
-      steps {
-        // Job 설정에서 Credentials가 연결된 scm을 재사용
-        checkout scm
-      }
+      steps { checkout scm }
     }
 
     stage('Sanity: docker reachable') {
@@ -21,6 +18,7 @@ pipeline {
         sh '''
           docker ps
           docker compose version
+          test -f "$COMPOSE_FILE" && echo "[OK] compose file found: $COMPOSE_FILE" || (echo "[ERR] compose file missing"; exit 14)
         '''
       }
     }
@@ -51,7 +49,6 @@ pipeline {
     stage('Stop Backend Only') {
       steps {
         sh '''
-          # 기존 백엔드 컨테이너만 정리
           docker stop $CONTAINER_NAME || true
           docker rm   $CONTAINER_NAME || true
         '''
@@ -63,7 +60,6 @@ pipeline {
         sh '''
           # 백엔드 서비스 빌드/배포
           $COMPOSE_CMD up -d --build $SERVICE_NAME
-
           # 상태 확인
           $COMPOSE_CMD ps
         '''
@@ -107,8 +103,6 @@ pipeline {
       echo 'Backend deployment failed!'
       sh '''
         $COMPOSE_CMD logs $SERVICE_NAME || true
-      '''
-      sh '''
         docker logs --tail=200 $CONTAINER_NAME || true
       '''
     }
