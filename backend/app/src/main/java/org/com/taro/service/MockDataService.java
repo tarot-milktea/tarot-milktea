@@ -4,6 +4,11 @@ import org.com.taro.dto.TopicResponse;
 import org.com.taro.dto.ReaderResponse;
 import org.com.taro.dto.TaroResultResponse;
 import org.com.taro.dto.SubmitRequest;
+import org.com.taro.dto.TaroCard;
+import org.com.taro.dto.TaroReadingResponse;
+import org.com.taro.exception.SessionNotFoundException;
+import org.com.taro.exception.TaroServiceException;
+import org.com.taro.constants.ValidationConstants;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -15,7 +20,7 @@ public class MockDataService {
     private final Map<String, SessionData> sessions = new ConcurrentHashMap<>();
     private final List<TopicResponse.Category> categories;
     private final List<ReaderResponse.Reader> readers;
-    private final List<Card> taroCards;
+    private final List<TaroCard> taroCards;
     
     public MockDataService() {
         this.categories = initializeCategories();
@@ -31,19 +36,23 @@ public class MockDataService {
     }
 
     private String generateSessionId() {
-        String chars = "abcdefghijklmnopqrstuvwxyz0123456789";
         Random random = new Random();
         StringBuilder sessionId = new StringBuilder();
-        
-        for (int i = 0; i < 7; i++) {
-            sessionId.append(chars.charAt(random.nextInt(chars.length())));
-        }
-        
-        // 중복 확인 및 재생성
-        if (sessions.containsKey(sessionId.toString())) {
-            return generateSessionId();
-        }
-        
+        int attempts = 0;
+        final int maxAttempts = 1000; // Prevent infinite loop
+
+        do {
+            sessionId.setLength(0); // Clear previous attempt
+            for (int i = 0; i < ValidationConstants.SESSION_ID_LENGTH; i++) {
+                sessionId.append(ValidationConstants.SESSION_ID_CHARS.charAt(random.nextInt(ValidationConstants.SESSION_ID_CHARS.length())));
+            }
+            attempts++;
+
+            if (attempts > maxAttempts) {
+                throw new TaroServiceException("Unable to generate unique session ID after " + maxAttempts + " attempts");
+            }
+        } while (sessions.containsKey(sessionId.toString()));
+
         return sessionId.toString();
     }
 
@@ -59,19 +68,23 @@ public class MockDataService {
         return readers;
     }
 
-    public TaroResultResponse generateTaroResult(String sessionId, String categoryCode, String topicCode, 
+    public TaroResultResponse generateTaroResult(String sessionId, String categoryCode, String topicCode,
                                                  String questionText, String readerType, List<SubmitRequest.CardSelection> selectedCards) {
         if (!sessionExists(sessionId)) {
-            return null;
+            throw new SessionNotFoundException(sessionId);
         }
 
-        List<TaroResultResponse.DrawnCard> drawnCards = createDrawnCardsFromSelection(selectedCards);
-        String interpretation = generateInterpretation(categoryCode, topicCode, questionText, drawnCards, readerType);
-        String readerMessage = generateReaderMessage(readerType);
-        int fortuneScore = generateFortuneScore();
-        String resultImageUrl = "https://example.com/result-" + sessionId + ".jpg";
+        try {
+            List<TaroResultResponse.DrawnCard> drawnCards = createDrawnCardsFromSelection(selectedCards);
+            String interpretation = generateInterpretation(categoryCode, topicCode, questionText, drawnCards, readerType);
+            String readerMessage = generateReaderMessage(readerType);
+            int fortuneScore = generateFortuneScore();
+            String resultImageUrl = "https://example.com/result-" + sessionId + ".jpg";
 
-        return new TaroResultResponse(sessionId, drawnCards, interpretation, readerMessage, fortuneScore, resultImageUrl);
+            return new TaroResultResponse(sessionId, drawnCards, interpretation, readerMessage, fortuneScore, resultImageUrl);
+        } catch (Exception e) {
+            throw new TaroServiceException("Failed to generate tarot result for session: " + sessionId, e);
+        }
     }
 
     private List<TaroResultResponse.DrawnCard> createDrawnCardsFromSelection(List<SubmitRequest.CardSelection> selectedCards) {
@@ -79,19 +92,19 @@ public class MockDataService {
         Random random = new Random();
         
         for (SubmitRequest.CardSelection selection : selectedCards) {
-            Card card = findCard(selection.getSuit(), selection.getNumber());
+            TaroCard card = findCard(selection.getSuit(), selection.getNumber());
             if (card != null) {
                 String orientation = selection.getOrientation();
                 if (orientation == null) {
                     // orientation이 지정되지 않은 경우 랜덤으로 결정
-                    orientation = random.nextBoolean() ? "upright" : "reversed";
+                    orientation = random.nextBoolean() ? ValidationConstants.ORIENTATION_UPRIGHT : ValidationConstants.ORIENTATION_REVERSED;
                 }
-                
-                String meaning = "upright".equals(orientation) ? card.meaningUpright : card.meaningReversed;
-                
+
+                String meaning = ValidationConstants.ORIENTATION_UPRIGHT.equals(orientation) ? card.getMeaningUpright() : card.getMeaningReversed();
+
                 drawnCards.add(new TaroResultResponse.DrawnCard(
-                    selection.getPosition(), card.id, card.nameKo, card.nameEn, 
-                    orientation, card.imageUrl, meaning
+                    selection.getPosition(), card.getId(), card.getNameKo(), card.getNameEn(),
+                    orientation, card.getImageUrl(), meaning
                 ));
             }
         }
@@ -103,38 +116,41 @@ public class MockDataService {
     }
 
     public boolean isValidCategoryCode(String categoryCode) {
-        return "LOVE".equals(categoryCode) || "JOB".equals(categoryCode) || "MONEY".equals(categoryCode);
+        return ValidationConstants.CATEGORY_LOVE.equals(categoryCode) ||
+               ValidationConstants.CATEGORY_JOB.equals(categoryCode) ||
+               ValidationConstants.CATEGORY_MONEY.equals(categoryCode);
     }
 
     public boolean isValidTopicCode(String categoryCode, String topicCode) {
-        if ("LOVE".equals(categoryCode)) {
+        if (ValidationConstants.CATEGORY_LOVE.equals(categoryCode)) {
             return Arrays.asList("REUNION", "NEW_LOVE", "CURRENT_RELATIONSHIP", "MARRIAGE", "BREAKUP").contains(topicCode);
-        } else if ("JOB".equals(categoryCode)) {
+        } else if (ValidationConstants.CATEGORY_JOB.equals(categoryCode)) {
             return Arrays.asList("JOB_CHANGE", "PROMOTION", "NEW_JOB", "CAREER_PATH", "WORKPLACE").contains(topicCode);
-        } else if ("MONEY".equals(categoryCode)) {
+        } else if (ValidationConstants.CATEGORY_MONEY.equals(categoryCode)) {
             return Arrays.asList("INVESTMENT", "SAVINGS", "DEBT", "INCOME", "BUSINESS").contains(topicCode);
         }
         return false;
     }
 
     public boolean isValidCard(String suit, String number) {
-        if ("MAJOR".equals(suit)) {
+        if (ValidationConstants.SUIT_MAJOR.equals(suit)) {
             try {
                 int num = Integer.parseInt(number);
                 return num >= 1 && num <= 22;
             } catch (NumberFormatException e) {
                 return false;
             }
-        } else if (Arrays.asList("WANDS", "CUPS", "SWORDS", "PENTACLES").contains(suit)) {
-            return Arrays.asList("ACE", "2", "3", "4", "5", "6", "7", "8", "9", "10", 
+        } else if (Arrays.asList(ValidationConstants.SUIT_WANDS, ValidationConstants.SUIT_CUPS,
+                                ValidationConstants.SUIT_SWORDS, ValidationConstants.SUIT_PENTACLES).contains(suit)) {
+            return Arrays.asList("ACE", "2", "3", "4", "5", "6", "7", "8", "9", "10",
                                 "PAGE", "KNIGHT", "QUEEN", "KING").contains(number);
         }
         return false;
     }
 
-    public Card findCard(String suit, String number) {
+    public TaroCard findCard(String suit, String number) {
         return taroCards.stream()
-                .filter(card -> suit.equals(card.suit) && number.equals(card.number))
+                .filter(card -> suit.equals(card.getSuit()) && number.equals(card.getNumber()))
                 .findFirst()
                 .orElse(null);
     }
@@ -286,10 +302,10 @@ public class MockDataService {
         );
     }
 
-    private List<Card> initializeTaroCards() {
-        List<Card> cards = new ArrayList<>();
+    private List<TaroCard> initializeTaroCards() {
+        List<TaroCard> cards = new ArrayList<>();
         int cardId = 1;
-        
+
         // 메이저 아르카나 (22장)
         String[] majorArcana = {
             "바보", "마법사", "여교황", "여황제", "황제", "교황", "연인", "전차",
@@ -302,10 +318,21 @@ public class MockDataService {
             "Wheel of Fortune", "Justice", "The Hanged Man", "Death", "Temperance",
             "The Devil", "The Tower", "The Star", "The Moon", "The Sun", "Judgement", "The World"
         };
-        
+        String[] majorArcanaVideoFiles = {
+            "major_arcana_fool.webm", "major_arcana_magician.webm", "major_arcana_priestess.webm",
+            "major_arcana_empress.webm", "major_arcana_emperor.webm", "major_arcana_hierophant.webm",
+            "major_arcana_lovers.webm", "major_arcana_chariot.webm", "major_arcana_strength.webm",
+            "major_arcana_hermit.webm", "major_arcana_fortune.webm", "major_arcana_justice.webm",
+            "major_arcana_hanged.webm", "major_arcana_death.webm", "major_arcana_temperance.webm",
+            "major_arcana_devil.webm", "major_arcana_tower.webm", "major_arcana_star.webm",
+            "major_arcana_moon.webm", "major_arcana_sun.webm", "major_arcana_judgement.webm",
+            "major_arcana_world.webm"
+        };
+
         for (int i = 0; i < majorArcana.length; i++) {
-            cards.add(new Card(cardId++, majorArcana[i], majorArcanaEn[i], "MAJOR", String.valueOf(i + 1),
-                "https://example.com/card-major-" + (i + 1) + ".jpg",
+            String videoUrl = ValidationConstants.VIDEO_BASE_URL + majorArcanaVideoFiles[i];
+            cards.add(new TaroCard(cardId++, majorArcana[i], majorArcanaEn[i], ValidationConstants.SUIT_MAJOR, String.valueOf(i + 1),
+                "https://example.com/card-major-" + (i + 1) + ".jpg", videoUrl,
                 "정방향: " + majorArcana[i] + "의 긍정적 의미", "역방향: " + majorArcana[i] + "의 도전적 의미"));
         }
         
@@ -313,23 +340,31 @@ public class MockDataService {
         String[] suits = {"WANDS", "CUPS", "SWORDS", "PENTACLES"};
         String[] suitNamesKo = {"완드", "컵", "소드", "펜타클"};
         String[] suitNamesEn = {"Wands", "Cups", "Swords", "Pentacles"};
+        String[] suitNamesLower = {"wands", "cups", "swords", "pentacles"};
         String[] numbers = {"ACE", "2", "3", "4", "5", "6", "7", "8", "9", "10", "PAGE", "KNIGHT", "QUEEN", "KING"};
         String[] numbersKo = {"에이스", "2", "3", "4", "5", "6", "7", "8", "9", "10", "페이지", "나이트", "퀸", "킹"};
-        
+        String[] numbersVideo = {"ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "page", "knight", "queen", "king"};
+
         for (int suitIndex = 0; suitIndex < suits.length; suitIndex++) {
             String suit = suits[suitIndex];
             String suitNameKo = suitNamesKo[suitIndex];
             String suitNameEn = suitNamesEn[suitIndex];
-            
+            String suitNameLower = suitNamesLower[suitIndex];
+
             for (int numIndex = 0; numIndex < numbers.length; numIndex++) {
                 String number = numbers[numIndex];
                 String numberKo = numbersKo[numIndex];
-                
+                String numberVideo = numbersVideo[numIndex];
+
                 String nameKo = suitNameKo + " " + numberKo;
-                String nameEn = number + " of " + suitNameEn;
-                
-                cards.add(new Card(cardId++, nameKo, nameEn, suit, number,
-                    "https://example.com/card-" + suit.toLowerCase() + "-" + number.toLowerCase() + ".jpg",
+                String nameEn = numberKo.equals("킹") ? "King of " + suitNameEn : number + " of " + suitNameEn;
+
+                // 비디오 URL 생성
+                String videoFileName = "minor_arcana_" + suitNameLower + "_" + numberVideo + ".webm";
+                String videoUrl = ValidationConstants.VIDEO_BASE_URL + videoFileName;
+
+                cards.add(new TaroCard(cardId++, nameKo, nameEn, suit, number,
+                    "https://example.com/card-" + suit.toLowerCase() + "-" + number.toLowerCase() + ".jpg", videoUrl,
                     "정방향: " + nameKo + "의 긍정적 에너지", "역방향: " + nameKo + "의 도전과 성장"));
             }
         }
@@ -337,28 +372,37 @@ public class MockDataService {
         return cards;
     }
 
-    private List<TaroResultResponse.DrawnCard> drawRandomCards() {
-        Random random = new Random();
-        List<TaroResultResponse.DrawnCard> drawnCards = new ArrayList<>();
-        Set<Integer> usedCards = new HashSet<>();
-        
-        for (int position = 1; position <= 3; position++) {
-            int cardIndex;
-            do {
-                cardIndex = random.nextInt(taroCards.size());
-            } while (usedCards.contains(cardIndex));
-            
-            usedCards.add(cardIndex);
-            Card card = taroCards.get(cardIndex);
-            String orientation = random.nextBoolean() ? "upright" : "reversed";
-            String meaning = orientation.equals("upright") ? card.meaningUpright : card.meaningReversed;
-            
-            drawnCards.add(new TaroResultResponse.DrawnCard(
-                position, card.id, card.nameKo, card.nameEn, orientation, card.imageUrl, meaning
-            ));
+    public TaroReadingResponse generateTaroReading(String sessionId) {
+        if (!sessionExists(sessionId)) {
+            throw new SessionNotFoundException(sessionId);
         }
-        
-        return drawnCards;
+
+        try {
+            Random random = new Random();
+            List<TaroReadingResponse.DrawnCard> drawnCards = new ArrayList<>();
+            Set<Integer> usedCards = new HashSet<>();
+
+            for (int position = ValidationConstants.PAST_POSITION; position <= ValidationConstants.FUTURE_POSITION; position++) {
+                int cardIndex;
+                do {
+                    cardIndex = random.nextInt(taroCards.size());
+                } while (usedCards.contains(cardIndex));
+
+                usedCards.add(cardIndex);
+                TaroCard card = taroCards.get(cardIndex);
+                String orientation = random.nextBoolean() ? ValidationConstants.ORIENTATION_UPRIGHT : ValidationConstants.ORIENTATION_REVERSED;
+                String meaning = ValidationConstants.ORIENTATION_UPRIGHT.equals(orientation) ? card.getMeaningUpright() : card.getMeaningReversed();
+
+                drawnCards.add(new TaroReadingResponse.DrawnCard(
+                    position, card.getId(), card.getNameKo(), card.getNameEn(),
+                    orientation, card.getImageUrl(), card.getVideoUrl(), meaning
+                ));
+            }
+
+            return new TaroReadingResponse(sessionId, drawnCards);
+        } catch (Exception e) {
+            throw new TaroServiceException("Failed to generate tarot reading for session: " + sessionId, e);
+        }
     }
 
     private String generateInterpretation(String categoryCode, String topicCode, String questionText, 
@@ -406,39 +450,32 @@ public class MockDataService {
 
     private int generateFortuneScore() {
         Random random = new Random();
-        return 60 + random.nextInt(40); // 60-99 사이의 점수
+        return ValidationConstants.MIN_FORTUNE_SCORE + random.nextInt(
+            ValidationConstants.MAX_FORTUNE_SCORE - ValidationConstants.MIN_FORTUNE_SCORE + 1
+        );
     }
 
     private static class SessionData {
-        String sessionId;
-        String nickname;
-        
+        final String sessionId;
+        final String nickname;
+        final long createdAt;
+
         SessionData(String sessionId, String nickname) {
             this.sessionId = sessionId;
             this.nickname = nickname;
+            this.createdAt = System.currentTimeMillis();
         }
-    }
 
-    private static class Card {
-        int id;
-        String nameKo;
-        String nameEn;
-        String suit;
-        String number;
-        String imageUrl;
-        String meaningUpright;
-        String meaningReversed;
-        
-        Card(int id, String nameKo, String nameEn, String suit, String number,
-             String imageUrl, String meaningUpright, String meaningReversed) {
-            this.id = id;
-            this.nameKo = nameKo;
-            this.nameEn = nameEn;
-            this.suit = suit;
-            this.number = number;
-            this.imageUrl = imageUrl;
-            this.meaningUpright = meaningUpright;
-            this.meaningReversed = meaningReversed;
+        public String getSessionId() {
+            return sessionId;
+        }
+
+        public String getNickname() {
+            return nickname;
+        }
+
+        public long getCreatedAt() {
+            return createdAt;
         }
     }
 }
