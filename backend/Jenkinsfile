@@ -5,13 +5,13 @@ pipeline {
     SERVICE_NAME   = "spring-app"      // docker-compose 서비스 이름
     CONTAINER_NAME = "backend-app"     // compose에서 만들어질 컨테이너 이름
     COMPOSE_FILE   = "./docker-compose.yml"
-    COMPOSE_CMD    = "docker compose -f ${COMPOSE_FILE}"
+    COMPOSE_CMD    = "docker compose -f ./docker-compose.yml"
   }
 
   stages {
     stage('Checkout') {
       steps {
-        // Job 설정에서 Credentials가 연결된 scm을 재사용 (이중 체크아웃/무자격증명 방지)
+        // Job 설정에서 Credentials가 연결된 scm을 재사용
         checkout scm
       }
     }
@@ -27,16 +27,15 @@ pipeline {
 
     stage('Ensure MySQL is Running') {
       steps {
-        sh """
+        sh '''
           # mysql-prod 컨테이너가 떠있는지 체크
           if ! docker ps --format '{{.Names}}' | grep -q '^mysql-prod$'; then
             echo "[INFO] Starting MySQL via compose..."
-            ${COMPOSE_CMD} up -d mysql
+            $COMPOSE_CMD up -d mysql
 
             echo "[INFO] Waiting for MySQL to be healthy..."
-            # healthcheck가 있으니 최대 90초 정도 대기
             for i in {1..18}; do
-              if [ "\$(docker inspect -f '{{.State.Health.Status}}' mysql-prod 2>/dev/null)" = "healthy" ]; then
+              if [ "$(docker inspect -f '{{.State.Health.Status}}' mysql-prod 2>/dev/null)" = "healthy" ]; then
                 echo "[INFO] MySQL is healthy."
                 break
               fi
@@ -45,29 +44,29 @@ pipeline {
           else
             echo "[INFO] MySQL is already running."
           fi
-        """
+        '''
       }
     }
 
     stage('Stop Backend Only') {
       steps {
-        sh """
-          # 기존 백엔드 컨테이너만 안전하게 정리 (없어도 오류 없이 통과)
-          docker stop ${CONTAINER_NAME} || true
-          docker rm   ${CONTAINER_NAME} || true
-        """
+        sh '''
+          # 기존 백엔드 컨테이너만 정리
+          docker stop $CONTAINER_NAME || true
+          docker rm   $CONTAINER_NAME || true
+        '''
       }
     }
 
     stage('Build & Deploy Backend') {
       steps {
-        sh """
-          # 백엔드 서비스만 빌드/배포
-          ${COMPOSE_CMD} up -d --build ${SERVICE_NAME}
+        sh '''
+          # 백엔드 서비스 빌드/배포
+          $COMPOSE_CMD up -d --build $SERVICE_NAME
 
-          # 상태 확인 (compose v2)
-          ${COMPOSE_CMD} ps
-        """
+          # 상태 확인
+          $COMPOSE_CMD ps
+        '''
       }
     }
 
@@ -77,7 +76,6 @@ pipeline {
           timeout(time: 3, unit: 'MINUTES') {
             waitUntil {
               script {
-                // 애플리케이션이 200 OK/UP를 줄 때까지 대기
                 def rc = sh(script: 'curl -fsS http://localhost:8080/actuator/health | grep -q UP', returnStatus: true)
                 return rc == 0
               }
@@ -89,11 +87,11 @@ pipeline {
 
     stage('DB Schema Update') {
       steps {
-        sh """
+        sh '''
           echo "[INFO] DB schema migration handled by app (JPA/Flyway)."
           # 필요 시 수동 SQL:
           # docker exec mysql-prod mysql -utaro -ptaro1234 taro < ./sql/migration.sql
-        """
+        '''
       }
     }
   }
@@ -101,12 +99,18 @@ pipeline {
   post {
     success {
       echo 'Backend deployment successful! Database preserved.'
-      sh '${COMPOSE_CMD} logs --tail=100 ${SERVICE_NAME} || true'
+      sh '''
+        $COMPOSE_CMD logs --tail=100 $SERVICE_NAME || true
+      '''
     }
     failure {
       echo 'Backend deployment failed!'
-      sh '${COMPOSE_CMD} logs ${SERVICE_NAME} || true'
-      sh 'docker logs --tail=200 ${CONTAINER_NAME} || true'
+      sh '''
+        $COMPOSE_CMD logs $SERVICE_NAME || true
+      '''
+      sh '''
+        docker logs --tail=200 $CONTAINER_NAME || true
+      '''
     }
   }
 }
