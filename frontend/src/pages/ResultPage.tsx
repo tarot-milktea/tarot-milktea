@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import { useColors } from '../hooks/useColors';
 import { useCardStore } from '../store/cardStore';
+import { useSessionStore } from '../store/sessionStore';
 import { showToast } from '../components/common/Toast';
 import ThemeToggle from '../components/etc/ThemeToggle';
 import CardVideo from '../components/TarotCard/CardVideo';
@@ -25,6 +26,7 @@ function ResultPage() {
   const navigate = useNavigate();
   const { getColor } = useColors();
   const { resetSelection } = useCardStore();
+  const { clearSession } = useSessionStore();
   const [result, setResult] = useState<TarotResult | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -73,6 +75,13 @@ function ResultPage() {
     showToast.info('영상 다운로드 기능은 준비중입니다. 🚧');
   };
 
+  const handleRestartTarot = () => {
+    // 모든 상태 초기화
+    resetSelection();    // 카드 스토어 초기화
+    clearSession();      // 세션 스토어 초기화 (sessionStorage 포함)
+    navigate('/');       // 온보딩1페이지로 이동
+  };
+
   if (loading) {
     return (
       <LoadingContainer>
@@ -88,10 +97,7 @@ function ResultPage() {
         <Button
           variant="primary"
           size="large"
-          onClick={() => {
-            resetSelection(); // 카드 선택 상태 초기화
-            navigate('/');
-          }}
+          onClick={handleRestartTarot}
         >
           새로운 타로 보기
         </Button>
@@ -150,13 +156,10 @@ function ResultPage() {
 
         {/* 액션 버튼들 */}
         <ButtonGroup gap="large" align="center">
-          <Button 
+          <Button
             variant="primary"
             size="large"
-            onClick={() => {
-              resetSelection(); // 카드 선택 상태 초기화
-              navigate('/');
-            }}
+            onClick={handleRestartTarot}
           >
             다시 타로보기
           </Button>

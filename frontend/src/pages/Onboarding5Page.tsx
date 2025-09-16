@@ -1,5 +1,7 @@
 import styled from '@emotion/styled';
 import { useColors } from '../hooks/useColors';
+import { useDataStore } from '../store/dataStore';
+import { useSessionStore } from '../store/sessionStore';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
 
@@ -10,24 +12,12 @@ interface Onboarding5PageProps {
 
 function Onboarding5Page({ onNext, onPrev }: Onboarding5PageProps) {
   const { styles: globalStyles, getColor } = useColors();
+  const { readers, isLoading, error } = useDataStore();
+  const { selectedReader, setSelectedReader } = useSessionStore();
 
-  const characters = [
-    {
-      type: 'T',
-      title: '냉정한 분석가',
-      description: '완전 냉정하고 현실적인 어투로 객관적인 분석을 제공합니다'
-    },
-    {
-      type: 'F', 
-      title: '감성적 상담사',
-      description: '완전 감성적이고 공감을 잘해주는 따뜻한 어투로 위로와 격려를 전합니다'
-    },
-    {
-      type: 'TF',
-      title: '균형잡힌 조언자', 
-      description: '이성과 감성의 균형을 맞춘 조화로운 해석을 제공합니다'
-    }
-  ];
+  const handleReaderSelect = (reader: any) => {
+    setSelectedReader(reader);
+  };
 
   return (
     <Container style={globalStyles.container}>
@@ -49,45 +39,71 @@ function Onboarding5Page({ onNext, onPrev }: Onboarding5PageProps) {
         어떤 스타일의 해석을 받고 싶으신가요?
       </Description>
 
-      <CharacterGrid>
-        {characters.map((character, index) => (
-          <CharacterCard
-            key={index}
-            style={{
-              ...globalStyles.card,
-              border: `2px solid ${getColor('primary', '700')}`
-            }}
-          >
-            <CharacterAvatar 
+      {/* 로딩 상태 */}
+      {isLoading && (
+        <LoadingText style={{ color: getColor('primary', '300') }}>
+          리더 정보를 불러오는 중...
+        </LoadingText>
+      )}
+
+      {/* 에러 상태 */}
+      {error && (
+        <ErrorText style={{ color: getColor('error', '400') }}>
+          리더 정보를 불러오는데 실패했습니다: {error}
+        </ErrorText>
+      )}
+
+      {/* 리더 목록 */}
+      {!isLoading && !error && (
+        <CharacterGrid>
+          {readers.map((reader) => (
+            <CharacterCard
+              key={reader.type}
+              onClick={() => handleReaderSelect(reader)}
+              isSelected={selectedReader?.type === reader.type}
               style={{
-                background: `linear-gradient(135deg, ${getColor('accent', '400')} 0%, ${getColor('accent', '600')} 100%)`
+                ...globalStyles.card,
+                border: `2px solid ${
+                  selectedReader?.type === reader.type
+                    ? getColor('accent', '400')
+                    : getColor('primary', '700')
+                }`,
+                backgroundColor: selectedReader?.type === reader.type
+                  ? getColor('accent', '900')
+                  : 'transparent'
               }}
             >
-              {character.type}
-            </CharacterAvatar>
-            
-            <CharacterInfo>
-              <CharacterTitle 
+              <CharacterAvatar
                 style={{
-                  ...globalStyles.subheading,
-                  color: getColor('accent', '300')
+                  background: `linear-gradient(135deg, ${getColor('accent', '400')} 0%, ${getColor('accent', '600')} 100%)`
                 }}
               >
-                {character.title}
-              </CharacterTitle>
-              
-              <CharacterDescription 
-                style={{
-                  ...globalStyles.body,
-                  color: getColor('primary', '400')
-                }}
-              >
-                {character.description}
-              </CharacterDescription>
-            </CharacterInfo>
-          </CharacterCard>
-        ))}
-      </CharacterGrid>
+                {reader.type}
+              </CharacterAvatar>
+
+              <CharacterInfo>
+                <CharacterTitle
+                  style={{
+                    ...globalStyles.subheading,
+                    color: getColor('accent', '300')
+                  }}
+                >
+                  {reader.name}
+                </CharacterTitle>
+
+                <CharacterDescription
+                  style={{
+                    ...globalStyles.body,
+                    color: getColor('primary', '400')
+                  }}
+                >
+                  {reader.description}
+                </CharacterDescription>
+              </CharacterInfo>
+            </CharacterCard>
+          ))}
+        </CharacterGrid>
+      )}
 
       <ButtonGroup gap="large">
         <Button 
@@ -97,10 +113,11 @@ function Onboarding5Page({ onNext, onPrev }: Onboarding5PageProps) {
         >
           이전
         </Button>
-        <Button 
+        <Button
           variant="primary"
           size="large"
           onClick={onNext}
+          disabled={!selectedReader}
         >
           다음
         </Button>
@@ -138,7 +155,7 @@ const CharacterGrid = styled.div`
   margin-bottom: 40px;
 `;
 
-const CharacterCard = styled.div`
+const CharacterCard = styled.div<{ isSelected?: boolean }>`
   padding: 30px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -147,7 +164,7 @@ const CharacterCard = styled.div`
   align-items: center;
   text-align: center;
   border-radius: 12px;
-  
+
   &:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
@@ -180,6 +197,18 @@ const CharacterDescription = styled.p`
   font-size: 1rem;
   line-height: 1.6;
   margin: 0;
+`;
+
+const LoadingText = styled.p`
+  text-align: center;
+  padding: 40px;
+  font-size: 16px;
+`;
+
+const ErrorText = styled.p`
+  text-align: center;
+  padding: 40px;
+  font-size: 16px;
 `;
 
 export default Onboarding5Page;

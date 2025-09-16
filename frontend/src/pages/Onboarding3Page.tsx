@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import styled from '@emotion/styled';
 import { useColors } from '../hooks/useColors';
+import { useSessionStore } from '../store/sessionStore';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
 
@@ -10,9 +12,11 @@ interface Onboarding3PageProps {
 
 function Onboarding3Page({ onNext, onPrev }: Onboarding3PageProps) {
   const { styles: globalStyles, getColor } = useColors();
+  const { selectedCategory, selectedTopic, setSelectedTopic } = useSessionStore();
 
-  const selectedTopic = '연애';
-  const subTopics = ['현재 인연', '과거 인연', '미래 인연', '짝사랑', '이별', '복합'];
+  const handleTopicSelect = (topic: any) => {
+    setSelectedTopic(topic);
+  };
 
   return (
     <Container style={globalStyles.container}>
@@ -31,27 +35,37 @@ function Onboarding3Page({ onNext, onPrev }: Onboarding3PageProps) {
           background: `linear-gradient(135deg, ${getColor('accent', '400')}20 0%, ${getColor('accent', '300')}10 100%)`
         }}
       >
-        <SelectedTopicText 
+        <SelectedTopicText
           style={{
             ...globalStyles.body,
             color: getColor('accent', '300')
           }}
         >
-          선택된 주제: <strong>{selectedTopic}</strong>
+          선택된 주제: <strong>{selectedCategory?.name || '없음'}</strong>
         </SelectedTopicText>
       </SelectedTopic>
 
       <SubtopicGrid>
-        {subTopics.map((subTopic, index) => (
+        {selectedCategory?.topics.map((topic) => (
           <SubtopicButton
-            key={index}
+            key={topic.code}
+            onClick={() => handleTopicSelect(topic)}
+            isSelected={selectedTopic?.code === topic.code}
             style={{
               ...globalStyles.card,
-              border: `2px solid ${getColor('primary', '700')}`,
+              border: `2px solid ${
+                selectedTopic?.code === topic.code
+                  ? getColor('accent', '400')
+                  : getColor('primary', '700')
+              }`,
+              backgroundColor: selectedTopic?.code === topic.code
+                ? getColor('accent', '900')
+                : 'transparent',
               color: getColor('primary', '200')
             }}
           >
-            {subTopic}
+            <TopicTitle>{topic.name}</TopicTitle>
+            <TopicDescription>{topic.description}</TopicDescription>
           </SubtopicButton>
         ))}
       </SubtopicGrid>
@@ -64,10 +78,11 @@ function Onboarding3Page({ onNext, onPrev }: Onboarding3PageProps) {
         >
           이전
         </Button>
-        <Button 
+        <Button
           variant="primary"
           size="large"
           onClick={onNext}
+          disabled={!selectedTopic}
         >
           다음
         </Button>
@@ -110,18 +125,30 @@ const SubtopicGrid = styled.div`
   margin-bottom: 40px;
 `;
 
-const SubtopicButton = styled.button`
+const SubtopicButton = styled.button<{ isSelected?: boolean }>`
   padding: 30px 20px;
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 1.1rem;
   background: none;
   border-radius: 12px;
-  
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
+`;
+
+const TopicTitle = styled.h3`
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+`;
+
+const TopicDescription = styled.p`
+  font-size: 14px;
+  opacity: 0.8;
+  line-height: 1.4;
 `;
 
 export default Onboarding3Page;
