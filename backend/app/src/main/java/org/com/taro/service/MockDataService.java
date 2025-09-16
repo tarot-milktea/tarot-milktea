@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class MockDataService {
-    
+    // Test for Jenkins
     private final Map<String, SessionData> sessions = new ConcurrentHashMap<>();
     private final List<TopicResponse.Category> categories;
     private final List<ReaderResponse.Reader> readers;
