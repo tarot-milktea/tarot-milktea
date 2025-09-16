@@ -19,7 +19,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-   
 
   spring-app:
     build: .
@@ -35,11 +34,6 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-
-
-# networks:
-#   app-network:
-#     driver: bridge
 
 volumes:
   mysql_data:

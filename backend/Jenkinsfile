@@ -2,29 +2,48 @@ pipeline {
   agent any
 
   environment {
-    APP_NAME = "backend-app"
+    SERVICE_NAME   = "spring-app"      // docker-compose 서비스 이름
+    CONTAINER_NAME = "backend-app"     // compose에서 만들어질 컨테이너 이름
+    COMPOSE_FILE   = "./docker-compose.yml"
+    COMPOSE_CMD    = "docker compose -f ${COMPOSE_FILE}"
   }
 
   stages {
     stage('Checkout') {
       steps {
-        git branch: 'back', url: 'https://lab.ssafy.com/s13-ai-image-sub1/S13P21A601.git'
+        // Job 설정에서 Credentials가 연결된 scm을 재사용 (이중 체크아웃/무자격증명 방지)
+        checkout scm
+      }
+    }
+
+    stage('Sanity: docker reachable') {
+      steps {
+        sh '''
+          docker ps
+          docker compose version
+        '''
       }
     }
 
     stage('Ensure MySQL is Running') {
       steps {
         sh """
-          # MySQL이 없으면 최초 1회만 시작
-          if ! docker ps | grep mysql-prod; then
-            echo "Starting MySQL for the first time..."
-            docker-compose up -d mysql
-            
-            # MySQL이 완전히 준비될 때까지 대기
-            echo "Waiting for MySQL to be ready..."
-            sleep 30
+          # mysql-prod 컨테이너가 떠있는지 체크
+          if ! docker ps --format '{{.Names}}' | grep -q '^mysql-prod$'; then
+            echo "[INFO] Starting MySQL via compose..."
+            ${COMPOSE_CMD} up -d mysql
+
+            echo "[INFO] Waiting for MySQL to be healthy..."
+            # healthcheck가 있으니 최대 90초 정도 대기
+            for i in {1..18}; do
+              if [ "\$(docker inspect -f '{{.State.Health.Status}}' mysql-prod 2>/dev/null)" = "healthy" ]; then
+                echo "[INFO] MySQL is healthy."
+                break
+              fi
+              sleep 5
+            done
           else
-            echo "MySQL is already running, keeping data intact"
+            echo "[INFO] MySQL is already running."
           fi
         """
       }
@@ -33,9 +52,9 @@ pipeline {
     stage('Stop Backend Only') {
       steps {
         sh """
-          # 백엔드 컨테이너만 중지/삭제 (DB는 건드리지 않음)
-          docker stop ${APP_NAME} || true
-          docker rm ${APP_NAME} || true
+          # 기존 백엔드 컨테이너만 안전하게 정리 (없어도 오류 없이 통과)
+          docker stop ${CONTAINER_NAME} || true
+          docker rm   ${CONTAINER_NAME} || true
         """
       }
     }
@@ -43,11 +62,11 @@ pipeline {
     stage('Build & Deploy Backend') {
       steps {
         sh """
-          # 백엔드만 새로 빌드 및 배포
-          docker-compose up -d --build spring-app
-          
-          # 상태 확인
-          docker-compose ps
+          # 백엔드 서비스만 빌드/배포
+          ${COMPOSE_CMD} up -d --build ${SERVICE_NAME}
+
+          # 상태 확인 (compose v2)
+          ${COMPOSE_CMD} ps
         """
       }
     }
@@ -58,8 +77,9 @@ pipeline {
           timeout(time: 3, unit: 'MINUTES') {
             waitUntil {
               script {
-                def result = sh(script: 'curl -f http://localhost:8080/actuator/health || exit 1', returnStatus: true)
-                return result == 0
+                // 애플리케이션이 200 OK/UP를 줄 때까지 대기
+                def rc = sh(script: 'curl -fsS http://localhost:8080/actuator/health | grep -q UP', returnStatus: true)
+                return rc == 0
               }
             }
           }
@@ -70,11 +90,9 @@ pipeline {
     stage('DB Schema Update') {
       steps {
         sh """
-          # Flyway 또는 Liquibase를 통한 스키마 업데이트
-          echo "Backend application will handle DB schema updates via JPA/Flyway"
-          
-          # 또는 수동 SQL 실행 (필요시)
-          # docker exec mysql-prod mysql -u taro -ptaro1234 taro < ./sql/migration.sql
+          echo "[INFO] DB schema migration handled by app (JPA/Flyway)."
+          # 필요 시 수동 SQL:
+          # docker exec mysql-prod mysql -utaro -ptaro1234 taro < ./sql/migration.sql
         """
       }
     }
@@ -83,11 +101,12 @@ pipeline {
   post {
     success {
       echo 'Backend deployment successful! Database preserved.'
-      sh 'docker-compose logs --tail=50 backend-app'
+      sh '${COMPOSE_CMD} logs --tail=100 ${SERVICE_NAME} || true'
     }
     failure {
       echo 'Backend deployment failed!'
-      sh 'docker-compose logs backend-app'
+      sh '${COMPOSE_CMD} logs ${SERVICE_NAME} || true'
+      sh 'docker logs --tail=200 ${CONTAINER_NAME} || true'
     }
   }
 }
