@@ -5,8 +5,10 @@ package org.com.taro;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
+@EnableJpaRepositories(basePackages = "org.com.taro.repository")
 public class App {
     public String getGreeting() {
         return "Hello World!!!";
