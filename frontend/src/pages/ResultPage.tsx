@@ -146,9 +146,9 @@ function ResultPage() {
                 </OrientationBadge>
 
                 <CardMeaning>
-                  {card.meaning || (card.orientation === 'reversed'
+                  {card.orientation === 'reversed'
                     ? '역방향 해석이 필요한 카드입니다'
-                    : '정방향의 긍정적 의미를 담고 있습니다')}
+                    : '정방향의 긍정적 의미를 담고 있습니다'}
                 </CardMeaning>
               </CardInfo>
             );

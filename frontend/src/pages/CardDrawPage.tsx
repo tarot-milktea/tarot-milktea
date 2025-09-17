@@ -24,9 +24,6 @@ function CardDrawPage({ onNext }: CardDrawPageProps) {
   const { selectedCards, isRevealing, startReveal, revealCard, resetSelection } = useCardStore();
   const { predefinedCards } = useSessionStore();
   const [scale, setScale] = useState(1);
-
-  // 디버깅: 미리 정해진 카드들 확인
-  console.log('🔍 Predefined cards:', predefinedCards);
   const [isReducedMotion, setIsReducedMotion] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const [screenType, setScreenType] = useState<'mobile' | 'tablet' | 'desktop'>(() => {
@@ -147,12 +144,16 @@ function CardDrawPage({ onNext }: CardDrawPageProps) {
           >
             {cardPositions.map((position, index) => {
               const cardId = index + 1;
-              
+
+              // 선택된 카드인지 확인하고 해당하는 predefinedCard 찾기
+              const selectedCardIndex = selectedCards.findIndex(card => card.id === cardId);
+              const predefinedCard = selectedCardIndex !== -1 ? predefinedCards[selectedCardIndex] : undefined;
+
               return (
                 <motion.div
                   key={cardId}
                   variants={itemVariants}
-                  custom={{ 
+                  custom={{
                     position: position,
                     delay: calculateAnimationDelay(index)
                   }}
@@ -175,7 +176,11 @@ function CardDrawPage({ onNext }: CardDrawPageProps) {
                     justifyContent: 'center',
                   }}
                 >
-                  <TarotCard cardId={cardId} size="small" />
+                  <TarotCard
+                    cardId={cardId}
+                    size="small"
+                    predefinedCard={predefinedCard}
+                  />
                 </motion.div>
               );
             })}

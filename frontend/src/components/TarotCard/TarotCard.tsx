@@ -1,17 +1,8 @@
 import React, { useMemo } from 'react';
 import styled from '@emotion/styled';
 import { useCardStore } from '../../store/cardStore';
+import type { PredefinedCard } from '../../store/sessionStore';
 import CardVideo from './CardVideo';
-
-// 임시 타입 정의 (sessionStore export 문제 해결 시 제거)
-interface PredefinedCard {
-  position: number;
-  cardId: number;
-  nameKo: string;
-  nameEn: string;
-  orientation: 'upright' | 'reversed';
-  videoUrl: string;
-}
 
 interface TarotCardProps {
   cardId: number;
@@ -22,11 +13,6 @@ interface TarotCardProps {
 const TarotCard: React.FC<TarotCardProps> = ({ cardId, size = 'small', predefinedCard }) => {
   const { selectedCards, selectCard, deselectCard, isRevealing, revealedCards } = useCardStore();
 
-  // 디버깅: predefinedCard 정보 확인
-  if (predefinedCard) {
-    console.log(`🎴 Card ${cardId} predefined:`, predefinedCard);
-  }
-  
   const cardState = useMemo(() => {
     const isSelected = selectedCards.some(card => card.id === cardId);
     const selectedCard = selectedCards.find(card => card.id === cardId);
@@ -60,7 +46,7 @@ const TarotCard: React.FC<TarotCardProps> = ({ cardId, size = 'small', predefine
       isSelected={isSelected}
       isRevealing={isRevealing}
     >
-      <CardInner isFlipped={isFlipped} isReversed={isFlipped && selectedCard?.orientation === 'reversed'}>
+      <CardInner isFlipped={isFlipped} isReversed={isFlipped && predefinedCard?.orientation === 'reversed'}>
         <CardBack isSelected={isSelected}>
           <CardPattern>
             <PatternElement />
