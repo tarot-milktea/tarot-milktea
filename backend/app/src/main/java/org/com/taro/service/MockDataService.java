@@ -3,7 +3,6 @@ package org.com.taro.service;
 import org.com.taro.dto.TopicResponse;
 import org.com.taro.dto.ReaderResponse;
 import org.com.taro.dto.TaroResultResponse;
-import org.com.taro.dto.SubmitRequest;
 import org.com.taro.dto.TaroCard;
 import org.com.taro.dto.TaroReadingResponse;
 import org.com.taro.exception.SessionNotFoundException;
@@ -68,52 +67,21 @@ public class MockDataService {
         return readers;
     }
 
-    public TaroResultResponse generateTaroResult(String sessionId, String categoryCode, String topicCode,
-                                                 String questionText, String readerType, List<SubmitRequest.CardSelection> selectedCards) {
+    public void generateTaroResult(String sessionId, String categoryCode, String topicCode,
+                                   String questionText, String readerType) {
         if (!sessionExists(sessionId)) {
             throw new SessionNotFoundException(sessionId);
         }
 
         try {
-            List<TaroResultResponse.DrawnCard> drawnCards = createDrawnCardsFromSelection(selectedCards);
-            String interpretation = generateInterpretation(categoryCode, topicCode, questionText, drawnCards, readerType);
-            String readerMessage = generateReaderMessage(readerType);
-            int fortuneScore = generateFortuneScore();
-            String resultImageUrl = "https://example.com/result-" + sessionId + ".jpg";
-
-            return new TaroResultResponse(sessionId, drawnCards, interpretation, readerMessage, fortuneScore, resultImageUrl);
+            // 타로 결과를 내부적으로 생성하고 저장 (실제 구현에서는 데이터베이스에 저장)
+            // 여기서는 세션에 결과가 생성되었다는 것만 기록
+            System.out.println("타로 결과가 세션 " + sessionId + "에 대해 생성되었습니다.");
         } catch (Exception e) {
             throw new TaroServiceException("Failed to generate tarot result for session: " + sessionId, e);
         }
     }
 
-    private List<TaroResultResponse.DrawnCard> createDrawnCardsFromSelection(List<SubmitRequest.CardSelection> selectedCards) {
-        List<TaroResultResponse.DrawnCard> drawnCards = new ArrayList<>();
-        Random random = new Random();
-        
-        for (SubmitRequest.CardSelection selection : selectedCards) {
-            TaroCard card = findCard(selection.getSuit(), selection.getNumber());
-            if (card != null) {
-                String orientation = selection.getOrientation();
-                if (orientation == null) {
-                    // orientation이 지정되지 않은 경우 랜덤으로 결정
-                    orientation = random.nextBoolean() ? ValidationConstants.ORIENTATION_UPRIGHT : ValidationConstants.ORIENTATION_REVERSED;
-                }
-
-                String meaning = ValidationConstants.ORIENTATION_UPRIGHT.equals(orientation) ? card.getMeaningUpright() : card.getMeaningReversed();
-
-                drawnCards.add(new TaroResultResponse.DrawnCard(
-                    selection.getPosition(), card.getId(), card.getNameKo(), card.getNameEn(),
-                    orientation, card.getImageUrl(), meaning
-                ));
-            }
-        }
-        
-        // 위치 순으로 정렬
-        drawnCards.sort((a, b) -> Integer.compare(a.getPosition(), b.getPosition()));
-        
-        return drawnCards;
-    }
 
     public boolean isValidCategoryCode(String categoryCode) {
         return ValidationConstants.CATEGORY_LOVE.equals(categoryCode) ||
@@ -155,27 +123,6 @@ public class MockDataService {
                 .orElse(null);
     }
 
-    public boolean isValidCardSelection(List<SubmitRequest.CardSelection> selections) {
-        if (selections == null || selections.isEmpty()) {
-            return false;
-        }
-        
-        // 위치 중복 검사
-        Set<Integer> positions = new HashSet<>();
-        for (SubmitRequest.CardSelection selection : selections) {
-            if (positions.contains(selection.getPosition())) {
-                return false; // 위치 중복
-            }
-            positions.add(selection.getPosition());
-            
-            // 카드 유효성 검사
-            if (!isValidCard(selection.getSuit(), selection.getNumber())) {
-                return false;
-            }
-        }
-        
-        return true;
-    }
 
     private List<TopicResponse.Category> initializeCategories() {
         List<TopicResponse.Category> categories = new ArrayList<>();
