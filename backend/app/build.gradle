@@ -24,6 +24,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     testImplementation libs.spring.boot.starter.test
 
+    // JPA dependencies
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'com.h2database:h2' // H2 database for development/testing
+    // runtimeOnly 'com.mysql:mysql-connector-j' // MySQL connector (uncomment if using MySQL)
+    // runtimeOnly 'org.postgresql:postgresql' // PostgreSQL connector (uncomment if using PostgreSQL)
+
     // Swagger/OpenAPI documentation
     implementation libs.springdoc.openapi.starter.webmvc.ui
 
