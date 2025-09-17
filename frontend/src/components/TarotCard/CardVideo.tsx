@@ -7,44 +7,32 @@ interface CardVideoProps {
   size?: 'small' | 'large';
   autoPlay?: boolean;
   context?: 'tarot-card' | 'result-page'; // 어디서 사용되는지 구분
+  videoUrl?: string; // 백엔드에서 받은 비디오 URL
+  cardName?: string; // 백엔드에서 받은 카드 이름
 }
 
-// 카드 ID에 따른 비디오 매핑
-const getVideoByCardId = (cardId: number): string => {
-  const videoMap: Record<number, string> = {
-    1: '/src/assets/ExampleCardVideo/fool.mov',
-    2: '/src/assets/ExampleCardVideo/magician.mov',
-    3: '/src/assets/ExampleCardVideo/wands.mov'
-  };
-  
-  // 카드 ID를 3으로 나눈 나머지로 순환 매핑
-  const mappedId = ((cardId - 1) % 3) + 1;
-  return videoMap[mappedId] || videoMap[1];
-};
 
-// 카드 이름 매핑
-const getCardNameByVideoId = (videoId: number): string => {
-  const nameMap: Record<number, string> = {
-    1: 'The Fool',
-    2: 'The Magician', 
-    3: 'Ace of Wands'
-  };
-  return nameMap[videoId] || 'Unknown Card';
-};
-
-const CardVideo: React.FC<CardVideoProps> = ({ 
-  cardId, 
-  isReversed = false, 
+const CardVideo: React.FC<CardVideoProps> = ({
+  cardId,
+  isReversed = false,
   size = 'large',
   autoPlay = true,
-  context = 'tarot-card'
+  context = 'tarot-card',
+  videoUrl,
+  cardName: propCardName
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
-  
-  const videoSrc = getVideoByCardId(cardId);
-  const mappedId = ((cardId - 1) % 3) + 1;
-  const cardName = getCardNameByVideoId(mappedId);
+
+  // 백엔드에서 받은 videoUrl 사용
+  const videoSrc = videoUrl;
+  const cardName = propCardName || `Card ${cardId}`;
+
+  // videoUrl이 없으면 에러 상태로 처리
+  if (!videoUrl) {
+    console.warn(`⚠️ Card ${cardId}: No videoUrl provided from backend`);
+    setHasError(true);
+  }
 
   const handleVideoLoad = () => {
     setIsLoaded(true);
