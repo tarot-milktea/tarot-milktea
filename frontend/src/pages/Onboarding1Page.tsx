@@ -4,6 +4,7 @@ import { useColors } from '../hooks/useColors';
 import { useSessionStore } from '../store/sessionStore';
 import Button from '../components/common/Button/Button';
 import NicknameInput from '../components/etc/NicknameInput';
+import Logo from '../components/common/Logo';
 import { generateRandomNickname } from '../utils/nicknameGenerator';
 import { showToast } from '../components/common/Toast';
 
@@ -45,48 +46,53 @@ function Onboarding1Page({ onNext }: Onboarding1PageProps) {
 
   return (
     <Container style={globalStyles.container}>
-      <Title 
-        style={{
-          ...globalStyles.heading,
-          color: getColor('primary', '200')
-        }}
-      >
-        🔮 타로밀크티에 오신 것을 환영합니다
-      </Title>
-      
-      <Description
-        style={{
-          ...globalStyles.body,
-          color: getColor('primary', '300')
-        }}
-      >
-        닉네임을 입력해주세요
-        <SubDescription style={{ color: getColor('primary', '400') }}>
-          빈 칸으로 두면 신비로운 닉네임을 자동으로 생성해드려요 ✨
-        </SubDescription>
-      </Description>
-
-      <InputCard style={globalStyles.card}>
-        <InputWrapper>
-          <NicknameInput
-            value={localNickname}
-            onChange={setLocalNickname}
-            onValidationChange={handleValidationChange}
-            placeholder="닉네임을 입력하거나 비워두세요"
-            inputSize="large"
-            autoFocus
-            showLiveValidation={true}
-          />
-        </InputWrapper>
-
-        <Button
-          variant="primary"
-          size="large"
-          onClick={handleNext}
+      <HeaderSection>
+        <Logo />
+        <WelcomeText
+          style={{
+            ...globalStyles.heading,
+            color: getColor('primary', '200')
+          }}
         >
-          {localNickname.trim() ? '시작하기' : '랜덤 닉네임으로 시작하기'}
-        </Button>
-      </InputCard>
+          신비로운 타로의 세계에 오신 것을 환영합니다
+        </WelcomeText>
+      </HeaderSection>
+
+      <ContentSection>
+        <Description
+          style={{
+            ...globalStyles.body,
+            color: getColor('primary', '300')
+          }}
+        >
+          운명의 여행을 시작하기 위한 당신의 이름을 알려주세요
+          <SubDescription style={{ color: getColor('primary', '400') }}>
+            비워두시면 우주가 선택한 신비로운 이름을 드려요 ✨
+          </SubDescription>
+        </Description>
+
+        <InputCard style={globalStyles.card}>
+          <InputWrapper>
+            <NicknameInput
+              value={localNickname}
+              onChange={setLocalNickname}
+              onValidationChange={handleValidationChange}
+              placeholder="닉네임(선택사항)"
+              inputSize="large"
+              autoFocus
+              showLiveValidation={true}
+            />
+          </InputWrapper>
+
+          <Button
+            variant="primary"
+            size="large"
+            onClick={handleNext}
+          >
+            시작하기
+          </Button>
+        </InputCard>
+      </ContentSection>
     </Container>
   );
 }
@@ -96,32 +102,48 @@ const Container = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  min-height: 100vh;
   text-align: center;
-  padding: 60px 20px;
+  padding: 40px 20px;
 `;
 
-const Title = styled.h1`
-  font-size: 2.5rem;
-  margin-bottom: 20px;
+const HeaderSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 5px;
+`;
+
+const WelcomeText = styled.h1`
+  font-size: 2rem;
+  margin-top: 20px;
+  font-weight: 600;
+`;
+
+const ContentSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 400px;
 `;
 
 const Description = styled.div`
-  font-size: 1.2rem;
-  margin-bottom: 40px;
-  max-width: 600px;
-  line-height: 1.5;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+  font-weight: 500;
+  line-height: 1.6;
 `;
 
 const SubDescription = styled.div`
-  font-size: 1rem;
+  font-size: 0.95rem;
   margin-top: 8px;
   opacity: 0.8;
   font-weight: 400;
 `;
 
 const InputCard = styled.div`
-  padding: 40px;
-  max-width: 400px;
+  padding: 30px;
   width: 100%;
 `;
 
