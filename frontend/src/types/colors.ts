@@ -139,6 +139,19 @@ export const setTheme = (theme: 'light' | 'dark') => {
 };
 
 export const getCurrentTheme = (): 'light' | 'dark' => {
-  return document.documentElement.getAttribute('data-theme') as 'light' | 'dark' || 'dark';
+  const storedTheme = document.documentElement.getAttribute('data-theme') as 'light' | 'dark';
+
+  if (storedTheme) {
+    return storedTheme;
+  }
+
+  // 시스템 테마 감지
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const defaultTheme = prefersDark ? 'dark' : 'light';
+
+  // 기본 테마 설정
+  document.documentElement.setAttribute('data-theme', defaultTheme);
+
+  return defaultTheme;
 };
 

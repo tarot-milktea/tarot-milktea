@@ -9,35 +9,8 @@ function ErrorPage() {
     navigate('/');
   };
 
-  const stars = Array.from({ length: 15 }, (_, i) => ({
-    id: i,
-    top: `${Math.random() * 100}%`,
-    left: `${Math.random() * 100}%`,
-    size: Math.random() * 3 + 1,
-    delay: Math.random() * 2,
-  }));
-
   return (
     <ErrorContainer>
-      <FloatingStars>
-        {stars.map((star) => (
-          <Star
-            key={star.id}
-            top={star.top}
-            left={star.left}
-            size={star.size}
-            animate={{
-              opacity: [0.3, 1, 0.3],
-              scale: [0.8, 1.2, 0.8],
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              repeat: Infinity,
-              delay: star.delay,
-            }}
-          />
-        ))}
-      </FloatingStars>
 
       <ErrorCard
         initial={{ opacity: 0, y: 50, scale: 0.9 }}
@@ -154,26 +127,5 @@ const BackButton = styled(motion.button)`
   }
 `;
 
-const FloatingStars = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: hidden;
-`;
-
-const Star = styled(motion.div)<{ top: string; left: string; size: number }>`
-  position: absolute;
-  top: ${props => props.top};
-  left: ${props => props.left};
-  width: ${props => props.size}px;
-  height: ${props => props.size}px;
-  background: var(--color-accent-300);
-  border-radius: 50%;
-  filter: blur(1px);
-  box-shadow: 0 0 6px var(--color-accent-300);
-`;
 
 export default ErrorPage;

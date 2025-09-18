@@ -1,6 +1,6 @@
 import styled from '@emotion/styled';
 import { useColors } from '../hooks/useColors';
-import { useSessionStore } from '../store/sessionStore';
+import { useSessionStore, type Topic } from '../store/sessionStore';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
 
@@ -13,7 +13,7 @@ function Onboarding3Page({ onNext, onPrev }: Onboarding3PageProps) {
   const { styles: globalStyles, getColor } = useColors();
   const { selectedCategory, selectedTopic, setSelectedTopic } = useSessionStore();
 
-  const handleTopicSelect = (topic: any) => {
+  const handleTopicSelect = (topic: Topic) => {
     // 이미 선택된 주제를 다시 클릭하면 선택 해제 (토글)
     if (selectedTopic?.code === topic.code) {
       setSelectedTopic(null);
