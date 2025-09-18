@@ -1,7 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
-import { useColors } from '../hooks/useColors';
 import { useCardStore } from '../store/cardStore';
 import { useSessionStore } from '../store/sessionStore';
 import { showToast } from '../components/common/Toast';
@@ -24,7 +23,6 @@ interface TarotResult {
 function ResultPage() {
   const { resultId } = useParams<{ resultId: string }>();
   const navigate = useNavigate();
-  const { getColor } = useColors();
   const { resetSelection } = useCardStore();
   const { clearSession, predefinedCards } = useSessionStore();
   const [result, setResult] = useState<TarotResult | null>(null);

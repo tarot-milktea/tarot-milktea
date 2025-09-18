@@ -46,9 +46,9 @@ function Onboarding1Page({ onNext }: Onboarding1PageProps) {
           <Input
             type="text"
             placeholder="닉네임을 입력해주세요"
-            size="large"
+            inputSize="large"
             value={localNickname}
-            onChange={(e) => setLocalNickname(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLocalNickname(e.target.value)}
           />
         </InputWrapper>
 

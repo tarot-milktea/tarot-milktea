@@ -39,18 +39,6 @@ const DESKTOP_LAYOUT_CONFIG = {
   CARD_OVERLAP: 0.8, // 좀 더 여유로운 간격 (0.75->0.8)
 };
 
-/**
- * 화면 크기 감지
- */
-function isMobile(): boolean {
-  if (typeof window === 'undefined') return false;
-  return window.innerWidth <= 768;
-}
-
-function isDesktop(): boolean {
-  if (typeof window === 'undefined') return false;
-  return window.innerWidth >= 1024;
-}
 
 export function getScreenType(): 'mobile' | 'tablet' | 'desktop' {
   if (typeof window === 'undefined') return 'desktop';

@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
-import { useColors } from '../hooks/useColors';
 import { useSessionStore } from '../store/sessionStore';
 import { useDataStore } from '../store/dataStore';
 import ThemeToggle from './etc/ThemeToggle';
@@ -17,7 +16,6 @@ type PageType = 'onboarding1' | 'onboarding2' | 'onboarding3' | 'onboarding4' | 
 
 function OnboardingFlow() {
   const navigate = useNavigate();
-  const { getColor } = useColors();
   const { currentStep, isSessionConfirmed, restoreFromStorage } = useSessionStore();
   const { initializeData } = useDataStore();
   const [currentPage, setCurrentPage] = useState<PageType>('onboarding1');
@@ -56,7 +54,7 @@ function OnboardingFlow() {
     
     // 결과 데이터 구조 생성
     const tarotResult = {
-      cards: selectedCards.map((card: any, index: number) => ({
+      cards: selectedCards.map((card: { id: string; orientation?: string }, index: number) => ({
         id: card.id,
         position: ['past', 'present', 'future'][index] as 'past' | 'present' | 'future',
         orientation: card.orientation || 'upright'
@@ -77,7 +75,7 @@ function OnboardingFlow() {
     useSessionStore.getState().setCurrentStep(step);
   };
 
-  const pages: Record<PageType, { title: string; component: JSX.Element }> = {
+  const pages: Record<PageType, { title: string; component: React.JSX.Element }> = {
     onboarding1: {
       title: '온보딩1',
       component: <Onboarding1Page onNext={() => handleStepChange(2)} />
@@ -114,7 +112,7 @@ function OnboardingFlow() {
       title: '카드뽑기',
       component: <CardDrawPage
         onNext={() => handleStepChange(7)}
-        onPrev={isSessionConfirmed ? undefined : () => handleStepChange(5)}
+        {...(!isSessionConfirmed && { onPrev: () => handleStepChange(5) })}
       />
     },
     loading: {

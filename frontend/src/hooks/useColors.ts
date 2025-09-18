@@ -1,5 +1,4 @@
-/* eslint-disable */
-import { useCallback, useMemo, useState, useEffect } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { 
   ColorPalette, 
   ColorScale, 
