@@ -14,7 +14,12 @@ function Onboarding3Page({ onNext, onPrev }: Onboarding3PageProps) {
   const { selectedCategory, selectedTopic, setSelectedTopic } = useSessionStore();
 
   const handleTopicSelect = (topic: any) => {
-    setSelectedTopic(topic);
+    // 이미 선택된 주제를 다시 클릭하면 선택 해제 (토글)
+    if (selectedTopic?.code === topic.code) {
+      setSelectedTopic(null);
+    } else {
+      setSelectedTopic(topic);
+    }
   };
 
   return (

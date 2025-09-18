@@ -19,8 +19,13 @@ function Onboarding4Page({ onNext, onPrev }: Onboarding4PageProps) {
   const sampleQuestions = selectedTopic?.sampleQuestions || [];
 
   const handleQuestionSelect = (question: string) => {
-    setSelectedQuestion(question);
-    setCustomQuestion('');
+    // 이미 선택된 질문을 다시 클릭하면 선택 해제 (토글)
+    if (selectedQuestion === question && !customQuestion) {
+      setSelectedQuestion('');
+    } else {
+      setSelectedQuestion(question);
+      setCustomQuestion('');
+    }
   };
 
   const handleCustomQuestionChange = (value: string) => {

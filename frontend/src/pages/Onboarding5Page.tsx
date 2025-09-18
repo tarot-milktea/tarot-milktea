@@ -16,7 +16,12 @@ function Onboarding5Page({ onNext, onPrev }: Onboarding5PageProps) {
   const { selectedReader, setSelectedReader, createSession } = useSessionStore();
 
   const handleReaderSelect = (reader: any) => {
-    setSelectedReader(reader);
+    // 이미 선택된 리더를 다시 클릭하면 선택 해제 (토글)
+    if (selectedReader?.type === reader.type) {
+      setSelectedReader(null);
+    } else {
+      setSelectedReader(reader);
+    }
   };
 
   const handleNext = async () => {
