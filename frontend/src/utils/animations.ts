@@ -43,7 +43,7 @@ export const cardVariants = {
     y: custom.position.y,
     rotate: custom.position.rotation,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 100,
       damping: 15,
       mass: 1,
@@ -63,7 +63,7 @@ export const cardVariants = {
     y: custom.position.y - 8, // 현재 위치에서 8px 위로
     zIndex: 10,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 400,
       damping: 25,
     },

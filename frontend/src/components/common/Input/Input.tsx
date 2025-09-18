@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 import { useColors } from '../../../hooks/useColors';
 
 interface BaseInputProps {
-  size?: 'small' | 'medium' | 'large';
+  inputSize?: 'small' | 'medium' | 'large';
   variant?: 'default' | 'error';
   disabled?: boolean;
   fullWidth?: boolean;
@@ -42,7 +42,7 @@ interface TextareaProps extends BaseInputProps {
 type InputProps = TextInputProps | TextareaProps;
 
 const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
-  ({ size = 'medium', variant = 'default', fullWidth = true, className, ...props }, ref) => {
+  ({ inputSize = 'medium', variant = 'default', fullWidth = true, className, ...props }, ref) => {
     const { getColor } = useColors();
 
     const isTextarea = 'as' in props && props.as === 'textarea';
@@ -58,14 +58,14 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
       return (
         <StyledTextarea
           ref={ref as React.Ref<HTMLTextAreaElement>}
-          size={size}
+          inputSize={inputSize}
           variant={variant}
           fullWidth={fullWidth}
           resize={textareaProps.resize || 'vertical'}
           rows={textareaProps.rows || 3}
           className={className}
           style={baseStyle}
-          {...(textareaProps as any)}
+          {...textareaProps}
         />
       );
     }
@@ -75,12 +75,12 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
       <StyledInput
         ref={ref as React.Ref<HTMLInputElement>}
         type={inputProps.type || 'text'}
-        size={size}
+        inputSize={inputSize}
         variant={variant}
         fullWidth={fullWidth}
         className={className}
         style={baseStyle}
-        {...(inputProps as any)}
+        {...inputProps}
       />
     );
   }
@@ -118,7 +118,7 @@ const baseStyles = `
 `;
 
 const StyledInput = styled.input<{
-  size: 'small' | 'medium' | 'large';
+  inputSize: 'small' | 'medium' | 'large';
   variant: 'default' | 'error';
   fullWidth: boolean;
 }>`
@@ -126,7 +126,7 @@ const StyledInput = styled.input<{
 
   /* 사이즈별 스타일 */
   ${props => {
-    switch (props.size) {
+    switch (props.inputSize) {
       case 'small':
         return `
           padding: 10px 12px;
@@ -162,7 +162,7 @@ const StyledInput = styled.input<{
 `;
 
 const StyledTextarea = styled.textarea<{
-  size: 'small' | 'medium' | 'large';
+  inputSize: 'small' | 'medium' | 'large';
   variant: 'default' | 'error';
   fullWidth: boolean;
   resize: 'none' | 'vertical' | 'horizontal' | 'both';
@@ -171,7 +171,7 @@ const StyledTextarea = styled.textarea<{
 
   /* 사이즈별 스타일 */
   ${props => {
-    switch (props.size) {
+    switch (props.inputSize) {
       case 'small':
         return `
           padding: 10px 12px;

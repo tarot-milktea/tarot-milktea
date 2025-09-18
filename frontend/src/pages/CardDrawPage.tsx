@@ -17,11 +17,11 @@ import {
 
 interface CardDrawPageProps {
   onNext: () => void;
-  onPrev: () => void;
+  onPrev?: () => void;
 }
 
 function CardDrawPage({ onNext }: CardDrawPageProps) {
-  const { selectedCards, isRevealing, startReveal, revealCard, resetSelection } = useCardStore();
+  const { selectedCards, isRevealing, startReveal, revealCard } = useCardStore();
   const { predefinedCards } = useSessionStore();
   const [scale, setScale] = useState(1);
   const [isReducedMotion, setIsReducedMotion] = useState(false);
@@ -75,9 +75,6 @@ function CardDrawPage({ onNext }: CardDrawPageProps) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleReset = () => {
-    resetSelection();
-  };
 
   const handleConfirm = () => {
     if (selectedCards.length === 3) {

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import styled from '@emotion/styled';
 import { useColors } from '../hooks/useColors';
 import { useSessionStore } from '../store/sessionStore';

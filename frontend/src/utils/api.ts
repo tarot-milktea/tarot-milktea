@@ -8,13 +8,18 @@ export interface ApiError {
 }
 
 export class ApiClientError extends Error {
+  statusCode: number;
+  apiError: ApiError;
+
   constructor(
-    public statusCode: number,
-    public apiError: ApiError,
+    statusCode: number,
+    apiError: ApiError,
     message?: string
   ) {
     super(message || apiError.message);
     this.name = 'ApiClientError';
+    this.statusCode = statusCode;
+    this.apiError = apiError;
   }
 }
 

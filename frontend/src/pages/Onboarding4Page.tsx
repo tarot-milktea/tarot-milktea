@@ -75,11 +75,11 @@ function Onboarding4Page({ onNext, onPrev }: Onboarding4PageProps) {
         <Input
           as="textarea"
           placeholder="궁금한 질문을 자유롭게 작성해주세요..."
-          size="medium"
+          inputSize="medium"
           rows={4}
           resize="vertical"
           value={customQuestion}
-          onChange={(e) => handleCustomQuestionChange(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleCustomQuestionChange(e.target.value)}
         />
       </CustomInput>
 
