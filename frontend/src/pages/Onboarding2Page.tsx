@@ -1,7 +1,7 @@
 import styled from '@emotion/styled';
 import { useColors } from '../hooks/useColors';
 import { useDataStore } from '../store/dataStore';
-import { useSessionStore } from '../store/sessionStore';
+import { useSessionStore, type Category } from '../store/sessionStore';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
 
@@ -15,7 +15,7 @@ function Onboarding2Page({ onNext, onPrev }: Onboarding2PageProps) {
   const { categories, isLoading, error } = useDataStore();
   const { selectedCategory, setSelectedCategory } = useSessionStore();
 
-  const handleCategorySelect = (category: any) => {
+  const handleCategorySelect = (category: Category) => {
     // 이미 선택된 카테고리를 다시 클릭하면 선택 해제 (토글)
     if (selectedCategory?.code === category.code) {
       setSelectedCategory(null);

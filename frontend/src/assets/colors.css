@@ -198,6 +198,11 @@
   --color-card-front-border: #e0e0e0;
   --color-card-placeholder-border: #cccccc;
   --color-card-placeholder-text: #666666;
+
+  /* 라이트 모드에서 글씨 색상 좀 더 진하게 */
+  --color-primary-200: var(--color-primary-400);
+  --color-primary-300: var(--color-primary-500);
+  --color-accent-300: var(--color-accent-600);
 }
 
 /* 전역 레이아웃 */
