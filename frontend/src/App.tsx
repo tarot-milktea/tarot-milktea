@@ -3,10 +3,12 @@ import OnboardingFlow from './components/OnboardingFlow';
 import ResultPage from './pages/ResultPage';
 import ErrorPage from './pages/ErrorPage';
 import TempOnboardingPage from './pages/TempOnboardingPage';
+import ParticleBackground from './components/common/ParticleBackground/ParticleBackground';
 
 function App() {
   return (
     <BrowserRouter>
+      <ParticleBackground particleCount={25} intensity="light" />
       <Routes>
         {/* 온보딩 플로우는 useState 방식 */}
         <Route path="/" element={<OnboardingFlow />} />
