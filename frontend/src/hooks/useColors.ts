@@ -1,13 +1,13 @@
-import { useCallback, useMemo, useState } from 'react';
-import type { 
-  ColorPalette, 
-  ColorScale, 
-  SemanticColor, 
-  GradientType, 
-  ShadowType, 
+import { useCallback, useMemo, useState, useEffect } from 'react';
+import type {
+  ColorPalette,
+  ColorScale,
+  SemanticColor,
+  GradientType,
+  ShadowType,
   TransitionType
 } from '../types/colors';
-import { 
+import {
   colorCombinations,
   getColorVariable,
   getSemanticColorVariable,
@@ -17,6 +17,10 @@ import {
   setTheme,
   getCurrentTheme
 } from '../types/colors';
+
+// 전역 상태 관리를 위한 변수들
+let globalTheme: 'light' | 'dark' = getCurrentTheme();
+const themeListeners: Set<(theme: 'light' | 'dark') => void> = new Set();
 
 export const useColors = () => {
   // 기본 컬러 팔레트 접근
@@ -45,23 +49,40 @@ export const useColors = () => {
   }, []);
 
   // 테마 관리
-  const [theme, setThemeState] = useState<'light' | 'dark'>(() => getCurrentTheme());
-  
+  const [theme, setThemeState] = useState<'light' | 'dark'>(globalTheme);
+
+  // 전역 테마 변경 리스너 등록
+  useEffect(() => {
+    const listener = (newTheme: 'light' | 'dark') => {
+      setThemeState(newTheme);
+    };
+    themeListeners.add(listener);
+    return () => {
+      themeListeners.delete(listener);
+    };
+  }, []);
+
   const toggleTheme = useCallback(() => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    const newTheme = globalTheme === 'dark' ? 'light' : 'dark';
+    globalTheme = newTheme;
     setTheme(newTheme);
-    setThemeState(newTheme);
+
+    // 모든 리스너에게 알림
+    themeListeners.forEach(listener => listener(newTheme));
+
     return newTheme;
-  }, [theme]);
+  }, []);
 
   const setLightTheme = useCallback(() => {
+    globalTheme = 'light';
     setTheme('light');
-    setThemeState('light');
+    themeListeners.forEach(listener => listener('light'));
   }, []);
 
   const setDarkTheme = useCallback(() => {
+    globalTheme = 'dark';
     setTheme('dark');
-    setThemeState('dark');
+    themeListeners.forEach(listener => listener('dark'));
   }, []);
 
   // 자주 사용되는 스타일 조합들

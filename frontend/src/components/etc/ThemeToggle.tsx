@@ -11,7 +11,7 @@ interface ThemeToggleProps {
   className?: string;
 }
 
-const ThemeToggle: React.FC<ThemeToggleProps> = ({ 
+const ThemeToggle: React.FC<ThemeToggleProps> = ({
   position = 'fixed',
   top = '20px',
   right = '20px',
@@ -21,9 +21,13 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({
 }) => {
   const { theme, toggleTheme, getColor } = useColors();
 
+  const handleToggle = () => {
+    toggleTheme();
+  };
+
   return (
     <StyledThemeToggle
-      onClick={toggleTheme}
+      onClick={handleToggle}
       position={position}
       top={top}
       right={right}
