@@ -14,19 +14,19 @@ function ParticleBackground({
     light: {
       maxSize: 3,
       minSize: 1,
-      opacity: [0.3, 0.7, 0.3],
+      opacity: [0.2, 0.5, 0.2],
       duration: { min: 4, max: 8 },
     },
     medium: {
       maxSize: 4,
       minSize: 2,
-      opacity: [0.4, 0.8, 0.4],
+      opacity: [0.3, 0.6, 0.3],
       duration: { min: 3, max: 6 },
     },
     heavy: {
       maxSize: 5,
       minSize: 2.5,
-      opacity: [0.5, 0.9, 0.5],
+      opacity: [0.4, 0.7, 0.4],
       duration: { min: 2, max: 4 },
     },
   };
@@ -68,6 +68,11 @@ function ParticleBackground({
   );
 }
 
+{/*
+  - 배경: z-index 기본값 (0)
+  - 파티클: z-index 5 (배경 위, UI 아래) 
+  - 클릭 가능한 UI: z-index 10 (파티클 위)
+  */}
 const ParticleContainer = styled.div`
   position: fixed;
   top: 0;
@@ -76,7 +81,7 @@ const ParticleContainer = styled.div`
   height: 100vh;
   pointer-events: none;
   overflow: hidden;
-  z-index: 1;
+  z-index: 5;
 `;
 
 const Particle = styled(motion.div)<{ top: string; left: string; size: number }>`
@@ -85,9 +90,9 @@ const Particle = styled(motion.div)<{ top: string; left: string; size: number }>
   left: ${props => props.left};
   width: ${props => props.size}px;
   height: ${props => props.size}px;
-  background: #fff280;
+  background: var(--color-accent-400);
   border-radius: 50%;
-  box-shadow: 0 0 8px #fff280;
+  box-shadow: 0 0 6px var(--color-accent-400);
 `;
 
 export default ParticleBackground;

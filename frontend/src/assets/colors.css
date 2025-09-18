@@ -189,7 +189,10 @@
   --color-text-muted: var(--color-neutral-500);
   --color-text-accent: var(--color-accent-600);
   --color-text-gold: var(--color-gold-600);
-  
+
+  /* 라이트 모드에서 파티클이 잘 보이도록 더 진한 accent 색상 */
+  --color-accent-400: var(--color-accent-500);
+
   /* 라이트 테마에서의 카드 색상 조정 */
   --color-card-front-bg: #ffffff;
   --color-card-front-border: #e0e0e0;
@@ -202,6 +205,26 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+/* UI 컴포넌트들이 파티클 위에 표시되도록 보장 */
+button, input, select, textarea,
+[role="button"], [role="textbox"], [role="listbox"],
+.ui-component {
+  position: relative;
+  z-index: 10;
+}
+
+/* 인터랙티브 요소들만 파티클 위에 */
+a, form, label {
+  position: relative;
+  z-index: 10;
+}
+
+/* 입력 관련 컨테이너들도 파티클 위에 */
+*[class*="Input"] {
+  position: relative;
+  z-index: 10;
 }
 
 html {

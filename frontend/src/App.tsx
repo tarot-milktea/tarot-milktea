@@ -8,7 +8,7 @@ import ParticleBackground from './components/common/ParticleBackground/ParticleB
 function App() {
   return (
     <BrowserRouter>
-      <ParticleBackground particleCount={25} intensity="light" />
+      <ParticleBackground particleCount={18} intensity="heavy" />
       <Routes>
         {/* 온보딩 플로우는 useState 방식 */}
         <Route path="/" element={<OnboardingFlow />} />
