@@ -87,7 +87,7 @@ public class MockDataService {
         }
     }
 
-    private List<TaroResultResponse.DrawnCard> createDrawnCardsFromSelection(List<SubmitRequest.CardSelection> selectedCards) {
+    public List<TaroResultResponse.DrawnCard> createDrawnCardsFromSelection(List<SubmitRequest.CardSelection> selectedCards) {
         List<TaroResultResponse.DrawnCard> drawnCards = new ArrayList<>();
         Random random = new Random();
         
