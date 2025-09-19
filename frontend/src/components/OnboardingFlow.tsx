@@ -3,6 +3,7 @@ import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { useSessionStore } from '../store/sessionStore';
 import { useDataStore } from '../store/dataStore';
+import { storageService } from '../services/storageService';
 import ThemeToggle from './etc/ThemeToggle';
 import Onboarding1Page from '../pages/Onboarding1Page';
 import Onboarding2Page from '../pages/Onboarding2Page';
@@ -49,26 +50,34 @@ function OnboardingFlow() {
 
   // 결과 페이지로 이동하는 함수
   const goToResult = () => {
-    // 카드 스토어에서 선택된 카드들 가져오기
-    const selectedCards = JSON.parse(localStorage.getItem('selectedCards') || '[]');
-    
-    // 결과 데이터 구조 생성
-    const tarotResult = {
-      cards: selectedCards.map((card: { id: string; orientation?: string }, index: number) => ({
-        id: card.id,
-        position: ['past', 'present', 'future'][index] as 'past' | 'present' | 'future',
-        orientation: card.orientation || 'upright'
-      }))
-    };
-    
-    // 고유 ID 생성
-    const resultId = Date.now().toString(36) + Math.random().toString(36).substr(2);
-    
-    // localStorage에 결과 저장
-    localStorage.setItem(`tarot_${resultId}`, JSON.stringify(tarotResult));
-    
-    // 결과 페이지로 라우팅
-    navigate(`/result/${resultId}`);
+    try {
+      const selectedCards = storageService.loadSelectedCards();
+
+      if (!selectedCards || selectedCards.length === 0) {
+        console.error('선택된 카드가 없습니다');
+        return;
+      }
+
+      // 결과 데이터 구조 생성
+      const tarotResult = {
+        cards: selectedCards.map((card, index) => ({
+          id: card.id,
+          position: ['past', 'present', 'future'][index] as 'past' | 'present' | 'future',
+          orientation: card.orientation
+        }))
+      };
+
+      // 고유 ID 생성
+      const resultId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+
+      storageService.saveTarotResult(resultId, tarotResult);
+
+      // 결과 페이지로 라우팅
+      navigate(`/result/${resultId}`);
+    } catch (error) {
+      console.error('결과 저장 중 오류가 발생했습니다:', error);
+      // 여기서 사용자에게 에러 메시지를 보여줄 수도 있어요
+    }
   };
 
   const handleStepChange = (step: number) => {

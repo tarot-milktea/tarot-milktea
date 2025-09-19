@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { storageService } from '../services/storageService';
 
 export interface Category {
   code: string;
@@ -60,34 +61,6 @@ interface SessionState extends SessionData {
   restoreFromStorage: () => void;
 }
 
-const STORAGE_KEY = 'tarot_session_data';
-
-const saveToSessionStorage = (data: SessionData) => {
-  try {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (error) {
-    console.warn('Failed to save to sessionStorage:', error);
-  }
-};
-
-const loadFromSessionStorage = (): Partial<SessionData> | null => {
-  try {
-    const saved = sessionStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : null;
-  } catch (error) {
-    console.warn('Failed to load from sessionStorage:', error);
-    return null;
-  }
-};
-
-const clearSessionStorage = () => {
-  try {
-    sessionStorage.removeItem(STORAGE_KEY);
-  } catch (error) {
-    console.warn('Failed to clear sessionStorage:', error);
-  }
-};
-
 const initialState: SessionData = {
   nickname: '',
   selectedCategory: null,
@@ -106,7 +79,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   setNickname: (nickname) => {
     const state = { ...get(), nickname };
     set({ nickname });
-    saveToSessionStorage(state);
+    storageService.saveSessionData(state);
   },
 
   setSelectedCategory: (selectedCategory) => {
@@ -121,7 +94,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       selectedTopic: null,
       selectedQuestion: ''
     });
-    saveToSessionStorage(state);
+    storageService.saveSessionData(state);
   },
 
   setSelectedTopic: (selectedTopic) => {
@@ -134,38 +107,38 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       selectedTopic,
       selectedQuestion: ''
     });
-    saveToSessionStorage(state);
+    storageService.saveSessionData(state);
   },
 
   setSelectedQuestion: (selectedQuestion) => {
     const state = { ...get(), selectedQuestion };
     set({ selectedQuestion });
-    saveToSessionStorage(state);
+    storageService.saveSessionData(state);
   },
 
   setSelectedReader: (selectedReader) => {
     const state = { ...get(), selectedReader };
     set({ selectedReader });
-    saveToSessionStorage(state);
+    storageService.saveSessionData(state);
   },
 
   setCurrentStep: (currentStep) => {
     const state = { ...get(), currentStep };
     set({ currentStep });
-    saveToSessionStorage(state);
+    storageService.saveSessionData(state);
   },
 
   setSessionId: (sessionId) => {
     const state = { ...get(), sessionId };
     const isSessionConfirmed = !!sessionId;
     set({ sessionId, isSessionConfirmed });
-    saveToSessionStorage(state);
+    storageService.saveSessionData(state);
   },
 
   setPredefinedCards: (predefinedCards) => {
     const state = { ...get(), predefinedCards };
     set({ predefinedCards });
-    saveToSessionStorage(state);
+    storageService.saveSessionData(state);
   },
 
   createSession: async () => {
@@ -265,11 +238,11 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       ...initialState,
       isSessionConfirmed: false,
     });
-    clearSessionStorage();
+    storageService.clearSessionData();
   },
 
   restoreFromStorage: () => {
-    const saved = loadFromSessionStorage();
+    const saved = storageService.loadSessionData();
     if (saved) {
       const isSessionConfirmed = !!saved.sessionId;
       set({

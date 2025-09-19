@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { storageService } from '../services/storageService';
 
 export interface SelectedCard {
   id: number;                           // 카드 고유 ID (1~72)
@@ -82,8 +83,7 @@ export const useCardStore = create<CardState>((set, get) => ({
     const { selectedCards } = get();
 
     if (selectedCards.length === 3) {
-      // localStorage에 선택된 카드 정보 저장
-      localStorage.setItem('selectedCards', JSON.stringify(selectedCards));
+      storageService.saveSelectedCards(selectedCards);
 
       set({
         isRevealing: true,
