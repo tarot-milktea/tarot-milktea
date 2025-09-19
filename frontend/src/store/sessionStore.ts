@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { storageService } from '../services/storageService';
+import { tarotApiService } from '../services/apiService';
 
 export interface Category {
   code: string;
@@ -53,40 +55,12 @@ interface SessionState extends SessionData {
   setSessionId: (sessionId: string | null) => void;
   setPredefinedCards: (cards: PredefinedCard[]) => void;
 
-  createSession: () => Promise<void>;
-  submitSessionData: () => Promise<void>;
-  fetchPredefinedCards: () => Promise<void>;
+  createSession: () => Promise<string>;
+  submitSessionData: () => Promise<unknown>;
+  fetchPredefinedCards: () => Promise<PredefinedCard[]>;
   clearSession: () => void;
   restoreFromStorage: () => void;
 }
-
-const STORAGE_KEY = 'tarot_session_data';
-
-const saveToSessionStorage = (data: SessionData) => {
-  try {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (error) {
-    console.warn('Failed to save to sessionStorage:', error);
-  }
-};
-
-const loadFromSessionStorage = (): Partial<SessionData> | null => {
-  try {
-    const saved = sessionStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : null;
-  } catch (error) {
-    console.warn('Failed to load from sessionStorage:', error);
-    return null;
-  }
-};
-
-const clearSessionStorage = () => {
-  try {
-    sessionStorage.removeItem(STORAGE_KEY);
-  } catch (error) {
-    console.warn('Failed to clear sessionStorage:', error);
-  }
-};
 
 const initialState: SessionData = {
   nickname: '',
@@ -106,7 +80,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   setNickname: (nickname) => {
     const state = { ...get(), nickname };
     set({ nickname });
-    saveToSessionStorage(state);
+    storageService.saveSessionData(state);
   },
 
   setSelectedCategory: (selectedCategory) => {
@@ -121,7 +95,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       selectedTopic: null,
       selectedQuestion: ''
     });
-    saveToSessionStorage(state);
+    storageService.saveSessionData(state);
   },
 
   setSelectedTopic: (selectedTopic) => {
@@ -134,63 +108,51 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       selectedTopic,
       selectedQuestion: ''
     });
-    saveToSessionStorage(state);
+    storageService.saveSessionData(state);
   },
 
   setSelectedQuestion: (selectedQuestion) => {
     const state = { ...get(), selectedQuestion };
     set({ selectedQuestion });
-    saveToSessionStorage(state);
+    storageService.saveSessionData(state);
   },
 
   setSelectedReader: (selectedReader) => {
     const state = { ...get(), selectedReader };
     set({ selectedReader });
-    saveToSessionStorage(state);
+    storageService.saveSessionData(state);
   },
 
   setCurrentStep: (currentStep) => {
     const state = { ...get(), currentStep };
     set({ currentStep });
-    saveToSessionStorage(state);
+    storageService.saveSessionData(state);
   },
 
   setSessionId: (sessionId) => {
     const state = { ...get(), sessionId };
     const isSessionConfirmed = !!sessionId;
     set({ sessionId, isSessionConfirmed });
-    saveToSessionStorage(state);
+    storageService.saveSessionData(state);
   },
 
   setPredefinedCards: (predefinedCards) => {
     const state = { ...get(), predefinedCards };
     set({ predefinedCards });
-    saveToSessionStorage(state);
+    storageService.saveSessionData(state);
   },
 
   createSession: async () => {
     const { nickname } = get();
 
     try {
-      const response = await fetch('https://j13a601.p.ssafy.io/api/sessions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ nickname }),
-      });
+      const { sessionId, predefinedCards } = await tarotApiService.createSessionWithCards(nickname);
 
-      if (!response.ok) {
-        throw new Error('Failed to create session');
-      }
+      // 상태 업데이트
+      get().setSessionId(sessionId);
+      get().setPredefinedCards(predefinedCards);
 
-      const data = await response.json();
-      get().setSessionId(data.sessionId);
-
-      // 세션 생성 후 미리 정해진 카드들 가져오기
-      await get().fetchPredefinedCards();
-
-      return data.sessionId;
+      return sessionId;
     } catch (error) {
       console.error('Error creating session:', error);
       throw error;
@@ -211,25 +173,15 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }
 
     try {
-      const response = await fetch(`https://j13a601.p.ssafy.io/api/sessions/${sessionId}/submit`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          categoryCode: selectedCategory.code,
-          topicCode: selectedTopic.code,
-          questionText: selectedQuestion,
-          readerType: selectedReader.type,
-          selectedCards: []
-        }),
+      const result = await tarotApiService.submitSessionData(sessionId, {
+        categoryCode: selectedCategory.code,
+        topicCode: selectedTopic.code,
+        questionText: selectedQuestion,
+        readerType: selectedReader.type,
+        selectedCards: [] // 현재는 빈 배열, 나중에 실제 선택된 카드 ID들로 변경 가능
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to submit session data');
-      }
-
-      return await response.json();
+      return result;
     } catch (error) {
       console.error('Error submitting session data:', error);
       throw error;
@@ -244,16 +196,10 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }
 
     try {
-      const response = await fetch(`https://j13a601.p.ssafy.io/api/sessions/${sessionId}/cards`);
+      const cards = await tarotApiService.getPredefinedCards(sessionId);
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch predefined cards');
-      }
-
-      const data = await response.json();
-      get().setPredefinedCards(data.cards || []);
-
-      return data.cards;
+      get().setPredefinedCards(cards);
+      return cards;
     } catch (error) {
       console.error('Error fetching predefined cards:', error);
       throw error;
@@ -265,11 +211,11 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       ...initialState,
       isSessionConfirmed: false,
     });
-    clearSessionStorage();
+    storageService.clearSessionData();
   },
 
   restoreFromStorage: () => {
-    const saved = loadFromSessionStorage();
+    const saved = storageService.loadSessionData();
     if (saved) {
       const isSessionConfirmed = !!saved.sessionId;
       set({
