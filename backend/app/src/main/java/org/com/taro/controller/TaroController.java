@@ -95,10 +95,10 @@ public class TaroController {
     }
 
     @PostMapping("/sessions/{sessionId}/submit")
-    @Operation(summary = "최종 선택 결과 전송", description = "선택한 카테고리, 주제, 질문, 리더 정보를 전송하고 타로 결과를 받습니다")
+    @Operation(summary = "최종 선택 결과 전송", description = "선택한 카테고리, 주제, 질문, 리더 정보를 전송하고 타로 결과 생성을 확인합니다")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "타로 결과 생성 성공",
-                    content = @Content(schema = @Schema(implementation = TaroResultResponse.class))),
+                    content = @Content(schema = @Schema(implementation = SubmitResultResponse.class))),
             @ApiResponse(responseCode = "400", description = "잘못된 요청",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음",
@@ -120,12 +120,6 @@ public class TaroController {
             // 필수 필드 검증
             validateRequiredFields(request);
 
-            // 카드 개수 검증 (타로는 정확히 3장이어야 함)
-            if (request.getSelectedCards().size() != ValidationConstants.REQUIRED_CARD_COUNT) {
-                return ResponseEntity.badRequest()
-                        .body(new ErrorResponse(400, "카드 개수가 올바르지 않습니다",
-                                "타로 리딩에는 정확히 " + ValidationConstants.REQUIRED_CARD_COUNT + "장의 카드가 필요합니다 (현재: " + request.getSelectedCards().size() + "장)"));
-            }
 
             // 비즈니스 로직 검증
             validateBusinessRules(request);
@@ -136,7 +130,7 @@ public class TaroController {
             //         request.getQuestionText(), request.getReaderType(), request.getSelectedCards());
             TaroResultResponse result = openAIClient.generateTaroResult(sessionId, request);
 
-            return ResponseEntity.ok(result);
+            return ResponseEntity.ok(new SubmitResultResponse(true, "타로 결과가 성공적으로 생성되었습니다", sessionId));
 
         } catch (InvalidRequestException e) {
             return ResponseEntity.badRequest()
@@ -158,11 +152,7 @@ public class TaroController {
                 request.getTopicCode() == null || request.getTopicCode().trim().isEmpty() ||
                 request.getQuestionText() == null || request.getQuestionText().trim().isEmpty() ||
                 request.getReaderType() == null || request.getReaderType().trim().isEmpty()) {
-            throw new InvalidRequestException("필수 필드가 누락되었습니다: categoryCode, topicCode, questionText, readerType, selectedCards는 모두 필수입니다");
-        }
-
-        if (request.getSelectedCards() == null || request.getSelectedCards().isEmpty()) {
-            throw new InvalidRequestException("카드를 선택해주세요: 최소 1장 이상의 카드를 selectedCards 배열에 포함해야 합니다");
+            throw new InvalidRequestException("필수 필드가 누락되었습니다: categoryCode, topicCode, questionText, readerType는 모두 필수입니다");
         }
     }
 
@@ -183,19 +173,6 @@ public class TaroController {
             throw new InvalidRequestException("질문 텍스트가 너무 깁니다: 질문은 " + ValidationConstants.MAX_QUESTION_LENGTH + "자 이하로 입력해주세요 (현재: " + request.getQuestionText().length() + "자)");
         }
 
-        // 카드 선택 검증
-        if (!mockDataService.isValidCardSelection(request.getSelectedCards())) {
-            throw new InvalidRequestException("유효하지 않은 카드 정보입니다: 카드 수트(MAJOR/WANDS/CUPS/SWORDS/PENTACLES)와 번호를 확인해주세요. 카드 위치도 중복되지 않아야 합니다");
-        }
-
-        // 카드 방향 검증
-        for (SubmitRequest.CardSelection card : request.getSelectedCards()) {
-            if (card.getOrientation() != null &&
-                    !ValidationConstants.ORIENTATION_UPRIGHT.equals(card.getOrientation()) &&
-                    !ValidationConstants.ORIENTATION_REVERSED.equals(card.getOrientation())) {
-                throw new InvalidRequestException("잘못된 카드 방향입니다: orientation은 upright(정방향), reversed(역방향) 중 하나이거나 비워두세요");
-            }
-        }
 
         // 리더 타입 검증
         if (!isValidReaderType(request.getReaderType())) {
