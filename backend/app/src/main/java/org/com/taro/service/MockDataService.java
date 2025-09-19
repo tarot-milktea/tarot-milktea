@@ -82,6 +82,33 @@ public class MockDataService {
         }
     }
 
+    public List<TaroResultResponse.DrawnCard> createDrawnCardsFromSelection(List<SubmitRequest.CardSelection> selectedCards) {
+        List<TaroResultResponse.DrawnCard> drawnCards = new ArrayList<>();
+        Random random = new Random();
+        
+        for (SubmitRequest.CardSelection selection : selectedCards) {
+            TaroCard card = findCard(selection.getSuit(), selection.getNumber());
+            if (card != null) {
+                String orientation = selection.getOrientation();
+                if (orientation == null) {
+                    // orientation이 지정되지 않은 경우 랜덤으로 결정
+                    orientation = random.nextBoolean() ? ValidationConstants.ORIENTATION_UPRIGHT : ValidationConstants.ORIENTATION_REVERSED;
+                }
+
+                String meaning = ValidationConstants.ORIENTATION_UPRIGHT.equals(orientation) ? card.getMeaningUpright() : card.getMeaningReversed();
+
+                drawnCards.add(new TaroResultResponse.DrawnCard(
+                    selection.getPosition(), card.getId(), card.getNameKo(), card.getNameEn(),
+                    orientation, card.getImageUrl(), meaning
+                ));
+            }
+        }
+        
+        // 위치 순으로 정렬
+        drawnCards.sort((a, b) -> Integer.compare(a.getPosition(), b.getPosition()));
+        
+        return drawnCards;
+    }
 
     public boolean isValidCategoryCode(String categoryCode) {
         return ValidationConstants.CATEGORY_LOVE.equals(categoryCode) ||
