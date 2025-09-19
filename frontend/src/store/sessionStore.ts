@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { storageService } from '../services/storageService';
+import { tarotApiService } from '../services/apiService';
 
 export interface Category {
   code: string;
@@ -54,9 +55,9 @@ interface SessionState extends SessionData {
   setSessionId: (sessionId: string | null) => void;
   setPredefinedCards: (cards: PredefinedCard[]) => void;
 
-  createSession: () => Promise<void>;
-  submitSessionData: () => Promise<void>;
-  fetchPredefinedCards: () => Promise<void>;
+  createSession: () => Promise<string>;
+  submitSessionData: () => Promise<unknown>;
+  fetchPredefinedCards: () => Promise<PredefinedCard[]>;
   clearSession: () => void;
   restoreFromStorage: () => void;
 }
@@ -145,25 +146,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     const { nickname } = get();
 
     try {
-      const response = await fetch('https://j13a601.p.ssafy.io/api/sessions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ nickname }),
-      });
+      const { sessionId, predefinedCards } = await tarotApiService.createSessionWithCards(nickname);
 
-      if (!response.ok) {
-        throw new Error('Failed to create session');
-      }
+      // 상태 업데이트
+      get().setSessionId(sessionId);
+      get().setPredefinedCards(predefinedCards);
 
-      const data = await response.json();
-      get().setSessionId(data.sessionId);
-
-      // 세션 생성 후 미리 정해진 카드들 가져오기
-      await get().fetchPredefinedCards();
-
-      return data.sessionId;
+      return sessionId;
     } catch (error) {
       console.error('Error creating session:', error);
       throw error;
@@ -184,25 +173,15 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }
 
     try {
-      const response = await fetch(`https://j13a601.p.ssafy.io/api/sessions/${sessionId}/submit`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          categoryCode: selectedCategory.code,
-          topicCode: selectedTopic.code,
-          questionText: selectedQuestion,
-          readerType: selectedReader.type,
-          selectedCards: []
-        }),
+      const result = await tarotApiService.submitSessionData(sessionId, {
+        categoryCode: selectedCategory.code,
+        topicCode: selectedTopic.code,
+        questionText: selectedQuestion,
+        readerType: selectedReader.type,
+        selectedCards: [] // 현재는 빈 배열, 나중에 실제 선택된 카드 ID들로 변경 가능
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to submit session data');
-      }
-
-      return await response.json();
+      return result;
     } catch (error) {
       console.error('Error submitting session data:', error);
       throw error;
@@ -217,16 +196,10 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }
 
     try {
-      const response = await fetch(`https://j13a601.p.ssafy.io/api/sessions/${sessionId}/cards`);
+      const cards = await tarotApiService.getPredefinedCards(sessionId);
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch predefined cards');
-      }
-
-      const data = await response.json();
-      get().setPredefinedCards(data.cards || []);
-
-      return data.cards;
+      get().setPredefinedCards(cards);
+      return cards;
     } catch (error) {
       console.error('Error fetching predefined cards:', error);
       throw error;

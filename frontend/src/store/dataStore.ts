@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { tarotApiService } from '../services/apiService';
 
 interface Category {
   code: string;
@@ -33,7 +34,6 @@ interface DataState {
   clearError: () => void;
 }
 
-const API_BASE_URL = 'https://j13a601.p.ssafy.io/api';
 
 export const useDataStore = create<DataState>((set, get) => ({
   categories: [],
@@ -45,14 +45,9 @@ export const useDataStore = create<DataState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const response = await fetch(`${API_BASE_URL}/topics`);
+      const categories = await tarotApiService.getTopics();
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch categories: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      set({ categories: data.categories || [], isLoading: false });
+      set({ categories, isLoading: false });
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -65,14 +60,9 @@ export const useDataStore = create<DataState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const response = await fetch(`${API_BASE_URL}/readers`);
+      const readers = await tarotApiService.getReaders();
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch readers: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      set({ readers: data.readers || [], isLoading: false });
+      set({ readers, isLoading: false });
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -92,10 +82,13 @@ export const useDataStore = create<DataState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      await Promise.all([
-        get().fetchCategories(),
-        get().fetchReaders()
-      ]);
+      const { categories: newCategories, readers: newReaders } = await tarotApiService.initializeAppData();
+
+      set({
+        categories: newCategories,
+        readers: newReaders,
+        isLoading: false
+      });
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : 'Failed to initialize data',

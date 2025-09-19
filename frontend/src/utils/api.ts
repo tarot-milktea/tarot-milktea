@@ -70,14 +70,14 @@ const createApiClient = () => {
     get: <T>(endpoint: string, options?: RequestInit) =>
       request<T>(endpoint, { ...options, method: 'GET' }),
 
-    post: <T>(endpoint: string, data?: any, options?: RequestInit) =>
+    post: <T>(endpoint: string, data?: unknown, options?: RequestInit) =>
       request<T>(endpoint, {
         ...options,
         method: 'POST',
         body: data ? JSON.stringify(data) : undefined,
       }),
 
-    put: <T>(endpoint: string, data?: any, options?: RequestInit) =>
+    put: <T>(endpoint: string, data?: unknown, options?: RequestInit) =>
       request<T>(endpoint, {
         ...options,
         method: 'PUT',
