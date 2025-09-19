@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.com.taro.dto.*;
 import org.com.taro.service.MockDataService;
+import org.com.taro.service.ai.OpenAIClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,9 @@ public class TaroController {
 
     @Autowired
     private MockDataService mockDataService;
+
+    @Autowired
+    private OpenAIClient openAIClient;
 
     @PostMapping("/sessions")
     @Operation(summary = "세션 생성", description = "새로운 타로 세션을 생성합니다")
@@ -163,9 +167,10 @@ public class TaroController {
             }
 
             // 타로 결과 생성
-            TaroResultResponse result = mockDataService.generateTaroResult(
-                    sessionId, request.getCategoryCode(), request.getTopicCode(), 
-                    request.getQuestionText(), request.getReaderType(), request.getSelectedCards());
+            // TaroResultResponse result = mockDataService.generateTaroResult(
+            //         sessionId, request.getCategoryCode(), request.getTopicCode(), 
+            //         request.getQuestionText(), request.getReaderType(), request.getSelectedCards());
+            TaroResultResponse result = openAIClient.generateTaroResult(sessionId, request);
 
             if (result == null) {
                 return ResponseEntity.internalServerError()
