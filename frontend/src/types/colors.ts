@@ -145,9 +145,7 @@ export const getCurrentTheme = (): 'light' | 'dark' => {
     return storedTheme;
   }
 
-  // 시스템 테마 감지
-  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const defaultTheme = prefersDark ? 'dark' : 'light';
+  const defaultTheme = 'dark';
 
   // 기본 테마 설정
   document.documentElement.setAttribute('data-theme', defaultTheme);
