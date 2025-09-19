@@ -5,6 +5,7 @@ import org.com.taro.dto.ReaderResponse;
 import org.com.taro.dto.TaroResultResponse;
 import org.com.taro.dto.TaroCard;
 import org.com.taro.dto.TaroReadingResponse;
+import org.com.taro.dto.SubmitRequest;
 import org.com.taro.exception.SessionNotFoundException;
 import org.com.taro.exception.TaroServiceException;
 import org.com.taro.constants.ValidationConstants;
@@ -82,32 +83,33 @@ public class MockDataService {
         }
     }
 
-    public List<TaroResultResponse.DrawnCard> createDrawnCardsFromSelection(List<SubmitRequest.CardSelection> selectedCards) {
-        List<TaroResultResponse.DrawnCard> drawnCards = new ArrayList<>();
-        Random random = new Random();
-        
-        for (SubmitRequest.CardSelection selection : selectedCards) {
-            TaroCard card = findCard(selection.getSuit(), selection.getNumber());
-            if (card != null) {
-                String orientation = selection.getOrientation();
-                if (orientation == null) {
-                    // orientation이 지정되지 않은 경우 랜덤으로 결정
-                    orientation = random.nextBoolean() ? ValidationConstants.ORIENTATION_UPRIGHT : ValidationConstants.ORIENTATION_REVERSED;
-                }
 
-                String meaning = ValidationConstants.ORIENTATION_UPRIGHT.equals(orientation) ? card.getMeaningUpright() : card.getMeaningReversed();
+    public TaroResultResponse generateTaroResultResponse(String sessionId, String categoryCode, String topicCode,
+                                                        String questionText, String readerType) {
+        // 폴백용 타로 결과 생성 (DB에서 카드 정보 조회 필요)
+        List<TaroResultResponse.DrawnCard> cards = new ArrayList<>();
 
-                drawnCards.add(new TaroResultResponse.DrawnCard(
-                    selection.getPosition(), card.getId(), card.getNameKo(), card.getNameEn(),
-                    orientation, card.getImageUrl(), meaning
-                ));
-            }
+        // 기본 카드 3장 생성 (실제로는 DB에서 조회해야 함)
+        for (int i = 1; i <= 3; i++) {
+            cards.add(new TaroResultResponse.DrawnCard(
+                i,
+                i,
+                "기본 카드 " + i,
+                "Default Card " + i,
+                "정방향",
+                "https://example.com/card-" + i + ".jpg",
+                "기본 해석"
+            ));
         }
-        
-        // 위치 순으로 정렬
-        drawnCards.sort((a, b) -> Integer.compare(a.getPosition(), b.getPosition()));
-        
-        return drawnCards;
+
+        return new TaroResultResponse(
+            sessionId,
+            cards,
+            "기본 해석: " + questionText + "에 대한 답변입니다.",
+            "기본 조언: " + readerType + " 스타일로 조언드립니다.",
+            75,
+            "https://example.com/result-" + sessionId + ".jpg"
+        );
     }
 
     public boolean isValidCategoryCode(String categoryCode) {

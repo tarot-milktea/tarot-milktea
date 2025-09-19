@@ -11,10 +11,10 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface TaroSessionRepository extends JpaRepository<TaroSession, Long> {
+public interface TaroSessionRepository extends JpaRepository<TaroSession, String> {
 
-    // sessionId로 세션 찾기
-    Optional<TaroSession> findBySessionId(String sessionId);
+    // This method is redundant since sessionId is now the primary key
+    // Optional<TaroSession> findBySessionId(String sessionId);
 
     // 특정 상태의 세션들 찾기
     List<TaroSession> findByStatus(TaroSession.SessionStatus status);
@@ -22,11 +22,8 @@ public interface TaroSessionRepository extends JpaRepository<TaroSession, Long> 
     // 특정 기간 동안 생성된 세션들 찾기
     List<TaroSession> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
 
-    // 특정 reader의 세션들 찾기
-    List<TaroSession> findByReaderName(String readerName);
-
-    // 특정 토픽으로 세션 찾기
-    List<TaroSession> findByTopicContaining(String topic);
+    // 특정 닉네임의 세션들 찾기
+    List<TaroSession> findByNickname(String nickname);
 
     // 활성 세션 개수 조회
     @Query("SELECT COUNT(s) FROM TaroSession s WHERE s.status = :status")
@@ -36,8 +33,8 @@ public interface TaroSessionRepository extends JpaRepository<TaroSession, Long> 
     @Query("SELECT s FROM TaroSession s ORDER BY s.createdAt DESC")
     List<TaroSession> findRecentSessions();
 
-    // sessionId 존재 여부 확인
-    boolean existsBySessionId(String sessionId);
+    // sessionId 존재 여부 확인 - use existsById since sessionId is now primary key
+    // boolean existsBySessionId(String sessionId);
 
     // 만료된 세션 삭제를 위한 조회
     @Query("SELECT s FROM TaroSession s WHERE s.updatedAt < :expireTime AND s.status = :status")

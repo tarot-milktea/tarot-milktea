@@ -2,13 +2,28 @@ package org.com.taro.service.ai;
 
 import org.com.taro.dto.SubmitRequest;
 import org.com.taro.dto.TaroResultResponse;
+import org.com.taro.entity.*;
+import org.com.taro.repository.*;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Service
 public class PromptService {
-    
+
+    private final TaroReadingRepository taroReadingRepository;
+    private final DrawnCardRepository drawnCardRepository;
+    private final TaroCardRepository taroCardRepository;
+
+    public PromptService(TaroReadingRepository taroReadingRepository,
+                        DrawnCardRepository drawnCardRepository,
+                        TaroCardRepository taroCardRepository) {
+        this.taroReadingRepository = taroReadingRepository;
+        this.drawnCardRepository = drawnCardRepository;
+        this.taroCardRepository = taroCardRepository;
+    }
+
     // TaroAiService에서 호출하는 메인 메서드
-    public String createPrompt(SubmitRequest request) {
+    public String createPrompt(SubmitRequest request, String sessionId) {
         StringBuilder prompt = new StringBuilder();
         
         // 1. 시스템 지시사항 (JSON 형식 강제)
@@ -30,16 +45,27 @@ public class PromptService {
         prompt.append("- 주제: ").append(getTopicName(request.getTopicCode())).append("\n");
         prompt.append("- 질문: \"").append(request.getQuestionText()).append("\"\n\n");
         
-        // 5. 선택된 카드 정보
+        // 5. 선택된 카드 정보 (DB에서 조회)
         prompt.append("선택된 카드:\n");
-        for (int i = 0; i < request.getSelectedCards().size(); i++) {
-            SubmitRequest.CardSelection card = request.getSelectedCards().get(i);
-            prompt.append(String.format("%d번째 카드: %s %s (%s)\n", 
-                i + 1, 
-                card.getSuit(), 
-                card.getNumber(),
-                card.getOrientation() != null ? card.getOrientation() : "정방향"
-            ));
+        try {
+            List<DrawnCard> drawnCards = getStoredCards(sessionId);
+            for (int i = 0; i < drawnCards.size(); i++) {
+                DrawnCard drawnCard = drawnCards.get(i);
+                TaroCardEntity cardEntity = taroCardRepository.findById(Long.valueOf(drawnCard.getCardId()))
+                    .orElseThrow(() -> new RuntimeException("Card not found: " + drawnCard.getCardId()));
+
+                String position = getPositionName(drawnCard.getPosition());
+                String orientation = drawnCard.getOrientation() == DrawnCard.Orientation.upright ? "정방향" : "역방향";
+
+                prompt.append(String.format("%d번째 카드 (%s): %s (%s)\n",
+                    i + 1,
+                    position,
+                    cardEntity.getNameKo(),
+                    orientation
+                ));
+            }
+        } catch (Exception e) {
+            prompt.append("카드 정보를 불러올 수 없습니다.\n");
         }
         
         return prompt.toString();
@@ -70,29 +96,40 @@ public class PromptService {
         }
     }
     
-    public String buildUserPrompt(SubmitRequest request) {
+    public String buildUserPrompt(SubmitRequest request, String sessionId) {
         StringBuilder prompt = new StringBuilder();
-        
+
         // 기본 정보
         prompt.append("타로 상담 정보:\n");
         prompt.append("- 카테고리: ").append(getCategoryName(request.getCategoryCode())).append("\n");
         prompt.append("- 주제: ").append(getTopicName(request.getTopicCode())).append("\n");
         prompt.append("- 질문: \"").append(request.getQuestionText()).append("\"\n\n");
-        
-        // 선택된 카드 정보
+
+        // 선택된 카드 정보 (DB에서 조회)
         prompt.append("선택된 카드:\n");
-        for (int i = 0; i < request.getSelectedCards().size(); i++) {
-            SubmitRequest.CardSelection card = request.getSelectedCards().get(i);
-            prompt.append(String.format("%d. %s %s (%s)\n", 
-                i + 1, 
-                card.getSuit(), 
-                card.getNumber(),
-                card.getOrientation() != null ? card.getOrientation() : "방향 미지정"
-            ));
+        try {
+            List<DrawnCard> drawnCards = getStoredCards(sessionId);
+            for (int i = 0; i < drawnCards.size(); i++) {
+                DrawnCard drawnCard = drawnCards.get(i);
+                TaroCardEntity cardEntity = taroCardRepository.findById(Long.valueOf(drawnCard.getCardId()))
+                    .orElseThrow(() -> new RuntimeException("Card not found: " + drawnCard.getCardId()));
+
+                String position = getPositionName(drawnCard.getPosition());
+                String orientation = drawnCard.getOrientation() == DrawnCard.Orientation.upright ? "정방향" : "역방향";
+
+                prompt.append(String.format("%d. %s (%s) - %s\n",
+                    i + 1,
+                    cardEntity.getNameKo(),
+                    orientation,
+                    position
+                ));
+            }
+        } catch (Exception e) {
+            prompt.append("카드 정보를 불러올 수 없습니다.\n");
         }
-        
+
         prompt.append("\n위 정보를 바탕으로 3장의 카드에 대한 타로 해석을 제공해주세요.");
-        
+
         return prompt.toString();
     }
     
@@ -146,6 +183,27 @@ public class PromptService {
             case "INCOME": return "수입";
             case "BUSINESS": return "사업";
             default: return topicCode;
+        }
+    }
+
+    // 헬퍼 메서드: 세션의 저장된 카드 조회
+    private List<DrawnCard> getStoredCards(String sessionId) {
+        // 세션에 해당하는 TaroReading 찾기
+        TaroReading taroReading = taroReadingRepository.findBySessionId(sessionId)
+            .stream().findFirst()
+            .orElseThrow(() -> new RuntimeException("TaroReading not found for session: " + sessionId));
+
+        // 해당 reading의 drawn_cards 조회
+        return drawnCardRepository.findByReadingIdOrderByPosition(taroReading.getId());
+    }
+
+    // 헬퍼 메서드: 포지션 이름 변환
+    private String getPositionName(int position) {
+        switch (position) {
+            case 1: return "과거";
+            case 2: return "현재";
+            case 3: return "미래";
+            default: return "위치" + position;
         }
     }
 }

@@ -8,6 +8,9 @@ import org.com.taro.config.OpenAIConfig;
 import org.com.taro.dto.TaroResultResponse;
 import org.com.taro.service.MockDataService;
 import org.com.taro.dto.SubmitRequest;
+import org.com.taro.entity.*;
+import org.com.taro.repository.*;
+import org.com.taro.constants.ValidationConstants;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.retry.annotation.Backoff;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,6 +38,15 @@ public class OpenAIClient {
     @Autowired
     private PromptService promptService;
 
+    @Autowired
+    private TaroReadingRepository taroReadingRepository;
+
+    @Autowired
+    private DrawnCardRepository drawnCardRepository;
+
+    @Autowired
+    private TaroCardRepository taroCardRepository;
+
     /**
      * AI를 통해 완전한 TaroResultResponse 생성 (메인 메서드)
      */
@@ -43,19 +55,19 @@ public class OpenAIClient {
             logger.info("AI 타로 결과 생성 시작 - 세션: {}", sessionId);
             
             // 1. 프롬프트 생성
-            String prompt = promptService.createPrompt(request);
+            String prompt = promptService.createPrompt(request, sessionId);
             logger.debug("프롬프트 생성 완료 - 길이: {}", prompt.length());
-            
+
             // 2. AI API 호출
             String aiResponse = getInterpretation(prompt);
             logger.debug("AI 응답 받음 - 길이: {}", aiResponse.length());
-            
+
             // 3. JSON 파싱
             ObjectMapper mapper = new ObjectMapper();
             JsonNode jsonNode = mapper.readTree(aiResponse);
-            
-            // 4. 카드 정보 생성
-            List<TaroResultResponse.DrawnCard> cards = mockDataService.createDrawnCardsFromSelection(request.getSelectedCards());
+
+            // 4. 카드 정보는 DB에서 조회 (별도 서비스 메소드 필요)
+            List<TaroResultResponse.DrawnCard> cards = getStoredCardsForResult(sessionId);
             
             // 5. TaroResultResponse 생성
             TaroResultResponse result = new TaroResultResponse(
@@ -75,13 +87,12 @@ public class OpenAIClient {
             
             // 폴백: MockDataService 사용
             logger.info("폴백 모드로 결과 생성 - 세션: {}", sessionId);
-            return mockDataService.generateTaroResult(
-                sessionId, 
-                request.getCategoryCode(), 
-                request.getTopicCode(), 
-                request.getQuestionText(), 
-                request.getReaderType(), 
-                request.getSelectedCards()
+            return mockDataService.generateTaroResultResponse(
+                sessionId,
+                request.getCategoryCode(),
+                request.getTopicCode(),
+                request.getQuestionText(),
+                request.getReaderType()
             );
         }
     }
@@ -165,5 +176,44 @@ public class OpenAIClient {
             "max_tokens", openAIConfig.getMaxTokens(),
             "temperature", openAIConfig.getTemperature()
         );
+    }
+
+    /**
+     * 세션의 저장된 카드를 TaroResultResponse용으로 조회
+     */
+    private List<TaroResultResponse.DrawnCard> getStoredCardsForResult(String sessionId) {
+        try {
+            // 세션에 해당하는 TaroReading 찾기
+            TaroReading taroReading = taroReadingRepository.findBySessionId(sessionId)
+                .stream().findFirst()
+                .orElseThrow(() -> new RuntimeException("TaroReading not found for session: " + sessionId));
+
+            // 저장된 drawn_cards 조회
+            List<DrawnCard> drawnCards = drawnCardRepository.findByReadingIdOrderByPosition(taroReading.getId());
+
+            // TaroResultResponse.DrawnCard로 변환
+            return drawnCards.stream().map(drawnCard -> {
+                TaroCardEntity cardEntity = taroCardRepository.findById(Long.valueOf(drawnCard.getCardId()))
+                    .orElseThrow(() -> new RuntimeException("Card not found: " + drawnCard.getCardId()));
+
+                String orientation = drawnCard.getOrientation() == DrawnCard.Orientation.upright ?
+                    ValidationConstants.ORIENTATION_UPRIGHT : ValidationConstants.ORIENTATION_REVERSED;
+
+                String meaning = drawnCard.getOrientation() == DrawnCard.Orientation.upright ?
+                    cardEntity.getMeaningUpright() : cardEntity.getMeaningReversed();
+
+                return new TaroResultResponse.DrawnCard(
+                    drawnCard.getPosition(),
+                    cardEntity.getId(),
+                    cardEntity.getNameKo(),
+                    cardEntity.getNameEn(),
+                    orientation,
+                    cardEntity.getImageUrl(),
+                    meaning
+                );
+            }).collect(java.util.stream.Collectors.toList());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to retrieve stored cards for session: " + sessionId, e);
+        }
     }
 }

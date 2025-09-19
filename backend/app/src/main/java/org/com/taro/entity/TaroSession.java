@@ -2,24 +2,17 @@ package org.com.taro.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "taro_sessions")
 public class TaroSession {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "session_id", unique = true, nullable = false)
+    @Column(name = "session_id", nullable = false)
     private String sessionId;
 
-    @Column(name = "topic", nullable = false)
-    private String topic;
-
-    @Column(name = "reader_name")
-    private String readerName;
+    @Column(name = "nickname", length = 100)
+    private String nickname;
 
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
@@ -31,8 +24,9 @@ public class TaroSession {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "taroSession", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<TaroCardEntity> cards;
+    // Remove bidirectional mapping for now to simplify
+    // @OneToMany(mappedBy = "sessionId", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    // private List<TaroCardEntity> cards;
 
     public enum SessionStatus {
         ACTIVE, COMPLETED, CANCELLED
@@ -42,10 +36,9 @@ public class TaroSession {
     public TaroSession() {}
 
     // 생성자
-    public TaroSession(String sessionId, String topic, String readerName) {
+    public TaroSession(String sessionId, String nickname) {
         this.sessionId = sessionId;
-        this.topic = topic;
-        this.readerName = readerName;
+        this.nickname = nickname;
         this.status = SessionStatus.ACTIVE;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
@@ -64,14 +57,6 @@ public class TaroSession {
     }
 
     // Getter와 Setter
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public String getSessionId() {
         return sessionId;
     }
@@ -80,20 +65,12 @@ public class TaroSession {
         this.sessionId = sessionId;
     }
 
-    public String getTopic() {
-        return topic;
+    public String getNickname() {
+        return nickname;
     }
 
-    public void setTopic(String topic) {
-        this.topic = topic;
-    }
-
-    public String getReaderName() {
-        return readerName;
-    }
-
-    public void setReaderName(String readerName) {
-        this.readerName = readerName;
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
     }
 
     public SessionStatus getStatus() {
@@ -120,11 +97,12 @@ public class TaroSession {
         this.updatedAt = updatedAt;
     }
 
-    public List<TaroCardEntity> getCards() {
-        return cards;
-    }
+    // Remove getter/setter for cards
+    // public List<TaroCardEntity> getCards() {
+    //     return cards;
+    // }
 
-    public void setCards(List<TaroCardEntity> cards) {
-        this.cards = cards;
-    }
+    // public void setCards(List<TaroCardEntity> cards) {
+    //     this.cards = cards;
+    // }
 }

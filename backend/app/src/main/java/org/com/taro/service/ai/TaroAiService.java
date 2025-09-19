@@ -32,10 +32,10 @@ public class TaroAiService {
      * 4. 예외 처리: OpenAI API 호출 실패 시 기본 메시지 등 폴백 처리 필요
      */
     @Async("taroTaskExecutor")
-    public CompletableFuture<String> generateInterpretation(SubmitRequest request) {   
+    public CompletableFuture<String> generateInterpretation(SubmitRequest request, String sessionId) {
         // 1. 프롬프트 생성: PromptService에서 프롬프트 생성
         //    (PromptService에 createPrompt(SubmitRequest) 메서드가 구현되어 있어야 함)
-        String prompt = promptService.createPrompt(request);
+        String prompt = promptService.createPrompt(request, sessionId);
 
         // 2. OpenAI API 호출: OpenAIClient에서 프롬프트를 넘겨서 해석 결과 받아오기
         //    (OpenAIClient에 getInterpretation(String prompt) 같은 메서드가 필요)
