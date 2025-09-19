@@ -8,7 +8,7 @@ public class TaroCardEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @Column(name = "card_id", unique = true, nullable = false)
     private Integer cardId;
@@ -38,12 +38,6 @@ public class TaroCardEntity {
     @Column(name = "meaning_reversed", columnDefinition = "TEXT")
     private String meaningReversed;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "session_id")
-    private TaroSession taroSession;
-
-    @Column(name = "is_reversed")
-    private Boolean isReversed = false;
 
     public enum CardSuit {
         MAJOR, WANDS, CUPS, SWORDS, PENTACLES
@@ -64,15 +58,14 @@ public class TaroCardEntity {
         this.videoUrl = videoUrl;
         this.meaningUpright = meaningUpright;
         this.meaningReversed = meaningReversed;
-        this.isReversed = false;
     }
 
     // Getter와 Setter
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -148,19 +141,4 @@ public class TaroCardEntity {
         this.meaningReversed = meaningReversed;
     }
 
-    public TaroSession getTaroSession() {
-        return taroSession;
-    }
-
-    public void setTaroSession(TaroSession taroSession) {
-        this.taroSession = taroSession;
-    }
-
-    public Boolean getIsReversed() {
-        return isReversed;
-    }
-
-    public void setIsReversed(Boolean isReversed) {
-        this.isReversed = isReversed;
-    }
 }

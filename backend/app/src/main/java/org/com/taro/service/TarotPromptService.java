@@ -15,15 +15,12 @@ public class TarotPromptService {
                 문장은 복잡하지 않게 작성해주세요.
                 """;
         String cardDescriptions = taroCards.stream()
-            .map(card -> String.format("%d. %s (%s) - %s\\n   의미: %s", 
+            .map(card -> String.format("%d. %s\\n   정방향 의미: %s\\n   역방향 의미: %s",
                 card.getId(),
                 card.getNameKo(),
-                // 정방향
                 card.getMeaningUpright(),
-                // 역방향
                 card.getMeaningReversed()))
-                
-            .collect(Collectors.joining("\\n"));
+            .collect(Collectors.joining("\\n\\n"));
         String userPrompt = String.format("""
             질문: "%s"
             분야: %s > %s
@@ -60,9 +57,9 @@ public class TarotPromptService {
             반드시 유효한 JSON만 응답해주세요. 마크다운이나 다른 텍스트는 포함하지 마세요.
             """, 
             question, category, topic, cardDescriptions,
-            cards.get(0).getName(), cards.get(0).getPositionMeaning(),
-            cards.get(1).getName(), cards.get(1).getPositionMeaning(),
-            cards.get(2).getName(), cards.get(2).getPositionMeaning());
+            taroCards.get(0).getNameKo(), "과거",
+            taroCards.get(1).getNameKo(), "현재",
+            taroCards.get(2).getNameKo(), "미래");
         
         return createPromptPair(systemPrompt, userPrompt);
     }

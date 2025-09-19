@@ -8,8 +8,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.com.taro.dto.*;
-import org.com.taro.service.MockDataService;
+import org.com.taro.service.TaroService;
 import org.com.taro.service.ai.OpenAIClient;
+import org.com.taro.exception.*;
+import org.com.taro.constants.ValidationConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,10 +23,10 @@ import jakarta.validation.Valid;
 @Tag(name = "Taro API", description = "타로 서비스 API")
 public class TaroController {
 
-    private final MockDataService mockDataService;
+    private final TaroService taroService;
 
-    public TaroController(MockDataService mockDataService) {
-        this.mockDataService = mockDataService;
+    public TaroController(TaroService taroService) {
+        this.taroService = taroService;
     }
 
     @Autowired
@@ -41,7 +43,7 @@ public class TaroController {
     public ResponseEntity<?> createSession(@RequestBody(required = false) CreateSessionRequest request) {
         try {
             String nickname = (request != null) ? request.getNickname() : null;
-            String sessionId = mockDataService.createSession(nickname);
+            String sessionId = taroService.createSession(nickname);
             return ResponseEntity.ok(new SessionResponse(sessionId));
         } catch (TaroServiceException e) {
             return ResponseEntity.internalServerError()
@@ -62,7 +64,7 @@ public class TaroController {
     })
     public ResponseEntity<?> getTopics() {
         try {
-            TopicResponse response = new TopicResponse(mockDataService.getCategories());
+            TopicResponse response = new TopicResponse(taroService.getCategories());
             return ResponseEntity.ok(response);
         } catch (TaroServiceException e) {
             return ResponseEntity.internalServerError()
@@ -83,7 +85,7 @@ public class TaroController {
     })
     public ResponseEntity<?> getReaders() {
         try {
-            ReaderResponse response = new ReaderResponse(mockDataService.getReaders());
+            ReaderResponse response = new ReaderResponse(taroService.getReaders());
             return ResponseEntity.ok(response);
         } catch (TaroServiceException e) {
             return ResponseEntity.internalServerError()
@@ -124,11 +126,10 @@ public class TaroController {
             // 비즈니스 로직 검증
             validateBusinessRules(request);
 
-            // 타로 결과 생성
-            // TaroResultResponse result = mockDataService.generateTaroResult(
-            //         sessionId, request.getCategoryCode(), request.getTopicCode(), 
-            //         request.getQuestionText(), request.getReaderType(), request.getSelectedCards());
-            TaroResultResponse result = openAIClient.generateTaroResult(sessionId, request);
+            // 타로 결과 생성 (내부적으로 처리)
+            taroService.generateTaroResult(
+                    sessionId, request.getCategoryCode(), request.getTopicCode(),
+                    request.getQuestionText(), request.getReaderType());
 
             return ResponseEntity.ok(new SubmitResultResponse(true, "타로 결과가 성공적으로 생성되었습니다", sessionId));
 
@@ -158,12 +159,12 @@ public class TaroController {
 
     private void validateBusinessRules(SubmitRequest request) {
         // 카테고리 코드 검증
-        if (!mockDataService.isValidCategoryCode(request.getCategoryCode())) {
+        if (!taroService.isValidCategoryCode(request.getCategoryCode())) {
             throw new InvalidRequestException("유효하지 않은 카테고리입니다: 사용 가능한 카테고리 코드: LOVE(연애), JOB(취업), MONEY(금전)");
         }
 
         // 토픽 코드 검증
-        if (!mockDataService.isValidTopicCode(request.getCategoryCode(), request.getTopicCode())) {
+        if (!taroService.isValidTopicCode(request.getCategoryCode(), request.getTopicCode())) {
             String availableTopics = getAvailableTopics(request.getCategoryCode());
             throw new InvalidRequestException("해당 카테고리에서 지원하지 않는 주제입니다: " + availableTopics);
         }
@@ -206,7 +207,7 @@ public class TaroController {
                         .body(new ErrorResponse(400, "유효하지 않은 세션 ID입니다", "세션 ID는 필수입니다"));
             }
 
-            TaroReadingResponse result = mockDataService.generateTaroReading(sessionId);
+            TaroReadingResponse result = taroService.generateTaroReading(sessionId);
             return ResponseEntity.ok(result);
 
         } catch (SessionNotFoundException e) {
