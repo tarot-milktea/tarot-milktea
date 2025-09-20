@@ -177,13 +177,12 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         categoryCode: selectedCategory.code,
         topicCode: selectedTopic.code,
         questionText: selectedQuestion,
-        readerType: selectedReader.type,
-        selectedCards: [] // 현재는 빈 배열, 나중에 실제 선택된 카드 ID들로 변경 가능
+        readerType: selectedReader.type
       });
 
       return result;
     } catch (error) {
-      console.error('Error submitting session data:', error);
+      console.error('❌ 세션 데이터 제출 실패:', error);
       throw error;
     }
   },
