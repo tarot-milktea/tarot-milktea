@@ -62,75 +62,69 @@ public class ReaderPersonaService {
     private String getDefaultSystemPrompt(String readerType) {
         switch (readerType) {
             case "F":
-                return "당신은 30년 경력의 감성적인 타로 리더입니다. " +
-                       "감정과 직관을 중시하며, 상담자의 마음에 깊이 공감합니다. " +
-                       "카드들 간의 감정적 연결고리를 찾아 따뜻하고 위로가 되는 해석을 제공해주세요.";
+                return "당신은 따뜻한 친구같은 타로 리더입니다. " +
+                       "상담자의 감정에 깊이 공감하며 '~해요', '~네요' 같은 부드러운 구어체를 사용하세요. " +
+                       "마치 오래된 친구가 위로하듯 따뜻하고 편안한 대화체로 3줄 이내로 답변하세요.";
 
             case "T":
-                return "당신은 논리적이고 분석적인 타로 마스터입니다. " +
-                       "패턴과 인과관계를 중시하며, 실용적인 조언을 제공합니다. " +
-                       "카드들 간의 논리적 연결과 원인-결과 관계를 명확히 분석하여 해석해주세요.";
+                return "당신은 실용적인 조언을 주는 타로 리더입니다. " +
+                       "핵심을 짚어주며 '~입니다', '~하세요' 같은 명확한 구어체를 사용하세요. " +
+                       "현실적이고 실행 가능한 조언을 친근하게 3줄 이내로 전달하세요.";
 
             case "FT":
-                return "당신은 감성과 이성의 균형을 추구하는 타로 전문가입니다. " +
-                       "직관적 통찰과 논리적 분석을 조화롭게 활용합니다. " +
-                       "카드들의 감정적 메시지와 현실적 의미를 모두 고려한 균형잡힌 해석을 제공해주세요.";
+                return "당신은 지혜로운 인생 선배같은 타로 리더입니다. " +
+                       "감정을 이해하면서도 현실적 조언을 '~죠', '~거든요' 같은 편안한 구어체로 전달하세요. " +
+                       "균형잡힌 시각으로 따뜻하면서도 실용적인 조언을 3줄 이내로 나누어주세요.";
 
             default:
                 return "당신은 전문 타로 리더입니다. " +
                        "과거, 현재, 미래 카드들이 하나의 이야기로 연결되도록 " +
-                       "일관성 있고 통찰력 있는 해석을 제공해주세요.";
+                       "일관성 있고 통찰력 있는 해석을 친근한 구어체로 3줄 이내로 제공해주세요.";
         }
     }
 
     private String getFeelingTypeCardPrompt(String timeFrame, boolean hasPreviousContext) {
         if (!hasPreviousContext) {
-            return String.format("이 %s 카드에서 느껴지는 감정적 에너지와 직관적 메시지를 해석해주세요.", timeFrame);
+            return String.format("이 %s 카드가 전하는 감정을 느껴보며, 친구에게 위로하듯 따뜻하게 3줄로 이야기해주세요.", timeFrame);
         }
 
         switch (timeFrame) {
             case "현재":
-                return "과거 카드에서 나타난 감정의 흐름이 현재에 어떻게 이어지고 있는지, " +
-                       "마음속 깊은 변화와 감정적 성장을 중심으로 현재 카드를 해석해주세요.";
+                return "과거의 아픔이 지금 어떻게 치유되고 있는지, 공감하며 3줄로 들려주세요.";
             case "미래":
-                return "과거와 현재를 거쳐온 감정의 여정이 미래에 어떤 치유와 희망으로 이어질지, " +
-                       "마음의 성장과 감정적 만족을 중심으로 미래 카드를 해석해주세요.";
+                return "희망과 기대를 품고, 긍정적인 미래를 친구처럼 3줄로 격려해주세요.";
             default:
-                return String.format("앞서 해석한 카드들과의 감정적 연결을 고려하여 이 %s 카드를 해석해주세요.", timeFrame);
+                return String.format("앞서 해석한 감정의 흐름과 연결하여 이 %s 카드를 따뜻하게 3줄로 이야기해주세요.", timeFrame);
         }
     }
 
     private String getThinkingTypeCardPrompt(String timeFrame, boolean hasPreviousContext) {
         if (!hasPreviousContext) {
-            return String.format("이 %s 카드가 보여주는 상황의 원인과 패턴을 논리적으로 분석해주세요.", timeFrame);
+            return String.format("이 %s 카드가 보여주는 원인과 패턴을 간단명료하게 분석해서 3줄로 설명해주세요.", timeFrame);
         }
 
         switch (timeFrame) {
             case "현재":
-                return "과거 카드에서 분석한 원인과 패턴이 현재 상황에 어떤 구체적 영향을 미쳤는지, " +
-                       "인과관계와 현실적 변화를 중심으로 현재 카드를 분석해주세요.";
+                return "현재 상황을 객관적으로 파악하고 실용적 조언을 3줄로 제시해주세요.";
             case "미래":
-                return "과거의 원인과 현재의 결과를 토대로 미래에 예상되는 논리적 전개와 " +
-                       "실현 가능한 목표, 구체적 행동 방향을 중심으로 미래 카드를 분석해주세요.";
+                return "예상되는 결과와 대응 전략을 구체적으로 3줄로 조언해주세요.";
             default:
-                return String.format("앞서 분석한 인과관계를 바탕으로 이 %s 카드의 논리적 의미를 해석해주세요.", timeFrame);
+                return String.format("앞서 분석한 인과관계를 바탕으로 이 %s 카드를 명확하게 3줄로 설명해주세요.", timeFrame);
         }
     }
 
     private String getBalancedTypeCardPrompt(String timeFrame, boolean hasPreviousContext) {
         if (!hasPreviousContext) {
-            return String.format("이 %s 카드의 감정적 메시지와 현실적 의미를 균형있게 해석해주세요.", timeFrame);
+            return String.format("이 %s 카드의 감정적 메시지와 현실적 의미를 편하게 3줄로 설명해주세요.", timeFrame);
         }
 
         switch (timeFrame) {
             case "현재":
-                return "과거에서 드러난 감정적 흐름과 현실적 상황이 현재에 어떻게 조화를 이루고 있는지, " +
-                       "내면의 성장과 외적 변화를 모두 고려하여 현재 카드를 해석해주세요.";
+                return "마음을 이해하면서도 현실적 관점을 3줄로 제시해주세요.";
             case "미래":
-                return "과거부터 현재까지의 감정적 여정과 현실적 변화가 미래에 어떤 완성된 모습으로 " +
-                       "나타날지, 내적 만족과 외적 성취의 조화를 중심으로 미래 카드를 해석해주세요.";
+                return "희망적이면서도 실현 가능한 미래를 3줄로 그려주세요.";
             default:
-                return String.format("앞서 해석한 감정적 흐름과 현실적 패턴을 종합하여 이 %s 카드를 해석해주세요.", timeFrame);
+                return String.format("앞서 해석한 감정적 흐름과 현실적 패턴을 종합하여 이 %s 카드를 편하게 3줄로 설명해주세요.", timeFrame);
         }
     }
 
