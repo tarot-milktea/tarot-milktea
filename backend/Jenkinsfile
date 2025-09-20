@@ -76,9 +76,16 @@ pipeline {
           sh """
             echo "[INFO] Building image with tag: ${env.CURRENT_TAG}"
             
-            # 현재 컨테이너 중지
-            docker stop ${env.CONTAINER_NAME} || true
-            docker rm   ${env.CONTAINER_NAME} || true
+            # 현재 컨테이너 안전하게 중지 및 제거
+            echo "[INFO] Stopping and removing existing containers..."
+            docker stop ${env.CONTAINER_NAME} 2>/dev/null || echo "[INFO] Container ${env.CONTAINER_NAME} was not running"
+            docker rm ${env.CONTAINER_NAME} 2>/dev/null || echo "[INFO] Container ${env.CONTAINER_NAME} was not found"
+            
+            # 컨테이너 정리 완료 확인
+            if docker ps -a --format '{{.Names}}' | grep -q "^${env.CONTAINER_NAME}\$"; then
+              echo "[WARNING] Container still exists, forcing removal..."
+              docker rm -f ${env.CONTAINER_NAME} || true
+            fi
             
             # 새 이미지 빌드
             cd ${env.WORKSPACE}/backend
@@ -101,8 +108,25 @@ pipeline {
             sed "s|image: ${env.IMAGE_NAME}.*|image: ${env.IMAGE_NAME}:${env.CURRENT_TAG}|g" ${env.COMPOSE_FILE} > ${env.COMPOSE_FILE}.tmp
             mv ${env.COMPOSE_FILE}.tmp ${env.COMPOSE_FILE}
             
+            # 기존 서비스 정리 (compose를 통해)
+            echo "[INFO] Stopping existing services..."
+            ${env.COMPOSE_CMD} down ${env.SERVICE_NAME} 2>/dev/null || echo "[INFO] Service was not running"
+            
+            # 새 서비스 시작
+            echo "[INFO] Starting new service..."
             ${env.COMPOSE_CMD} up -d ${env.SERVICE_NAME}
+            
+            # 서비스 상태 확인
             ${env.COMPOSE_CMD} ps
+            
+            # 컨테이너가 실제로 시작되었는지 확인
+            sleep 5
+            if ! docker ps --format '{{.Names}}' | grep -q "^${env.CONTAINER_NAME}\$"; then
+              echo "[ERROR] Container ${env.CONTAINER_NAME} failed to start"
+              exit 1
+            else
+              echo "[INFO] Container ${env.CONTAINER_NAME} started successfully"
+            fi
           """
         }
       }
@@ -139,14 +163,18 @@ pipeline {
                 ROLLBACK_TAG=\$(cat ${env.LAST_SUCCESS_FILE})
                 echo "[INFO] Rolling back to previous successful version: \$ROLLBACK_TAG"
                 
-                # 실패한 컨테이너 중지
-                docker stop ${env.CONTAINER_NAME} || true
-                docker rm   ${env.CONTAINER_NAME} || true
+                # 실패한 컨테이너 안전하게 중지
+                echo "[INFO] Stopping failed container..."
+                ${env.COMPOSE_CMD} down ${env.SERVICE_NAME} 2>/dev/null || echo "[INFO] Service was not running"
+                docker stop ${env.CONTAINER_NAME} 2>/dev/null || echo "[INFO] Container was not running"
+                docker rm ${env.CONTAINER_NAME} 2>/dev/null || echo "[INFO] Container was not found"
                 
                 # 이전 성공 이미지로 롤백
                 sed "s|image: ${env.IMAGE_NAME}.*|image: ${env.IMAGE_NAME}:\$ROLLBACK_TAG|g" ${env.COMPOSE_FILE} > ${env.COMPOSE_FILE}.tmp
                 mv ${env.COMPOSE_FILE}.tmp ${env.COMPOSE_FILE}
                 
+                # 롤백된 서비스 시작
+                echo "[INFO] Starting rollback service..."
                 ${env.COMPOSE_CMD} up -d ${env.SERVICE_NAME}
                 
                 echo "[INFO] Rollback completed to: \$ROLLBACK_TAG"
@@ -205,17 +233,23 @@ pipeline {
             ROLLBACK_TAG=\$(cat ${env.LAST_SUCCESS_FILE})
             echo "[INFO] Rolling back to: \$ROLLBACK_TAG"
               
-            # 실패한 컨테이너 정리
-            docker stop ${env.CONTAINER_NAME} || true
-            docker rm   ${env.CONTAINER_NAME} || true
+            # 실패한 컨테이너 안전하게 정리
+            echo "[INFO] Cleaning up failed deployment..."
+            ${env.COMPOSE_CMD} down ${env.SERVICE_NAME} 2>/dev/null || echo "[INFO] Service was not running"
+            docker stop ${env.CONTAINER_NAME} 2>/dev/null || echo "[INFO] Container was not running"
+            docker rm ${env.CONTAINER_NAME} 2>/dev/null || echo "[INFO] Container was not found"
             
-            # 실패한 이미지 정리
-            docker rmi ${env.IMAGE_NAME}:${env.CURRENT_TAG} || true
+            # 실패한 이미지 정리 (존재하는 경우에만)
+            if docker images ${env.IMAGE_NAME}:${env.CURRENT_TAG} -q | grep -q .; then
+              docker rmi ${env.IMAGE_NAME}:${env.CURRENT_TAG} || echo "[WARNING] Failed to remove image"
+            fi
             
             # 이전 성공 이미지로 롤백
             sed "s|image: ${env.IMAGE_NAME}.*|image: ${env.IMAGE_NAME}:\$ROLLBACK_TAG|g" ${env.COMPOSE_FILE} > ${env.COMPOSE_FILE}.tmp
             mv ${env.COMPOSE_FILE}.tmp ${env.COMPOSE_FILE}
             
+            # 롤백된 서비스 시작
+            echo "[INFO] Starting rollback service..."
             ${env.COMPOSE_CMD} up -d ${env.SERVICE_NAME}
             
             echo "[INFO] Emergency rollback completed to: \$ROLLBACK_TAG"
