@@ -32,8 +32,6 @@ function ResultPage() {
 
   useEffect(() => {
     if (resultId) {
-      console.log('📄 ResultPage initialized with sessionId:', resultId);
-
       // Initialize result store with session ID
       setSessionId(resultId);
 
@@ -42,7 +40,6 @@ function ResultPage() {
 
       setLoading(false);
     } else {
-      console.error('❌ No resultId provided, redirecting to home');
       navigate('/', { replace: true });
     }
 
@@ -58,7 +55,6 @@ function ResultPage() {
 
     const fetchResult = async () => {
       try {
-        console.log('🔄 Fetching result for sessionId:', resultId);
         const response = await fetch(`https://j13a601.p.ssafy.io/api/sessions/${resultId}/result`);
 
         if (!response.ok) {
@@ -66,7 +62,6 @@ function ResultPage() {
         }
 
         const data = await response.json();
-        console.log('✅ Result data received:', data);
 
         // Update result store with fetched data
         if (data.interpretations?.past) {
@@ -90,13 +85,11 @@ function ResultPage() {
 
         // Stop polling if completed
         if (data.status === 'COMPLETED') {
-          console.log('✅ Result completed, stopping polling');
           return true; // Signal to stop polling
         }
 
         return false; // Continue polling
       } catch (error) {
-        console.error('❌ Failed to fetch result:', error);
         return false; // Continue polling on error
       }
     };
@@ -115,7 +108,6 @@ function ResultPage() {
 
       // Cleanup interval on unmount
       return () => {
-        console.log('🛑 Stopping result polling');
         clearInterval(intervalId);
       };
     });
@@ -138,7 +130,6 @@ function ResultPage() {
           showToast.success('링크가 클립보드에 복사되었습니다! 📋');
         }
       } catch (error) {
-        console.error('Share failed:', error);
         showToast.error('공유에 실패했습니다');
       }
     }
