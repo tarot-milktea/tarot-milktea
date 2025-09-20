@@ -29,3 +29,8 @@ dist-ssr
 
 CLAUDE.md
 documents/*
+
+# Java
+bin/
+target/
+*.class
