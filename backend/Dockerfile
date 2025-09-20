@@ -19,6 +19,9 @@ COPY app/src ./app/src/
 # Build the application
 RUN ./gradlew build -x test
 
+# Create directory for media files
+RUN mkdir -p /app/media/images/result
+
 # Expose port 8080
 EXPOSE 8080
 

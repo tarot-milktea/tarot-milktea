@@ -26,11 +26,14 @@ services:
     restart: always
     ports:
       - "8080:8080"
+    volumes:
+      - /home/ubuntu/media/images:/app/media/images
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/taro
       SPRING_DATASOURCE_USERNAME: taro
       SPRING_DATASOURCE_PASSWORD: taro1234
       SPRING_PROFILES_ACTIVE: prod
+      MEDIA_IMAGES_PATH: /app/media/images
     depends_on:
       mysql:
         condition: service_healthy
