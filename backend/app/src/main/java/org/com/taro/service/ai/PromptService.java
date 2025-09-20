@@ -210,8 +210,8 @@ public class PromptService {
             prompt.append("- 기본 의미: ").append(meaning).append("\n\n");
 
             // 요청사항
-            prompt.append("위 ").append(timeFrame).append(" 카드에 대해 질문자의 상황에 맞춰 구체적인 해석을 150-300자로 제공해주세요. ");
-            prompt.append("카드의 의미를 질문자의 ").append(getCategoryName(request.getCategoryCode())).append(" 고민과 연결하여 해석해주세요.");
+            prompt.append("위 ").append(timeFrame).append(" 카드에 대해 질문자의 상황에 맞춰 친구에게 말하듯 편하고 따뜻하게 3줄 이내로 설명해주세요. ");
+            prompt.append("카드의 의미를 질문자의 ").append(getCategoryName(request.getCategoryCode())).append(" 고민과 연결하여 구어체로 해석해주세요.");
 
         } catch (Exception e) {
             prompt.append("카드 정보를 불러올 수 없어 기본 해석을 제공합니다.");
@@ -244,13 +244,21 @@ public class PromptService {
         prompt.append("【현재】\n").append(presentInterpretation).append("\n\n");
         prompt.append("【미래】\n").append(futureInterpretation).append("\n\n");
 
-        // 총평 요청
-        prompt.append("위 세 카드의 해석을 종합하여 다음을 포함한 총평을 300-500자로 작성해주세요:\n");
-        prompt.append("1. 전체적인 상황 분석\n");
-        prompt.append("2. 과거-현재-미래의 연결점\n");
-        prompt.append("3. 질문자에게 필요한 구체적인 조언\n");
-        prompt.append("4. 앞으로 나아갈 방향\n\n");
-        prompt.append("질문자의 ").append(getCategoryName(request.getCategoryCode())).append(" 고민에 초점을 맞춰 실용적이고 희망적인 메시지를 전달해주세요.");
+        // 리더 타입별 총평 요청
+        String readerType = request.getReaderType();
+        switch (readerType) {
+            case "F":
+                prompt.append("세 카드가 전하는 감정의 흐름을 따라가며, 마음을 어루만지는 따뜻한 메시지를 친구처럼 3줄로 전해주세요.");
+                break;
+            case "T":
+                prompt.append("세 카드의 인과관계를 분석하여, 핵심 조언과 행동 지침을 명확하게 3줄로 정리해주세요.");
+                break;
+            case "FT":
+                prompt.append("세 카드의 감정적 메시지와 현실적 조언을 조화롭게 엮어 지혜로운 조언을 3줄로 전달해주세요.");
+                break;
+            default:
+                prompt.append("세 카드의 메시지를 종합하여 친근하고 도움이 되는 조언을 3줄로 전달해주세요.");
+        }
 
         return prompt.toString();
     }

@@ -249,6 +249,9 @@ public class TaroAiService {
                 timeFrame, hasPreviousContext);
         prompt.append(readerSpecificPrompt);
 
+        // 구어체 및 3줄 제한 추가 강조
+        prompt.append("\n\n반드시 '요', '네요', '죠' 등의 구어체로 3줄을 넘지 말고 답변해주세요.");
+
         return prompt.toString();
     }
 
