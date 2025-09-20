@@ -256,4 +256,45 @@ public class TaroServiceImpl implements TaroService {
         }
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public TaroResultResponse getSessionResult(String sessionId) {
+        // 세션 존재 확인
+        TaroSession session = taroSessionRepository.findById(sessionId)
+            .orElseThrow(() -> new SessionNotFoundException(sessionId));
+
+        // TaroReading 조회
+        TaroReading taroReading = taroReadingRepository.findBySessionId(sessionId)
+            .stream().findFirst()
+            .orElseThrow(() -> new TaroServiceException("TaroReading not found for session: " + sessionId));
+
+        // 처리 상태 확인
+        String status = session.getProcessingStatus().toString();
+
+        // 해석 결과 구성
+        TaroResultResponse.InterpretationsDto interpretations = new TaroResultResponse.InterpretationsDto(
+            taroReading.getPastInterpretation(),
+            taroReading.getPresentInterpretation(),
+            taroReading.getFutureInterpretation(),
+            taroReading.getInterpretation() // summary
+        );
+
+        // 결과 이미지 구성
+        TaroResultResponse.ResultImageDto resultImage = null;
+        if (taroReading.getResultImageUrl() != null) {
+            resultImage = new TaroResultResponse.ResultImageDto(
+                taroReading.getResultImageUrl(),
+                taroReading.getResultImageText()
+            );
+        }
+
+        return new TaroResultResponse(
+            sessionId,
+            status,
+            interpretations,
+            taroReading.getFortuneScore(),
+            resultImage
+        );
+    }
+
 }
