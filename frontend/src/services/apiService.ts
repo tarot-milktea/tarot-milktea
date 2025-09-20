@@ -15,7 +15,6 @@ export interface SubmitSessionRequest {
   topicCode: string;
   questionText: string;
   readerType: string;
-  selectedCards: number[]; // 카드 ID들
 }
 
 export interface SubmitSessionResponse {
@@ -91,7 +90,10 @@ class TarotApiService {
 
       return response;
     } catch (error) {
-      console.error('Failed to submit session data:', error);
+      console.error('API 호출 실패:', error);
+      if (error instanceof Error) {
+        console.error('에러 메시지:', error.message);
+      }
       throw new Error('세션 데이터 제출에 실패했습니다');
     }
   }

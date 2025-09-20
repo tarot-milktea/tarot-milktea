@@ -22,7 +22,7 @@ interface CardDrawPageProps {
 
 function CardDrawPage({ onNext }: CardDrawPageProps) {
   const { selectedCards, isRevealing, startReveal, revealCard } = useCardStore();
-  const { predefinedCards } = useSessionStore();
+  const { predefinedCards, submitSessionData } = useSessionStore();
   const [scale, setScale] = useState(1);
   const [isReducedMotion, setIsReducedMotion] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
@@ -45,6 +45,19 @@ function CardDrawPage({ onNext }: CardDrawPageProps) {
     [isReducedMotion]
   );
 
+  // 컴포넌트 마운트 시 세션 데이터 제출
+  useEffect(() => {
+    const submitSession = async () => {
+      try {
+        await submitSessionData();
+      } catch (error) {
+        console.error('CardDrawPage: 세션 데이터 제출 실패:', error);
+      }
+    };
+
+    submitSession();
+  }, [submitSessionData]);
+
   useEffect(() => {
     // 접근성을 위한 reduced motion 감지
     setIsReducedMotion(shouldReduceMotion());
@@ -54,7 +67,7 @@ function CardDrawPage({ onNext }: CardDrawPageProps) {
       setIsTouchDevice(
         'ontouchstart' in window ||
         navigator.maxTouchPoints > 0 ||
-        (navigator as any).msMaxTouchPoints > 0
+        ((navigator as Navigator & { msMaxTouchPoints?: number }).msMaxTouchPoints ?? 0) > 0
       );
     };
     
