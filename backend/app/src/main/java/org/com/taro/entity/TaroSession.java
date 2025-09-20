@@ -18,6 +18,10 @@ public class TaroSession {
     @Enumerated(EnumType.STRING)
     private SessionStatus status;
 
+    @Column(name = "processing_status")
+    @Enumerated(EnumType.STRING)
+    private ProcessingStatus processingStatus;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -32,6 +36,23 @@ public class TaroSession {
         ACTIVE, COMPLETED, CANCELLED
     }
 
+    public enum ProcessingStatus {
+        CREATED,              // 세션 생성
+        CARDS_GENERATED,      // 카드 3장 생성
+        SUBMITTED,            // 사용자 제출
+        PAST_PROCESSING,      // 과거 카드 해석 중
+        PAST_COMPLETED,       // 과거 카드 완료
+        PRESENT_PROCESSING,   // 현재 카드 해석 중
+        PRESENT_COMPLETED,    // 현재 카드 완료
+        FUTURE_PROCESSING,    // 미래 카드 해석 중
+        FUTURE_COMPLETED,     // 미래 카드 완료
+        SUMMARY_PROCESSING,   // 총평 생성 중
+        SUMMARY_COMPLETED,    // 총평 완료
+        IMAGE_PROCESSING,     // 이미지 생성 중
+        COMPLETED,           // 전체 완료
+        FAILED              // 실패
+    }
+
     // 기본 생성자
     public TaroSession() {}
 
@@ -40,6 +61,7 @@ public class TaroSession {
         this.sessionId = sessionId;
         this.nickname = nickname;
         this.status = SessionStatus.ACTIVE;
+        this.processingStatus = ProcessingStatus.CREATED;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -79,6 +101,14 @@ public class TaroSession {
 
     public void setStatus(SessionStatus status) {
         this.status = status;
+    }
+
+    public ProcessingStatus getProcessingStatus() {
+        return processingStatus;
+    }
+
+    public void setProcessingStatus(ProcessingStatus processingStatus) {
+        this.processingStatus = processingStatus;
     }
 
     public LocalDateTime getCreatedAt() {

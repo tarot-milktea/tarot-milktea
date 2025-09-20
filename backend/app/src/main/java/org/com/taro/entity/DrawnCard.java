@@ -25,8 +25,6 @@ public class DrawnCard {
     @Enumerated(EnumType.STRING)
     private Orientation orientation;
 
-    @Column(name = "meaning", columnDefinition = "TEXT")
-    private String meaning;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -98,13 +96,6 @@ public class DrawnCard {
         this.orientation = orientation;
     }
 
-    public String getMeaning() {
-        return meaning;
-    }
-
-    public void setMeaning(String meaning) {
-        this.meaning = meaning;
-    }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;

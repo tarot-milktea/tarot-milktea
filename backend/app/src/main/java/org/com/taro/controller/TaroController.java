@@ -10,12 +10,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import org.com.taro.dto.*;
 import org.com.taro.service.TaroService;
 import org.com.taro.service.ai.OpenAIClient;
+import org.com.taro.service.ai.TaroAiService;
+import org.com.taro.service.SSEManager;
 import org.com.taro.exception.*;
 import org.com.taro.constants.ValidationConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.util.StringUtils;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import jakarta.validation.Valid;
 
 @RestController
@@ -31,6 +34,12 @@ public class TaroController {
 
     @Autowired
     private OpenAIClient openAIClient;
+
+    @Autowired
+    private TaroAiService taroAiService;
+
+    @Autowired
+    private SSEManager sseManager;
 
     @PostMapping("/sessions")
     @Operation(summary = "세션 생성", description = "새로운 타로 세션을 생성합니다")
@@ -126,12 +135,15 @@ public class TaroController {
             // 비즈니스 로직 검증
             validateBusinessRules(request);
 
-            // 타로 결과 생성 (내부적으로 처리)
+            // 기본 TaroReading 정보 업데이트 (동기)
             taroService.generateTaroResult(
                     sessionId, request.getCategoryCode(), request.getTopicCode(),
                     request.getQuestionText(), request.getReaderType());
 
-            return ResponseEntity.ok(new SubmitResultResponse(true, "타로 결과가 성공적으로 생성되었습니다", sessionId));
+            // 비동기 AI 처리 시작
+            taroAiService.processSequentially(sessionId, request);
+
+            return ResponseEntity.ok(new SubmitResultResponse(true, "타로 해석이 시작되었습니다. SSE를 통해 진행상황을 확인하세요.", sessionId));
 
         } catch (InvalidRequestException e) {
             return ResponseEntity.badRequest()
@@ -219,6 +231,39 @@ public class TaroController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                     .body(new ErrorResponse(500, "타로 카드 생성 실패", "서버 내부 오류가 발생했습니다"));
+        }
+    }
+
+    @GetMapping(value = "/sessions/{sessionId}/events", produces = "text/event-stream")
+    @Operation(summary = "세션 이벤트 구독", description = "SSE를 통해 타로 해석 진행상황을 실시간으로 구독합니다")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "SSE 연결 성공"),
+            @ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public SseEmitter subscribeToSession(
+            @Parameter(description = "세션 ID", required = true)
+            @PathVariable String sessionId) {
+        try {
+            // 세션 ID 검증
+            if (!StringUtils.hasText(sessionId)) {
+                throw new InvalidRequestException("유효하지 않은 세션 ID입니다");
+            }
+
+            // 세션 존재 여부 확인
+            if (!taroService.sessionExists(sessionId)) {
+                throw new SessionNotFoundException(sessionId);
+            }
+
+            // SSE 연결 생성
+            return sseManager.addEmitter(sessionId);
+
+        } catch (SessionNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new TaroServiceException("SSE 연결에 실패했습니다: " + e.getMessage());
         }
     }
 

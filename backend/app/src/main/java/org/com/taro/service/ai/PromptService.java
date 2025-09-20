@@ -6,6 +6,7 @@ import org.com.taro.entity.*;
 import org.com.taro.repository.*;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PromptService {
@@ -13,65 +14,39 @@ public class PromptService {
     private final TaroReadingRepository taroReadingRepository;
     private final DrawnCardRepository drawnCardRepository;
     private final TaroCardRepository taroCardRepository;
+    private final CategoryRepository categoryRepository;
+    private final TopicRepository topicRepository;
+    private final ReaderRepository readerRepository;
 
     public PromptService(TaroReadingRepository taroReadingRepository,
                         DrawnCardRepository drawnCardRepository,
-                        TaroCardRepository taroCardRepository) {
+                        TaroCardRepository taroCardRepository,
+                        CategoryRepository categoryRepository,
+                        TopicRepository topicRepository,
+                        ReaderRepository readerRepository) {
         this.taroReadingRepository = taroReadingRepository;
         this.drawnCardRepository = drawnCardRepository;
         this.taroCardRepository = taroCardRepository;
+        this.categoryRepository = categoryRepository;
+        this.topicRepository = topicRepository;
+        this.readerRepository = readerRepository;
     }
 
-    // TaroAiService에서 호출하는 메인 메서드
-    public String createPrompt(SubmitRequest request, String sessionId) {
-        StringBuilder prompt = new StringBuilder();
-        
-        // 1. 시스템 지시사항 (JSON 형식 강제)
-        prompt.append("당신은 전문 타로 리더입니다. 반드시 다음 JSON 형식으로만 응답해주세요. 다른 텍스트는 포함하지 마세요:\n\n");
-        
-        // 2. 정확한 JSON 형식 예시
-        prompt.append("{\n");
-        prompt.append("  \"interpretation\": \"여기에 타로 해석 내용을 300-500자로 작성\",\n");
-        prompt.append("  \"readerMessage\": \"여기에 리더의 조언을 100-200자로 작성\",\n");
-        prompt.append("  \"fortuneScore\": 75\n");
-        prompt.append("}\n\n");
-        
-        // 3. 리더 타입별 톤 설정
-        prompt.append("리더 스타일: ").append(getReaderStyle(request.getReaderType())).append("\n\n");
-        
-        // 4. 상담 정보
-        prompt.append("타로 상담:\n");
-        prompt.append("- 카테고리: ").append(getCategoryName(request.getCategoryCode())).append("\n");
-        prompt.append("- 주제: ").append(getTopicName(request.getTopicCode())).append("\n");
-        prompt.append("- 질문: \"").append(request.getQuestionText()).append("\"\n\n");
-        
-        // 5. 선택된 카드 정보 (DB에서 조회)
-        prompt.append("선택된 카드:\n");
-        try {
-            List<DrawnCard> drawnCards = getStoredCards(sessionId);
-            for (int i = 0; i < drawnCards.size(); i++) {
-                DrawnCard drawnCard = drawnCards.get(i);
-                TaroCardEntity cardEntity = taroCardRepository.findById(Long.valueOf(drawnCard.getCardId()))
-                    .orElseThrow(() -> new RuntimeException("Card not found: " + drawnCard.getCardId()));
-
-                String position = getPositionName(drawnCard.getPosition());
-                String orientation = drawnCard.getOrientation() == DrawnCard.Orientation.upright ? "정방향" : "역방향";
-
-                prompt.append(String.format("%d번째 카드 (%s): %s (%s)\n",
-                    i + 1,
-                    position,
-                    cardEntity.getNameKo(),
-                    orientation
-                ));
-            }
-        } catch (Exception e) {
-            prompt.append("카드 정보를 불러올 수 없습니다.\n");
-        }
-        
-        return prompt.toString();
-    }
+    // Deprecated - Use createCardPrompt() for individual cards instead
+    // This method was for processing all cards at once which is no longer used
     
     private String getReaderStyle(String readerType) {
+        try {
+            Optional<Reader> readerOpt = readerRepository.findByType(readerType);
+            if (readerOpt.isPresent()) {
+                Reader reader = readerOpt.get();
+                return reader.getDescription() + " style interpretation";
+            }
+        } catch (Exception e) {
+            // Fallback to default descriptions
+        }
+
+        // 기본 설명
         switch (readerType) {
             case "F": return "감성적이고 따뜻한 어조로 해석";
             case "T": return "논리적이고 현실적인 어조로 해석";
@@ -81,6 +56,18 @@ public class PromptService {
     }
     
     public String buildSystemPrompt(String readerType) {
+        try {
+            Optional<Reader> readerOpt = readerRepository.findByType(readerType);
+            if (readerOpt.isPresent()) {
+                Reader reader = readerOpt.get();
+                return "당신은 " + reader.getName() + ", 전문 타로 리더입니다. " +
+                       reader.getDescription() + " 통찰력 있고 도움이 되는 타로 해석을 제공해주세요.";
+            }
+        } catch (Exception e) {
+            // Fallback to default descriptions
+        }
+
+        // 기본 시스템 프롬프트
         switch (readerType) {
             case "F":
                 return "당신은 30년 경력의 감성적인 타로 리더입니다. " +
@@ -96,66 +83,48 @@ public class PromptService {
         }
     }
     
-    public String buildUserPrompt(SubmitRequest request, String sessionId) {
+    // Deprecated - Use createCardPrompt() and createSummaryPrompt() instead
+    
+    /**
+     * Create prompt for advice image generation
+     */
+    public String createImagePrompt(String summary, SubmitRequest request) {
         StringBuilder prompt = new StringBuilder();
 
-        // 기본 정보
-        prompt.append("타로 상담 정보:\n");
-        prompt.append("- 카테고리: ").append(getCategoryName(request.getCategoryCode())).append("\n");
-        prompt.append("- 주제: ").append(getTopicName(request.getTopicCode())).append("\n");
-        prompt.append("- 질문: \"").append(request.getQuestionText()).append("\"\n\n");
-
-        // 선택된 카드 정보 (DB에서 조회)
-        prompt.append("선택된 카드:\n");
-        try {
-            List<DrawnCard> drawnCards = getStoredCards(sessionId);
-            for (int i = 0; i < drawnCards.size(); i++) {
-                DrawnCard drawnCard = drawnCards.get(i);
-                TaroCardEntity cardEntity = taroCardRepository.findById(Long.valueOf(drawnCard.getCardId()))
-                    .orElseThrow(() -> new RuntimeException("Card not found: " + drawnCard.getCardId()));
-
-                String position = getPositionName(drawnCard.getPosition());
-                String orientation = drawnCard.getOrientation() == DrawnCard.Orientation.upright ? "정방향" : "역방향";
-
-                prompt.append(String.format("%d. %s (%s) - %s\n",
-                    i + 1,
-                    cardEntity.getNameKo(),
-                    orientation,
-                    position
-                ));
-            }
-        } catch (Exception e) {
-            prompt.append("카드 정보를 불러올 수 없습니다.\n");
-        }
-
-        prompt.append("\n위 정보를 바탕으로 3장의 카드에 대한 타로 해석을 제공해주세요.");
+        prompt.append("Create a mystical tarot card illustration that represents: ");
+        prompt.append(getCategoryContext(request.getCategoryCode())).append(". ");
+        prompt.append("The overall message is about hope and guidance. ");
+        prompt.append("Style: ethereal, magical, tarot card art, purple and gold color scheme, ");
+        prompt.append("mystical symbols, gentle and positive atmosphere.");
 
         return prompt.toString();
     }
-    
-    public String getCardDescription(TaroResultResponse.DrawnCard card) {
-        return String.format("%s (%s) - %s", 
-            card.getNameKo(), 
-            card.getOrientation(), 
-            card.getMeaning()
-        );
-    }
-    
-    public String getCategoryContext(String categoryCode) {
+
+    private String getCategoryContext(String categoryCode) {
         switch (categoryCode) {
             case "LOVE":
-                return "연애와 관련된 고민";
+                return "love and relationships";
             case "JOB":
-                return "취업과 커리어에 관련된 고민";
+                return "career and professional growth";
             case "MONEY":
-                return "금전과 재정에 관련된 고민";
+                return "financial prosperity and abundance";
             default:
-                return "일반적인 고민";
+                return "life guidance and wisdom";
         }
     }
     
-    // 헬퍼 메서드들
+    // Helper methods - now using DB data
     private String getCategoryName(String categoryCode) {
+        try {
+            Optional<Category> categoryOpt = categoryRepository.findByCode(categoryCode);
+            if (categoryOpt.isPresent()) {
+                return categoryOpt.get().getName();
+            }
+        } catch (Exception e) {
+            // Fall back to default if DB lookup fails
+        }
+
+        // 기본 매핑
         switch (categoryCode) {
             case "LOVE": return "연애";
             case "JOB": return "취업";
@@ -163,9 +132,18 @@ public class PromptService {
             default: return categoryCode;
         }
     }
-    
+
     private String getTopicName(String topicCode) {
-        // 간단한 매핑 - 실제로는 더 상세한 매핑 필요
+        try {
+            Optional<Topic> topicOpt = topicRepository.findByCode(topicCode);
+            if (topicOpt.isPresent()) {
+                return topicOpt.get().getName();
+            }
+        } catch (Exception e) {
+            // Fall back to default if DB lookup fails
+        }
+
+        // 기본 매핑
         switch (topicCode) {
             case "REUNION": return "재회";
             case "NEW_LOVE": return "새로운 인연";
@@ -195,6 +173,86 @@ public class PromptService {
 
         // 해당 reading의 drawn_cards 조회
         return drawnCardRepository.findByReadingIdOrderByPosition(taroReading.getId());
+    }
+
+    /**
+     * 개별 카드 해석을 위한 프롬프트 생성
+     */
+    public String createCardPrompt(DrawnCard drawnCard, SubmitRequest request, String timeFrame) {
+        StringBuilder prompt = new StringBuilder();
+
+        try {
+            // 카드 정보 조회
+            TaroCardEntity cardEntity = taroCardRepository.findById(Long.valueOf(drawnCard.getCardId()))
+                .orElseThrow(() -> new RuntimeException("Card not found: " + drawnCard.getCardId()));
+
+            // 시스템 지시사항
+            prompt.append("당신은 전문 타로 리더입니다. ")
+                  .append(getReaderStyle(request.getReaderType()))
+                  .append("\n\n");
+
+            // 상담 정보
+            prompt.append("상담 정보:\n");
+            prompt.append("- 카테고리: ").append(getCategoryName(request.getCategoryCode())).append("\n");
+            prompt.append("- 주제: ").append(getTopicName(request.getTopicCode())).append("\n");
+            prompt.append("- 질문: \"").append(request.getQuestionText()).append("\"\n\n");
+
+            // 카드 정보
+            String orientation = drawnCard.getOrientation() == DrawnCard.Orientation.upright ? "정방향" : "역방향";
+            prompt.append("해석할 카드:\n");
+            prompt.append("- 카드명: ").append(cardEntity.getNameKo()).append(" (").append(cardEntity.getNameEn()).append(")\n");
+            prompt.append("- 방향: ").append(orientation).append("\n");
+            prompt.append("- 시점: ").append(timeFrame).append("\n");
+
+            // 카드 의미 추가 (정방향/역방향에 따라)
+            String meaning = drawnCard.getOrientation() == DrawnCard.Orientation.upright ?
+                cardEntity.getMeaningUpright() : cardEntity.getMeaningReversed();
+            prompt.append("- 기본 의미: ").append(meaning).append("\n\n");
+
+            // 요청사항
+            prompt.append("위 ").append(timeFrame).append(" 카드에 대해 질문자의 상황에 맞춰 구체적인 해석을 150-300자로 제공해주세요. ");
+            prompt.append("카드의 의미를 질문자의 ").append(getCategoryName(request.getCategoryCode())).append(" 고민과 연결하여 해석해주세요.");
+
+        } catch (Exception e) {
+            prompt.append("카드 정보를 불러올 수 없어 기본 해석을 제공합니다.");
+        }
+
+        return prompt.toString();
+    }
+
+    /**
+     * 총평 생성을 위한 프롬프트 생성
+     */
+    public String createSummaryPrompt(String pastInterpretation, String presentInterpretation,
+                                    String futureInterpretation, SubmitRequest request) {
+        StringBuilder prompt = new StringBuilder();
+
+        // 시스템 지시사항
+        prompt.append("당신은 전문 타로 리더입니다. ")
+              .append(getReaderStyle(request.getReaderType()))
+              .append("\n\n");
+
+        // 상담 정보
+        prompt.append("상담 정보:\n");
+        prompt.append("- 카테고리: ").append(getCategoryName(request.getCategoryCode())).append("\n");
+        prompt.append("- 주제: ").append(getTopicName(request.getTopicCode())).append("\n");
+        prompt.append("- 질문: \"").append(request.getQuestionText()).append("\"\n\n");
+
+        // 각 카드별 해석
+        prompt.append("각 시점별 카드 해석:\n\n");
+        prompt.append("【과거】\n").append(pastInterpretation).append("\n\n");
+        prompt.append("【현재】\n").append(presentInterpretation).append("\n\n");
+        prompt.append("【미래】\n").append(futureInterpretation).append("\n\n");
+
+        // 총평 요청
+        prompt.append("위 세 카드의 해석을 종합하여 다음을 포함한 총평을 300-500자로 작성해주세요:\n");
+        prompt.append("1. 전체적인 상황 분석\n");
+        prompt.append("2. 과거-현재-미래의 연결점\n");
+        prompt.append("3. 질문자에게 필요한 구체적인 조언\n");
+        prompt.append("4. 앞으로 나아갈 방향\n\n");
+        prompt.append("질문자의 ").append(getCategoryName(request.getCategoryCode())).append(" 고민에 초점을 맞춰 실용적이고 희망적인 메시지를 전달해주세요.");
+
+        return prompt.toString();
     }
 
     // 헬퍼 메서드: 포지션 이름 변환

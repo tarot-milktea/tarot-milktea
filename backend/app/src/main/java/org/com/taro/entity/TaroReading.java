@@ -28,17 +28,27 @@ public class TaroReading {
     @Column(name = "reader_type", length = 10, nullable = true)
     private String readerType;
 
+    @Column(name = "past_interpretation", columnDefinition = "TEXT")
+    private String pastInterpretation;
+
+    @Column(name = "present_interpretation", columnDefinition = "TEXT")
+    private String presentInterpretation;
+
+    @Column(name = "future_interpretation", columnDefinition = "TEXT")
+    private String futureInterpretation;
+
     @Column(name = "interpretation", columnDefinition = "TEXT")
     private String interpretation;
 
-    @Column(name = "reader_message", columnDefinition = "TEXT")
-    private String readerMessage;
 
     @Column(name = "fortune_score")
     private Integer fortuneScore;
 
     @Column(name = "result_image_url", length = 500)
     private String resultImageUrl;
+
+    @Column(name = "result_image_text", columnDefinition = "TEXT")
+    private String resultImageText;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -127,6 +137,30 @@ public class TaroReading {
         this.readerType = readerType;
     }
 
+    public String getPastInterpretation() {
+        return pastInterpretation;
+    }
+
+    public void setPastInterpretation(String pastInterpretation) {
+        this.pastInterpretation = pastInterpretation;
+    }
+
+    public String getPresentInterpretation() {
+        return presentInterpretation;
+    }
+
+    public void setPresentInterpretation(String presentInterpretation) {
+        this.presentInterpretation = presentInterpretation;
+    }
+
+    public String getFutureInterpretation() {
+        return futureInterpretation;
+    }
+
+    public void setFutureInterpretation(String futureInterpretation) {
+        this.futureInterpretation = futureInterpretation;
+    }
+
     public String getInterpretation() {
         return interpretation;
     }
@@ -135,13 +169,6 @@ public class TaroReading {
         this.interpretation = interpretation;
     }
 
-    public String getReaderMessage() {
-        return readerMessage;
-    }
-
-    public void setReaderMessage(String readerMessage) {
-        this.readerMessage = readerMessage;
-    }
 
     public Integer getFortuneScore() {
         return fortuneScore;
@@ -157,6 +184,14 @@ public class TaroReading {
 
     public void setResultImageUrl(String resultImageUrl) {
         this.resultImageUrl = resultImageUrl;
+    }
+
+    public String getResultImageText() {
+        return resultImageText;
+    }
+
+    public void setResultImageText(String resultImageText) {
+        this.resultImageText = resultImageText;
     }
 
     public LocalDateTime getCreatedAt() {
