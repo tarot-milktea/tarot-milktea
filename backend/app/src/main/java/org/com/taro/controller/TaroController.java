@@ -293,11 +293,13 @@ public class TaroController {
 
             // 처리 상태에 따른 응답
             if ("CREATED".equals(result.getStatus()) || "CARDS_GENERATED".equals(result.getStatus()) ||
-                "SUBMITTED".equals(result.getStatus()) || result.getStatus().contains("_PROCESSING")) {
+                "SUBMITTED".equals(result.getStatus())) {
+                // 아직 시작되지 않은 경우만 425 에러
                 return ResponseEntity.status(425) // Too Early
                         .body(new ErrorResponse(425, "아직 처리 중입니다", "타로 해석이 진행 중입니다. 잠시 후 다시 시도해주세요."));
             }
 
+            // 처리 중이거나 완료된 경우 모두 중간 결과 포함하여 200 반환
             return ResponseEntity.ok(result);
 
         } catch (SessionNotFoundException e) {
