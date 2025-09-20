@@ -87,28 +87,40 @@ public class MockDataService {
     public TaroResultResponse generateTaroResultResponse(String sessionId, String categoryCode, String topicCode,
                                                         String questionText, String readerType) {
         // 폴백용 타로 결과 생성 (DB에서 카드 정보 조회 필요)
-        List<TaroResultResponse.DrawnCard> cards = new ArrayList<>();
+        List<TaroReadingResponse.DrawnCard> cards = new ArrayList<>();
 
         // 기본 카드 3장 생성 (실제로는 DB에서 조회해야 함)
         for (int i = 1; i <= 3; i++) {
-            cards.add(new TaroResultResponse.DrawnCard(
+            cards.add(new TaroReadingResponse.DrawnCard(
                 i,
                 i,
                 "기본 카드 " + i,
                 "Default Card " + i,
-                "정방향",
-                "https://example.com/card-" + i + ".jpg",
-                "기본 해석"
+                "upright",
+                "https://example.com/card-" + i + ".webm"
             ));
         }
 
+        // 해석 결과 구성
+        TaroResultResponse.InterpretationsDto interpretations = new TaroResultResponse.InterpretationsDto(
+            "과거: 기본 과거 해석",
+            "현재: 기본 현재 해석",
+            "미래: 기본 미래 해석",
+            "총평: " + questionText + "에 대한 기본 답변입니다."
+        );
+
+        // 결과 이미지 구성
+        TaroResultResponse.ResultImageDto resultImage = new TaroResultResponse.ResultImageDto(
+            "https://example.com/result-" + sessionId + ".jpg",
+            "기본 조언 이미지"
+        );
+
         return new TaroResultResponse(
             sessionId,
-            cards,
-            "기본 해석: " + questionText + "에 대한 답변입니다.",
-            "기본 조언: " + readerType + " 스타일로 조언드립니다.",
+            "COMPLETED",
+            interpretations,
             75,
-            "https://example.com/result-" + sessionId + ".jpg"
+            resultImage
         );
     }
 
@@ -382,7 +394,7 @@ public class MockDataService {
     }
 
     private String generateInterpretation(String categoryCode, String topicCode, String questionText, 
-                                          List<TaroResultResponse.DrawnCard> cards, String readerType) {
+                                          List<TaroReadingResponse.DrawnCard> cards, String readerType) {
         StringBuilder interpretation = new StringBuilder();
         
         // 질문에 대한 언급
