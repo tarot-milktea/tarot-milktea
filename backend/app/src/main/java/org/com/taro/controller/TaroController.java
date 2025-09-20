@@ -267,6 +267,51 @@ public class TaroController {
         }
     }
 
+    @GetMapping("/sessions/{sessionId}/result")
+    @Operation(summary = "타로 해석 결과 조회", description = "완료된 타로 해석 결과를 조회합니다 (카드 정보 제외)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "결과 조회 성공",
+                    content = @Content(schema = @Schema(implementation = TaroResultResponse.class))),
+            @ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "425", description = "아직 처리 중입니다",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<?> getSessionResult(
+            @Parameter(description = "세션 ID", required = true)
+            @PathVariable String sessionId) {
+        try {
+            // 세션 ID 검증
+            if (!StringUtils.hasText(sessionId)) {
+                return ResponseEntity.badRequest()
+                        .body(new ErrorResponse(400, "유효하지 않은 세션 ID입니다", "세션 ID는 필수입니다"));
+            }
+
+            TaroResultResponse result = taroService.getSessionResult(sessionId);
+
+            // 처리 상태에 따른 응답
+            if ("CREATED".equals(result.getStatus()) || "CARDS_GENERATED".equals(result.getStatus()) ||
+                "SUBMITTED".equals(result.getStatus()) || result.getStatus().contains("_PROCESSING")) {
+                return ResponseEntity.status(425) // Too Early
+                        .body(new ErrorResponse(425, "아직 처리 중입니다", "타로 해석이 진행 중입니다. 잠시 후 다시 시도해주세요."));
+            }
+
+            return ResponseEntity.ok(result);
+
+        } catch (SessionNotFoundException e) {
+            return ResponseEntity.status(404)
+                    .body(new ErrorResponse(404, "세션을 찾을 수 없습니다", e.getMessage()));
+        } catch (TaroServiceException e) {
+            return ResponseEntity.internalServerError()
+                    .body(new ErrorResponse(500, "결과 조회 실패", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(new ErrorResponse(500, "결과 조회 실패", "서버 내부 오류가 발생했습니다"));
+        }
+    }
+
     private String getAvailableTopics(String categoryCode) {
         switch (categoryCode) {
             case ValidationConstants.CATEGORY_LOVE:

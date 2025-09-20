@@ -1,103 +1,98 @@
 package org.com.taro.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.List;
 
-@Schema(description = "타로 결과 응답")
+@Schema(description = "타로 해석 결과 응답 (카드 정보 제외)")
 public class TaroResultResponse {
-    
+
     @Schema(description = "세션 ID")
     private String sessionId;
-    
-    @Schema(description = "뽑힌 카드 목록")
-    private List<DrawnCard> cards;
-    
-    @Schema(description = "전체 해석")
-    private String interpretation;
-    
-    @Schema(description = "리더 메시지")
-    private String readerMessage;
-    
-    @Schema(description = "운세 점수", example = "85")
-    private int fortuneScore;
-    
-    @Schema(description = "결과 이미지 URL")
-    private String resultImageUrl;
+
+    @Schema(description = "처리 상태")
+    private String status;
+
+    @Schema(description = "해석 결과")
+    private InterpretationsDto interpretations;
+
+    @Schema(description = "운세 점수", example = "75")
+    private Integer fortuneScore;
+
+    @Schema(description = "결과 이미지")
+    private ResultImageDto resultImage;
 
     public TaroResultResponse() {}
 
-    public TaroResultResponse(String sessionId, List<DrawnCard> cards, String interpretation, 
-                              String readerMessage, int fortuneScore, String resultImageUrl) {
+    public TaroResultResponse(String sessionId, String status, InterpretationsDto interpretations,
+                              Integer fortuneScore, ResultImageDto resultImage) {
         this.sessionId = sessionId;
-        this.cards = cards;
-        this.interpretation = interpretation;
-        this.readerMessage = readerMessage;
+        this.status = status;
+        this.interpretations = interpretations;
         this.fortuneScore = fortuneScore;
-        this.resultImageUrl = resultImageUrl;
+        this.resultImage = resultImage;
     }
 
     public String getSessionId() { return sessionId; }
     public void setSessionId(String sessionId) { this.sessionId = sessionId; }
-    public List<DrawnCard> getCards() { return cards; }
-    public void setCards(List<DrawnCard> cards) { this.cards = cards; }
-    public String getInterpretation() { return interpretation; }
-    public void setInterpretation(String interpretation) { this.interpretation = interpretation; }
-    public String getReaderMessage() { return readerMessage; }
-    public void setReaderMessage(String readerMessage) { this.readerMessage = readerMessage; }
-    public int getFortuneScore() { return fortuneScore; }
-    public void setFortuneScore(int fortuneScore) { this.fortuneScore = fortuneScore; }
-    public String getResultImageUrl() { return resultImageUrl; }
-    public void setResultImageUrl(String resultImageUrl) { this.resultImageUrl = resultImageUrl; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    public InterpretationsDto getInterpretations() { return interpretations; }
+    public void setInterpretations(InterpretationsDto interpretations) { this.interpretations = interpretations; }
+    public Integer getFortuneScore() { return fortuneScore; }
+    public void setFortuneScore(Integer fortuneScore) { this.fortuneScore = fortuneScore; }
+    public ResultImageDto getResultImage() { return resultImage; }
+    public void setResultImage(ResultImageDto resultImage) { this.resultImage = resultImage; }
 
-    @Schema(description = "뽑힌 카드 정보")
-    public static class DrawnCard {
-        @Schema(description = "카드 위치", example = "1")
-        private int position;
-        
-        @Schema(description = "카드 ID", example = "1")
-        private int cardId;
-        
-        @Schema(description = "카드명 (한글)", example = "바보")
-        private String nameKo;
-        
-        @Schema(description = "카드명 (영문)", example = "The Fool")
-        private String nameEn;
-        
-        @Schema(description = "카드 방향", example = "upright")
-        private String orientation;
-        
-        @Schema(description = "카드 이미지 URL")
-        private String imageUrl;
-        
-        @Schema(description = "카드 의미")
-        private String meaning;
+    @Schema(description = "해석 결과")
+    public static class InterpretationsDto {
+        @Schema(description = "과거 해석")
+        private String past;
 
-        public DrawnCard() {}
+        @Schema(description = "현재 해석")
+        private String present;
 
-        public DrawnCard(int position, int cardId, String nameKo, String nameEn, 
-                         String orientation, String imageUrl, String meaning) {
-            this.position = position;
-            this.cardId = cardId;
-            this.nameKo = nameKo;
-            this.nameEn = nameEn;
-            this.orientation = orientation;
-            this.imageUrl = imageUrl;
-            this.meaning = meaning;
+        @Schema(description = "미래 해석")
+        private String future;
+
+        @Schema(description = "총평")
+        private String summary;
+
+        public InterpretationsDto() {}
+
+        public InterpretationsDto(String past, String present, String future, String summary) {
+            this.past = past;
+            this.present = present;
+            this.future = future;
+            this.summary = summary;
         }
 
-        public int getPosition() { return position; }
-        public void setPosition(int position) { this.position = position; }
-        public int getCardId() { return cardId; }
-        public void setCardId(int cardId) { this.cardId = cardId; }
-        public String getNameKo() { return nameKo; }
-        public void setNameKo(String nameKo) { this.nameKo = nameKo; }
-        public String getNameEn() { return nameEn; }
-        public void setNameEn(String nameEn) { this.nameEn = nameEn; }
-        public String getOrientation() { return orientation; }
-        public void setOrientation(String orientation) { this.orientation = orientation; }
-        public String getImageUrl() { return imageUrl; }
-        public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
-        public String getMeaning() { return meaning; }
-        public void setMeaning(String meaning) { this.meaning = meaning; }
+        public String getPast() { return past; }
+        public void setPast(String past) { this.past = past; }
+        public String getPresent() { return present; }
+        public void setPresent(String present) { this.present = present; }
+        public String getFuture() { return future; }
+        public void setFuture(String future) { this.future = future; }
+        public String getSummary() { return summary; }
+        public void setSummary(String summary) { this.summary = summary; }
+    }
+
+    @Schema(description = "결과 이미지")
+    public static class ResultImageDto {
+        @Schema(description = "이미지 URL")
+        private String url;
+
+        @Schema(description = "이미지 설명")
+        private String description;
+
+        public ResultImageDto() {}
+
+        public ResultImageDto(String url, String description) {
+            this.url = url;
+            this.description = description;
+        }
+
+        public String getUrl() { return url; }
+        public void setUrl(String url) { this.url = url; }
+        public String getDescription() { return description; }
+        public void setDescription(String description) { this.description = description; }
     }
 }

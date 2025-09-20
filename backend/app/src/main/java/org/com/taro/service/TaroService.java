@@ -3,6 +3,7 @@ package org.com.taro.service;
 import org.com.taro.dto.TopicResponse;
 import org.com.taro.dto.ReaderResponse;
 import org.com.taro.dto.TaroReadingResponse;
+import org.com.taro.dto.TaroResultResponse;
 
 import java.util.List;
 
@@ -48,4 +49,9 @@ public interface TaroService {
      * 세션에 대한 3장의 타로 카드를 생성합니다.
      */
     TaroReadingResponse generateTaroReading(String sessionId);
+
+    /**
+     * 세션의 타로 해석 결과를 조회합니다.
+     */
+    TaroResultResponse getSessionResult(String sessionId);
 }
