@@ -142,3 +142,72 @@ Each card interpretation builds on previous readings, creating a coherent narrat
   docker build -t backend-app .
   docker run -p 8080:8080 backend-app
 ```
+
+## Jenkins CI/CD 파이프라인
+
+### 자동 배포 및 롤백 시스템
+
+Jenkins 파이프라인은 다음과 같은 고급 기능을 제공합니다:
+
+#### 주요 기능
+- **태그 기반 이미지 관리**: 각 빌드마다 `{BUILD_NUMBER}-{GIT_COMMIT_HASH}` 형식의 고유 태그 생성
+- **자동 롤백**: 빌드 실패 또는 헬스체크 실패 시 이전 성공 버전으로 자동 롤백
+- **성공 버전 추적**: `/tmp/last_successful_build.txt`에 마지막 성공 빌드 태그 저장
+- **이미지 정리**: 최근 3개 버전만 보관하여 디스크 공간 관리
+
+#### 파이프라인 단계
+1. **Prepare Build**: 빌드 태그 설정 및 이전 성공 태그 확인
+2. **Build & Tag Image**: 고유 태그로 Docker 이미지 빌드
+3. **Deploy with New Image**: 새 이미지로 서비스 배포
+4. **Health Check**: 서비스 상태 확인 (실패 시 자동 롤백)
+5. **Save Successful Build**: 성공 시 태그 저장 및 오래된 이미지 정리
+
+### 수동 롤백 도구
+
+긴급 상황이나 특정 버전으로 수동 롤백이 필요한 경우:
+
+```bash
+# 기본 사용법 (마지막 성공 버전으로 롤백)
+./rollback.sh
+
+# 특정 태그로 롤백
+./rollback.sh 42-a1b2c3d
+
+# 사용 가능한 태그 목록 확인
+./rollback.sh --list
+
+# 현재 서비스 상태 확인
+./rollback.sh --status
+
+# 도움말
+./rollback.sh --help
+```
+
+#### 롤백 스크립트 특징
+- **안전한 롤백**: 이미지 존재 확인 후 롤백 실행
+- **자동 헬스체크**: 롤백 후 서비스 정상 동작 확인
+- **상세한 로깅**: 컬러 코딩된 로그로 진행 상황 추적
+- **대화형 확인**: 특정 태그 롤백 시 사용자 확인 요청
+
+### 장애 복구 시나리오
+
+1. **빌드 실패**: Jenkins가 자동으로 이전 성공 이미지로 롤백
+2. **배포 후 헬스체크 실패**: 자동으로 이전 버전으로 롤백
+3. **운영 중 문제 발견**: `./rollback.sh` 실행하여 즉시 롤백
+4. **특정 버전으로 복원**: `./rollback.sh [태그]`로 원하는 버전으로 롤백
+
+### 모니터링 및 확인
+
+```bash
+# 현재 실행 중인 컨테이너 확인
+docker ps | grep backend-app
+
+# 현재 사용 중인 이미지 확인  
+docker inspect backend-app --format '{{.Config.Image}}'
+
+# 서비스 헬스체크
+curl http://localhost:8080/actuator/health
+
+# 마지막 성공 빌드 확인
+cat /tmp/last_successful_build.txt
+```
