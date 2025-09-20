@@ -3,7 +3,6 @@ import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { useSessionStore } from '../store/sessionStore';
 import { useDataStore } from '../store/dataStore';
-import { storageService } from '../services/storageService';
 import ThemeToggle from './etc/ThemeToggle';
 import Onboarding1Page from '../pages/Onboarding1Page';
 import Onboarding2Page from '../pages/Onboarding2Page';
@@ -51,32 +50,20 @@ function OnboardingFlow() {
   // 결과 페이지로 이동하는 함수
   const goToResult = () => {
     try {
-      const selectedCards = storageService.loadSelectedCards();
+      // sessionStorage에서 백엔드 sessionId 가져오기
+      const { sessionId } = useSessionStore.getState();
 
-      if (!selectedCards || selectedCards.length === 0) {
-        console.error('선택된 카드가 없습니다');
+      if (!sessionId) {
+        console.error('세션 ID가 없습니다');
         return;
       }
 
-      // 결과 데이터 구조 생성
-      const tarotResult = {
-        cards: selectedCards.map((card, index) => ({
-          id: card.id,
-          position: ['past', 'present', 'future'][index] as 'past' | 'present' | 'future',
-          orientation: card.orientation
-        }))
-      };
+      console.log('🚀 결과 페이지로 이동, sessionId:', sessionId);
 
-      // 고유 ID 생성
-      const resultId = Date.now().toString(36) + Math.random().toString(36).substr(2);
-
-      storageService.saveTarotResult(resultId, tarotResult);
-
-      // 결과 페이지로 라우팅
-      navigate(`/result/${resultId}`);
+      // 백엔드 sessionId를 사용하여 결과 페이지로 라우팅
+      navigate(`/result/${sessionId}`);
     } catch (error) {
-      console.error('결과 저장 중 오류가 발생했습니다:', error);
-      // 여기서 사용자에게 에러 메시지를 보여줄 수도 있어요
+      console.error('결과 페이지 이동 중 오류가 발생했습니다:', error);
     }
   };
 
