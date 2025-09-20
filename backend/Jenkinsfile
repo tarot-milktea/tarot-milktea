@@ -7,7 +7,6 @@ pipeline {
     IMAGE_NAME     = "taro-backend"                    // Docker 이미지명
     COMPOSE_FILE   = "${WORKSPACE}/backend/docker-compose.yml"
     COMPOSE_CMD    = "docker compose -f ${WORKSPACE}/backend/docker-compose.yml"
-    BUILD_TAG      = "${BUILD_NUMBER}-${GIT_COMMIT[0..7]}"
     LAST_SUCCESS_FILE = "/tmp/last_successful_build.txt"
   }
 
@@ -29,8 +28,11 @@ pipeline {
     stage('Prepare Build') {
       steps {
         script {
-          // 현재 빌드 태그 설정
+          // Git 커밋 해시 가져오기
+          def gitCommit = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+          env.BUILD_TAG = "${BUILD_NUMBER}-${gitCommit}"
           env.CURRENT_TAG = env.BUILD_TAG
+          
           echo "[INFO] Current build tag: ${env.CURRENT_TAG}"
           
           // 이전 성공 태그 확인
@@ -70,35 +72,39 @@ pipeline {
 
     stage('Build & Tag Image') {
       steps {
-        sh '''
-          echo "[INFO] Building image with tag: $CURRENT_TAG"
-          
-          # 현재 컨테이너 중지
-          docker stop $CONTAINER_NAME || true
-          docker rm   $CONTAINER_NAME || true
-          
-          # 새 이미지 빌드
-          cd ${WORKSPACE}/backend
-          docker build -t ${IMAGE_NAME}:${CURRENT_TAG} .
-          docker tag ${IMAGE_NAME}:${CURRENT_TAG} ${IMAGE_NAME}:latest
-          
-          echo "[INFO] Image built successfully: ${IMAGE_NAME}:${CURRENT_TAG}"
-        '''
+        script {
+          sh """
+            echo "[INFO] Building image with tag: ${env.CURRENT_TAG}"
+            
+            # 현재 컨테이너 중지
+            docker stop ${env.CONTAINER_NAME} || true
+            docker rm   ${env.CONTAINER_NAME} || true
+            
+            # 새 이미지 빌드
+            cd ${env.WORKSPACE}/backend
+            docker build -t ${env.IMAGE_NAME}:${env.CURRENT_TAG} .
+            docker tag ${env.IMAGE_NAME}:${env.CURRENT_TAG} ${env.IMAGE_NAME}:latest
+            
+            echo "[INFO] Image built successfully: ${env.IMAGE_NAME}:${env.CURRENT_TAG}"
+          """
+        }
       }
     }
 
     stage('Deploy with New Image') {
       steps {
-        sh '''
-          echo "[INFO] Deploying with image: ${IMAGE_NAME}:${CURRENT_TAG}"
-          
-          # docker-compose.yml에서 이미지 태그 업데이트 (임시 파일 사용)
-          sed "s|image: ${IMAGE_NAME}.*|image: ${IMAGE_NAME}:${CURRENT_TAG}|g" $COMPOSE_FILE > ${COMPOSE_FILE}.tmp
-          mv ${COMPOSE_FILE}.tmp $COMPOSE_FILE
-          
-          $COMPOSE_CMD up -d $SERVICE_NAME
-          $COMPOSE_CMD ps
-        '''
+        script {
+          sh """
+            echo "[INFO] Deploying with image: ${env.IMAGE_NAME}:${env.CURRENT_TAG}"
+            
+            # docker-compose.yml에서 이미지 태그 업데이트 (임시 파일 사용)
+            sed "s|image: ${env.IMAGE_NAME}.*|image: ${env.IMAGE_NAME}:${env.CURRENT_TAG}|g" ${env.COMPOSE_FILE} > ${env.COMPOSE_FILE}.tmp
+            mv ${env.COMPOSE_FILE}.tmp ${env.COMPOSE_FILE}
+            
+            ${env.COMPOSE_CMD} up -d ${env.SERVICE_NAME}
+            ${env.COMPOSE_CMD} ps
+          """
+        }
       }
     }
 
@@ -128,27 +134,27 @@ pipeline {
           script {
             echo "[ERROR] Health check failed! Initiating rollback..."
             // 헬스체크 실패 시 즉시 롤백 실행
-            sh '''
-              if [ -f "$LAST_SUCCESS_FILE" ]; then
-                ROLLBACK_TAG=$(cat $LAST_SUCCESS_FILE)
-                echo "[INFO] Rolling back to previous successful version: $ROLLBACK_TAG"
+            sh """
+              if [ -f "${env.LAST_SUCCESS_FILE}" ]; then
+                ROLLBACK_TAG=\$(cat ${env.LAST_SUCCESS_FILE})
+                echo "[INFO] Rolling back to previous successful version: \$ROLLBACK_TAG"
                 
                 # 실패한 컨테이너 중지
-                docker stop $CONTAINER_NAME || true
-                docker rm   $CONTAINER_NAME || true
+                docker stop ${env.CONTAINER_NAME} || true
+                docker rm   ${env.CONTAINER_NAME} || true
                 
                 # 이전 성공 이미지로 롤백
-                sed "s|image: ${IMAGE_NAME}.*|image: ${IMAGE_NAME}:${ROLLBACK_TAG}|g" $COMPOSE_FILE > ${COMPOSE_FILE}.tmp
-                mv ${COMPOSE_FILE}.tmp $COMPOSE_FILE
+                sed "s|image: ${env.IMAGE_NAME}.*|image: ${env.IMAGE_NAME}:\$ROLLBACK_TAG|g" ${env.COMPOSE_FILE} > ${env.COMPOSE_FILE}.tmp
+                mv ${env.COMPOSE_FILE}.tmp ${env.COMPOSE_FILE}
                 
-                $COMPOSE_CMD up -d $SERVICE_NAME
+                ${env.COMPOSE_CMD} up -d ${env.SERVICE_NAME}
                 
-                echo "[INFO] Rollback completed to: $ROLLBACK_TAG"
+                echo "[INFO] Rollback completed to: \$ROLLBACK_TAG"
               else
                 echo "[ERROR] No previous successful build found for rollback!"
                 exit 1
               fi
-            '''
+            """
           }
         }
       }
@@ -156,13 +162,15 @@ pipeline {
 
     stage('Save Successful Build') {
       steps {
-        sh '''
-          echo "[INFO] Saving successful build tag: $CURRENT_TAG"
-          echo "$CURRENT_TAG" > $LAST_SUCCESS_FILE
-          
-          # 오래된 이미지 정리 (최근 3개 버전만 유지)
-          docker images ${IMAGE_NAME} --format "table {{.Tag}}" | grep -v "TAG" | grep -v "latest" | sort -rn | tail -n +4 | xargs -r -I {} docker rmi ${IMAGE_NAME}:{} || true
-        '''
+        script {
+          sh """
+            echo "[INFO] Saving successful build tag: ${env.CURRENT_TAG}"
+            echo "${env.CURRENT_TAG}" > ${env.LAST_SUCCESS_FILE}
+            
+            # 오래된 이미지 정리 (최근 3개 버전만 유지)
+            docker images ${env.IMAGE_NAME} --format "table {{.Tag}}" | grep -v "TAG" | grep -v "latest" | sort -rn | tail -n +4 | xargs -r -I {} docker rmi ${env.IMAGE_NAME}:{} || true
+          """
+        }
       }
     }
 
@@ -177,66 +185,68 @@ pipeline {
 
   post {
     success {
-      echo "Backend deployment successful! Database preserved."
-      sh '''
-        echo "[SUCCESS] Build ${CURRENT_TAG} deployed successfully"
-        $COMPOSE_CMD logs --tail=100 $SERVICE_NAME || true
-      '''
+      script {
+        echo "Backend deployment successful! Database preserved."
+        sh """
+          echo "[SUCCESS] Build ${env.CURRENT_TAG} deployed successfully"
+          ${env.COMPOSE_CMD} logs --tail=100 ${env.SERVICE_NAME} || true
+        """
+      }
     }
     failure {
       script {
         echo "Backend deployment failed!"
         
-        // 빌드 스테이지에서 실패한 경우에만 롤백 시도
-        if (currentBuild.result == 'FAILURE') {
-          sh '''
-            echo "[ERROR] Build failed! Attempting rollback..."
+        // 항상 롤백 시도
+        sh """
+          echo "[ERROR] Build failed! Attempting rollback..."
+          
+          if [ -f "${env.LAST_SUCCESS_FILE}" ]; then
+            ROLLBACK_TAG=\$(cat ${env.LAST_SUCCESS_FILE})
+            echo "[INFO] Rolling back to: \$ROLLBACK_TAG"
+              
+            # 실패한 컨테이너 정리
+            docker stop ${env.CONTAINER_NAME} || true
+            docker rm   ${env.CONTAINER_NAME} || true
             
-            if [ -f "$LAST_SUCCESS_FILE" ]; then
-              ROLLBACK_TAG=$(cat $LAST_SUCCESS_FILE)
-              echo "[INFO] Rolling back to: $ROLLBACK_TAG"
-              
-              # 실패한 컨테이너 정리
-              docker stop $CONTAINER_NAME || true
-              docker rm   $CONTAINER_NAME || true
-              
-              # 실패한 이미지 정리
-              docker rmi ${IMAGE_NAME}:${CURRENT_TAG} || true
-              
-              # 이전 성공 이미지로 롤백
-              sed "s|image: ${IMAGE_NAME}.*|image: ${IMAGE_NAME}:${ROLLBACK_TAG}|g" $COMPOSE_FILE > ${COMPOSE_FILE}.tmp
-              mv ${COMPOSE_FILE}.tmp $COMPOSE_FILE
-              
-              $COMPOSE_CMD up -d $SERVICE_NAME
-              
-              echo "[INFO] Emergency rollback completed to: $ROLLBACK_TAG"
-              
-              # 롤백 후 간단한 헬스체크
-              sleep 30
-              HOST_IP=$(ip -4 route show default | awk '{print $3}')
-              if curl -fsS http://$HOST_IP:8080/actuator/health | grep -q UP; then
-                echo "[SUCCESS] Service restored successfully after rollback"
-              else
-                echo "[WARNING] Service may still have issues after rollback"
-              fi
+            # 실패한 이미지 정리
+            docker rmi ${env.IMAGE_NAME}:${env.CURRENT_TAG} || true
+            
+            # 이전 성공 이미지로 롤백
+            sed "s|image: ${env.IMAGE_NAME}.*|image: ${env.IMAGE_NAME}:\$ROLLBACK_TAG|g" ${env.COMPOSE_FILE} > ${env.COMPOSE_FILE}.tmp
+            mv ${env.COMPOSE_FILE}.tmp ${env.COMPOSE_FILE}
+            
+            ${env.COMPOSE_CMD} up -d ${env.SERVICE_NAME}
+            
+            echo "[INFO] Emergency rollback completed to: \$ROLLBACK_TAG"
+            
+            # 롤백 후 간단한 헬스체크
+            sleep 30
+            HOST_IP=\$(ip -4 route show default | awk '{print \$3}')
+            if curl -fsS http://\$HOST_IP:8080/actuator/health | grep -q UP; then
+              echo "[SUCCESS] Service restored successfully after rollback"
             else
-              echo "[ERROR] No previous successful build for rollback!"
+              echo "[WARNING] Service may still have issues after rollback"
             fi
-          '''
-        }
+          else
+            echo "[ERROR] No previous successful build for rollback!"
+          fi
+        """
         
-        sh '''
-          $COMPOSE_CMD logs $SERVICE_NAME || true
-          docker logs --tail=200 $CONTAINER_NAME || true
-        '''
+        sh """
+          ${env.COMPOSE_CMD} logs ${env.SERVICE_NAME} || true
+          docker logs --tail=200 ${env.CONTAINER_NAME} || true
+        """
       }
     }
     always {
-      sh '''
-        echo "[INFO] Cleaning up workspace..."
-        # 빌드 과정에서 생성된 임시 파일들 정리
-        rm -f ${COMPOSE_FILE}.tmp || true
-      '''
+      script {
+        sh """
+          echo "[INFO] Cleaning up workspace..."
+          # 빌드 과정에서 생성된 임시 파일들 정리
+          rm -f ${env.COMPOSE_FILE}.tmp || true
+        """
+      }
     }
   }
 }
