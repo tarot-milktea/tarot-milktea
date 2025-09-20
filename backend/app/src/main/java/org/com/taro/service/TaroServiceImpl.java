@@ -51,6 +51,7 @@ public class TaroServiceImpl implements TaroService {
         session.setSessionId(sessionId);
         session.setNickname(nickname);
         session.setStatus(TaroSession.SessionStatus.ACTIVE);
+        session.setProcessingStatus(TaroSession.ProcessingStatus.CREATED);
         taroSessionRepository.save(session);
 
         // 2. 빈 TaroReading 레코드 생성 (나중에 submit 시 업데이트)
@@ -92,6 +93,11 @@ public class TaroServiceImpl implements TaroService {
                 drawnCard.setOrientation(orientation);
                 drawnCardRepository.save(drawnCard);
             }
+
+            // 카드 생성 완료 상태 업데이트
+            session.setProcessingStatus(TaroSession.ProcessingStatus.CARDS_GENERATED);
+            taroSessionRepository.save(session);
+
         } catch (Exception e) {
             throw new TaroServiceException("Failed to create cards for session: " + sessionId, e);
         }
@@ -185,8 +191,8 @@ public class TaroServiceImpl implements TaroService {
             taroReading.setReaderType(readerType);
             taroReadingRepository.save(taroReading);
 
-            // 세션 상태 업데이트
-            session.setStatus(TaroSession.SessionStatus.COMPLETED);
+            // 제출 완료 상태 업데이트 (AI 처리는 비동기로 진행)
+            session.setProcessingStatus(TaroSession.ProcessingStatus.SUBMITTED);
             taroSessionRepository.save(session);
 
             System.out.println("타로 결과가 세션 " + sessionId + "에 대해 생성되었습니다.");
