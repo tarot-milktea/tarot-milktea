@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { useColors } from '../hooks/useColors';
@@ -7,6 +7,7 @@ import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
 import Input from '../components/common/Input';
 import ThemeToggle from '../components/etc/ThemeToggle';
+import { trackOnboardingEnter, trackOnboardingComplete, trackUserSelection } from '../utils/analytics';
 
 function Onboarding4Page() {
   const navigate = useNavigate();
@@ -31,8 +32,20 @@ function Onboarding4Page() {
     setSelectedQuestion(value);
   };
 
+  // 컴포넌트 마운트 시 GA 추적
+  useEffect(() => {
+    trackOnboardingEnter(4, 'question_input');
+  }, []);
+
   const handleNext = () => {
     if (selectedQuestion.trim()) {
+      // GA: 온보딩 4단계 완료 추적
+      trackOnboardingComplete(4, 'question_input', {
+        question_length: selectedQuestion.trim().length,
+        question_source: customQuestion ? 'custom' : 'sample'
+      });
+      trackUserSelection('question', customQuestion ? 'custom_input' : 'sample_question', 4);
+
       navigate('/onboarding/5');
     }
   };

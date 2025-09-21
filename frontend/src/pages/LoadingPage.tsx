@@ -4,15 +4,27 @@ import { useNavigate } from 'react-router-dom';
 import { useColors } from '../hooks/useColors';
 import { useSessionStore } from '../store/sessionStore';
 import ThemeToggle from '../components/etc/ThemeToggle';
+import { trackOnboardingEnter, trackPerformance } from '../utils/analytics';
 
 function LoadingPage() {
   const navigate = useNavigate();
   const { styles: globalStyles, getColor } = useColors();
   const { sessionId } = useSessionStore();
 
-  // 3초 후 결과 페이지로 이동
+  // 컴포넌트 마운트 시 GA 추적 및 3초 후 결과 페이지로 이동
   useEffect(() => {
+    // GA: 로딩 페이지 진입 추적
+    trackOnboardingEnter(7, 'loading');
+
+    const startTime = performance.now();
+
     const timer = setTimeout(() => {
+      const endTime = performance.now();
+      const loadingTime = Math.round(endTime - startTime);
+
+      // GA: 로딩 시간 추적
+      trackPerformance('loading_page_time', loadingTime);
+
       if (sessionId) {
         navigate(`/result/${sessionId}`);
       } else {

@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import Onboarding1Page from './pages/Onboarding1Page';
 import Onboarding2Page from './pages/Onboarding2Page';
 import Onboarding3Page from './pages/Onboarding3Page';
@@ -9,11 +10,32 @@ import LoadingPage from './pages/LoadingPage';
 import ResultPage from './pages/ResultPage';
 import ErrorPage from './pages/ErrorPage';
 import ParticleBackground from './components/common/ParticleBackground/ParticleBackground';
+import { initializeGA, trackPageView, debugGA } from './utils/analytics';
+
+// 페이지뷰 추적 컴포넌트
+function GAPageTracker() {
+  const location = useLocation();
+
+  useEffect(() => {
+    trackPageView(location.pathname + location.search);
+  }, [location]);
+
+  return null;
+}
 
 function App() {
+  // GA 초기화
+  useEffect(() => {
+    initializeGA();
+    debugGA(); // 개발 환경에서만 디버그 정보 출력
+  }, []);
   return (
     <BrowserRouter>
       <ParticleBackground particleCount={18} intensity="heavy" />
+
+      {/* GA 페이지뷰 추적 */}
+      <GAPageTracker />
+
       <Routes>
         {/* 온보딩 라우팅 */}
         <Route path="/" element={<Onboarding1Page />} />

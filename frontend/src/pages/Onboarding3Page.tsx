@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { useColors } from '../hooks/useColors';
@@ -5,11 +6,17 @@ import { useSessionStore, type Topic } from '../store/sessionStore';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
 import ThemeToggle from '../components/etc/ThemeToggle';
+import { trackOnboardingEnter, trackOnboardingComplete, trackUserSelection } from '../utils/analytics';
 
 function Onboarding3Page() {
   const navigate = useNavigate();
   const { styles: globalStyles, getColor } = useColors();
   const { selectedCategory, selectedTopic, setSelectedTopic } = useSessionStore();
+
+  // 컴포넌트 마운트 시 GA 추적
+  useEffect(() => {
+    trackOnboardingEnter(3, 'topic_selection');
+  }, []);
 
   const handleTopicSelect = (topic: Topic) => {
     // 이미 선택된 주제를 다시 클릭하면 선택 해제 (토글)
@@ -17,11 +24,19 @@ function Onboarding3Page() {
       setSelectedTopic(null);
     } else {
       setSelectedTopic(topic);
+      // GA: 토픽 선택 추적
+      trackUserSelection('topic', topic.code, 3);
     }
   };
 
   const handleNext = () => {
     if (selectedTopic) {
+      // GA: 온보딩 3단계 완료 추적
+      trackOnboardingComplete(3, 'topic_selection', {
+        selected_topic: selectedTopic.code,
+        topic_name: selectedTopic.name
+      });
+
       navigate('/onboarding/4');
     }
   };

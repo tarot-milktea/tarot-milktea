@@ -9,6 +9,7 @@ import ThemeToggle from '../components/etc/ThemeToggle';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
 import CardVideo from '../components/TarotCard/CardVideo';
+import { trackPageView, trackResultInteraction, trackTimeOnPage, trackError } from '../utils/analytics';
 
 function ResultPage() {
   const { resultId } = useParams<{ resultId: string }>();
@@ -29,6 +30,7 @@ function ResultPage() {
     adviceImageUrl
   } = useResultStore();
   const [loading, setLoading] = useState(true);
+  const [pageStartTime] = useState(performance.now());
 
   useEffect(() => {
     if (resultId) {
@@ -38,6 +40,12 @@ function ResultPage() {
       // Restore session data from sessionStorage
       restoreFromStorage();
 
+      // GA: 결과 페이지 조회 추적
+      trackPageView(`/result/${resultId}`, '타로 결과 페이지');
+      trackResultInteraction('view_complete', {
+        result_id: resultId
+      });
+
       setLoading(false);
     } else {
       navigate('/', { replace: true });
@@ -45,9 +53,13 @@ function ResultPage() {
 
     // Cleanup on unmount
     return () => {
+      // GA: 페이지 체류 시간 추적
+      const timeOnPage = Math.round(performance.now() - pageStartTime);
+      trackTimeOnPage('result_page', timeOnPage);
+
       resetResult();
     };
-  }, [resultId, navigate, setSessionId, resetResult, restoreFromStorage]);
+  }, [resultId, navigate, setSessionId, resetResult, restoreFromStorage, pageStartTime]);
 
   // Polling for result updates
   useEffect(() => {
@@ -117,6 +129,12 @@ function ResultPage() {
     if (resultId) {
       const shareUrl = `${window.location.origin}/result/${resultId}`;
 
+      // GA: 공유 버튼 클릭 추적
+      trackResultInteraction('share', {
+        result_id: resultId,
+        share_method: 'navigator' in window && 'share' in navigator ? 'native' : 'clipboard'
+      });
+
       try {
         if (navigator.share) {
           await navigator.share({
@@ -131,11 +149,17 @@ function ResultPage() {
         }
       } catch {
         showToast.error('공유에 실패했습니다');
+        trackError('share_failed', '공유 실패', 'result_page');
       }
     }
   };
 
   const handleRestartTarot = () => {
+    // GA: 새로운 타로 보기 클릭 추적
+    trackResultInteraction('restart', {
+      result_id: resultId || 'unknown'
+    });
+
     // 모든 상태 초기화
     resetSelection();    // 카드 스토어 초기화
     clearSession();      // 세션 스토어 초기화 (sessionStorage 포함)

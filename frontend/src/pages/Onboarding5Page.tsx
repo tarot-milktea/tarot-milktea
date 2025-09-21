@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { useColors } from '../hooks/useColors';
@@ -6,6 +7,7 @@ import { useSessionStore, type Reader } from '../store/sessionStore';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
 import ThemeToggle from '../components/etc/ThemeToggle';
+import { trackOnboardingEnter, trackOnboardingComplete, trackUserSelection } from '../utils/analytics';
 
 function Onboarding5Page() {
   const navigate = useNavigate();
@@ -13,12 +15,19 @@ function Onboarding5Page() {
   const { readers, isLoading, error } = useDataStore();
   const { selectedReader, setSelectedReader, createSession } = useSessionStore();
 
+  // 컴포넌트 마운트 시 GA 추적
+  useEffect(() => {
+    trackOnboardingEnter(5, 'reader_selection');
+  }, []);
+
   const handleReaderSelect = (reader: Reader) => {
     // 이미 선택된 리더를 다시 클릭하면 선택 해제 (토글)
     if (selectedReader?.type === reader.type) {
       setSelectedReader(null);
     } else {
       setSelectedReader(reader);
+      // GA: 리더 선택 추적
+      trackUserSelection('reader', reader.type, 5);
     }
   };
 
@@ -28,6 +37,13 @@ function Onboarding5Page() {
     try {
       // 리더 선택 완료 후 세션 생성 (미리 정해진 카드들도 함께 가져옴)
       await createSession();
+
+      // GA: 온보딩 5단계 완료 추적 (전체 온보딩 완료)
+      trackOnboardingComplete(5, 'reader_selection', {
+        selected_reader: selectedReader.type,
+        reader_name: selectedReader.name
+      });
+
       navigate('/onboarding/card-draw');
     } catch (error) {
       console.error('Failed to create session:', error);
