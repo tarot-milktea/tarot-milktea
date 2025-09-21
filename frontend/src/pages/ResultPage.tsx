@@ -15,7 +15,7 @@ function ResultPage() {
   const { resultId } = useParams<{ resultId: string }>();
   const navigate = useNavigate();
   const { resetSelection } = useCardStore();
-  const { clearSession, restoreFromStorage, predefinedCards } = useSessionStore();
+  const { clearSession, restoreFromStorage, predefinedCards, setPredefinedCards, fetchPredefinedCards } = useSessionStore();
   const {
     setSessionId,
     resetResult,
@@ -60,6 +60,30 @@ function ResultPage() {
       resetResult();
     };
   }, [resultId, navigate, setSessionId, resetResult, restoreFromStorage, pageStartTime]);
+
+  /**
+   * TODO: 임시 해결책 - 백엔드 API 수정 후 삭제 예정
+   *
+   * 문제: 공유 링크로 접속한 사용자는 sessionStorage에 저장된 predefinedCards 데이터에 접근할 수 없음
+   * 임시 해결: predefinedCards가 없으면 별도 API 호출로 카드 정보 가져오기
+   *
+   * 백엔드 수정 완료 시 이 useEffect와 관련 로직을 모두 삭제하고,
+   * 결과 API 응답에 predefinedCards를 포함하도록 수정
+   */
+  useEffect(() => {
+    if (resultId && (!predefinedCards || predefinedCards.length === 0)) {
+      const loadPredefinedCards = async () => {
+        try {
+          await fetchPredefinedCards();
+        } catch (error) {
+          console.error('Failed to fetch predefined cards for shared link:', error);
+          // 카드 정보를 가져오지 못해도 텍스트는 보여줄 수 있으므로 에러를 throw하지 않음
+        }
+      };
+
+      loadPredefinedCards();
+    }
+  }, [resultId, predefinedCards, fetchPredefinedCards]);
 
   // Polling for result updates
   useEffect(() => {
