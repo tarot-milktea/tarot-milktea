@@ -89,7 +89,7 @@ function ResultPage() {
         }
 
         return false; // Continue polling
-      } catch (error) {
+      } catch {
         return false; // Continue polling on error
       }
     };
@@ -129,7 +129,7 @@ function ResultPage() {
           await navigator.clipboard.writeText(shareUrl);
           showToast.success('링크가 클립보드에 복사되었습니다! 📋');
         }
-      } catch (error) {
+      } catch {
         showToast.error('공유에 실패했습니다');
       }
     }
