@@ -1,5 +1,195 @@
-# Ignore Gradle project-specific cache directory
-.gradle
+# =============================================================================
+# Spring Boot Backend Project .gitignore
+# =============================================================================
 
-# Ignore Gradle build output directory
-build
+# Gradle
+# -----
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+gradle-app.setting
+.gradletasknamecache
+
+# Java
+# ----
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+
+# IDE - IntelliJ IDEA
+# ------------------
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+# IDE - Eclipse
+# -------------
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+# IDE - VS Code
+# -------------
+.vscode/
+*.code-workspace
+
+# Spring Boot
+# -----------
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Application Properties (보안 정보 포함)
+# ---------------------------------------
+application.properties
+application-*.properties
+application.yml
+application-*.yml
+!application-example.properties
+!application-template.yml
+
+# Logs
+# ----
+*.log
+logs/
+spring.log
+
+# Temporary Files
+# ---------------
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# OS Files
+# --------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker
+# ------
+.dockerignore
+*.pid
+
+# Jenkins
+# -------
+.jenkins/
+jenkins.log
+
+# Database
+# --------
+*.db
+*.sqlite
+*.sqlite3
+*.h2.db
+
+# Maven (경우에 따라)
+# ------------------
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Test Results
+# ------------
+/test-results/
+/test-output/
+*.test
+TEST-*.xml
+
+# Security & Sensitive Files
+# --------------------------
+*.key
+*.pem
+*.crt
+*.p12
+*.jks
+*.keystore
+*.truststore
+secrets/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# API Keys & Config
+# -----------------
+config/secrets.yml
+config/database.yml
+openai.key
+*.secret
+
+# Backup Files
+# ------------
+*.bak
+*.backup
+*.orig
+
+# Node.js (프론트엔드 연동 시)
+# ---------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Coverage Reports
+# ----------------
+*.lcov
+coverage/
+.nyc_output
+
+# JaCoCo
+# ------
+*.exec
+jacoco.xml
+
+# Heap Dumps
+# -----------
+*.hprof
+
+# Custom Application Files
+# ------------------------
+uploads/
+downloads/
+storage/
+data/
+
+# Rollback Scripts (운영 시 생성될 수 있음)
+# ----------------------------------------
+/tmp/last_successful_build.txt
+
+# Docker Compose Override
+# -----------------------
+docker-compose.override.yml
+docker-compose.local.yml
