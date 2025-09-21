@@ -15,7 +15,7 @@ function ResultPage() {
   const { resultId } = useParams<{ resultId: string }>();
   const navigate = useNavigate();
   const { resetSelection } = useCardStore();
-  const { clearSession, restoreFromStorage, predefinedCards, setPredefinedCards, fetchPredefinedCards } = useSessionStore();
+  const { clearSession, restoreFromStorage, predefinedCards, fetchPredefinedCards } = useSessionStore();
   const {
     setSessionId,
     resetResult,
