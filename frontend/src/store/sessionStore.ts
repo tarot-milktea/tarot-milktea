@@ -38,7 +38,6 @@ interface SessionData {
   selectedTopic: Topic | null;
   selectedQuestion: string;
   selectedReader: Reader | null;
-  currentStep: number;
   sessionId: string | null;
   predefinedCards: PredefinedCard[];
 }
@@ -51,7 +50,6 @@ interface SessionState extends SessionData {
   setSelectedTopic: (topic: Topic | null) => void;
   setSelectedQuestion: (question: string) => void;
   setSelectedReader: (reader: Reader | null) => void;
-  setCurrentStep: (step: number) => void;
   setSessionId: (sessionId: string | null) => void;
   setPredefinedCards: (cards: PredefinedCard[]) => void;
 
@@ -68,7 +66,6 @@ const initialState: SessionData = {
   selectedTopic: null,
   selectedQuestion: '',
   selectedReader: null,
-  currentStep: 1,
   sessionId: null,
   predefinedCards: [],
 };
@@ -123,11 +120,6 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     storageService.saveSessionData(state);
   },
 
-  setCurrentStep: (currentStep) => {
-    const state = { ...get(), currentStep };
-    set({ currentStep });
-    storageService.saveSessionData(state);
-  },
 
   setSessionId: (sessionId) => {
     const state = { ...get(), sessionId };
@@ -223,7 +215,6 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         selectedTopic: saved.selectedTopic || null,
         selectedQuestion: saved.selectedQuestion || '',
         selectedReader: saved.selectedReader || null,
-        currentStep: saved.currentStep || 1,
         sessionId: saved.sessionId || null,
         predefinedCards: saved.predefinedCards || [],
         isSessionConfirmed,

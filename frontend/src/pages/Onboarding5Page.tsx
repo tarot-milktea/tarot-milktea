@@ -1,21 +1,19 @@
 import styled from '@emotion/styled';
+import { useNavigate } from 'react-router-dom';
 import { useColors } from '../hooks/useColors';
 import { useDataStore } from '../store/dataStore';
-import { useSessionStore } from '../store/sessionStore';
+import { useSessionStore, type Reader } from '../store/sessionStore';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
+import ThemeToggle from '../components/etc/ThemeToggle';
 
-interface Onboarding5PageProps {
-  onNext: () => void;
-  onPrev: () => void;
-}
-
-function Onboarding5Page({ onNext, onPrev }: Onboarding5PageProps) {
+function Onboarding5Page() {
+  const navigate = useNavigate();
   const { styles: globalStyles, getColor } = useColors();
   const { readers, isLoading, error } = useDataStore();
   const { selectedReader, setSelectedReader, createSession } = useSessionStore();
 
-  const handleReaderSelect = (reader: any) => {
+  const handleReaderSelect = (reader: Reader) => {
     // 이미 선택된 리더를 다시 클릭하면 선택 해제 (토글)
     if (selectedReader?.type === reader.type) {
       setSelectedReader(null);
@@ -30,15 +28,21 @@ function Onboarding5Page({ onNext, onPrev }: Onboarding5PageProps) {
     try {
       // 리더 선택 완료 후 세션 생성 (미리 정해진 카드들도 함께 가져옴)
       await createSession();
-      onNext();
+      navigate('/onboarding/card-draw');
     } catch (error) {
       console.error('Failed to create session:', error);
       // TODO: 에러 처리 (토스트 메시지 등)
     }
   };
 
+  const handlePrev = () => {
+    navigate('/onboarding/4');
+  };
+
   return (
     <Container style={globalStyles.container}>
+      {/* 테마 토글 버튼 */}
+      <ThemeToggle position="fixed" />
       <Title 
         style={{
           ...globalStyles.heading,
@@ -127,7 +131,7 @@ function Onboarding5Page({ onNext, onPrev }: Onboarding5PageProps) {
         <Button 
           variant="secondary"
           size="large"
-          onClick={onPrev}
+          onClick={handlePrev}
         >
           이전
         </Button>

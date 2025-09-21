@@ -1,22 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
+import { useNavigate } from 'react-router-dom';
 import { useColors } from '../hooks/useColors';
 import { useSessionStore } from '../store/sessionStore';
+import { useDataStore } from '../store/dataStore';
 import Button from '../components/common/Button/Button';
 import NicknameInput from '../components/etc/NicknameInput';
 import Logo from '../components/common/Logo';
+import ThemeToggle from '../components/etc/ThemeToggle';
 import { generateRandomNickname } from '../utils/nicknameGenerator';
 import { showToast } from '../components/common/Toast';
 
-interface Onboarding1PageProps {
-  onNext: () => void;
-}
-
-function Onboarding1Page({ onNext }: Onboarding1PageProps) {
+function Onboarding1Page() {
+  const navigate = useNavigate();
   const { styles: globalStyles, getColor } = useColors();
-  const { nickname, setNickname } = useSessionStore();
+  const { nickname, setNickname, restoreFromStorage } = useSessionStore();
+  const { initializeData } = useDataStore();
   const [localNickname, setLocalNickname] = useState(nickname || '');
   const [isValid, setIsValid] = useState(false);
+
+  // 컴포넌트 마운트 시 세션 복구 및 데이터 초기화
+  useEffect(() => {
+    restoreFromStorage();
+    initializeData();
+  }, [restoreFromStorage, initializeData]);
 
   const handleValidationChange = (valid: boolean) => {
     setIsValid(valid);
@@ -30,7 +37,7 @@ function Onboarding1Page({ onNext }: Onboarding1PageProps) {
       const randomNickname = generateRandomNickname();
       setNickname(randomNickname);
       showToast.success(`"${randomNickname}"으로 모험을 시작합니다!`);
-      onNext();
+      navigate('/onboarding/2');
       return;
     }
 
@@ -38,7 +45,7 @@ function Onboarding1Page({ onNext }: Onboarding1PageProps) {
     if (isValid) {
       setNickname(trimmedNickname);
       showToast.success(`"${trimmedNickname}"님, 환영합니다!`);
-      onNext();
+      navigate('/onboarding/2');
     } else {
       showToast.error('올바른 닉네임을 입력해주세요');
     }
@@ -46,6 +53,9 @@ function Onboarding1Page({ onNext }: Onboarding1PageProps) {
 
   return (
     <Container style={globalStyles.container}>
+      {/* 테마 토글 버튼 */}
+      <ThemeToggle position="fixed" />
+
       <HeaderSection>
         <Logo />
         <WelcomeText
