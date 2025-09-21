@@ -10,6 +10,7 @@ import Logo from '../components/common/Logo';
 import ThemeToggle from '../components/etc/ThemeToggle';
 import { generateRandomNickname } from '../utils/nicknameGenerator';
 import { showToast } from '../components/common/Toast';
+import { trackOnboardingEnter, trackOnboardingComplete, trackUserSelection } from '../utils/analytics';
 
 function Onboarding1Page() {
   const navigate = useNavigate();
@@ -23,6 +24,9 @@ function Onboarding1Page() {
   useEffect(() => {
     restoreFromStorage();
     initializeData();
+
+    // GA: 온보딩 1단계 진입 추적
+    trackOnboardingEnter(1, 'nickname_input');
   }, [restoreFromStorage, initializeData]);
 
   const handleValidationChange = (valid: boolean) => {
@@ -37,6 +41,14 @@ function Onboarding1Page() {
       const randomNickname = generateRandomNickname();
       setNickname(randomNickname);
       showToast.success(`"${randomNickname}"으로 모험을 시작합니다!`);
+
+      // GA: 온보딩 1단계 완료 추적 (랜덤 닉네임)
+      trackOnboardingComplete(1, 'nickname_input', {
+        nickname_type: 'random',
+        nickname_length: randomNickname.length
+      });
+      trackUserSelection('nickname', 'random_generated', 1);
+
       navigate('/onboarding/2');
       return;
     }
@@ -45,6 +57,14 @@ function Onboarding1Page() {
     if (isValid) {
       setNickname(trimmedNickname);
       showToast.success(`"${trimmedNickname}"님, 환영합니다!`);
+
+      // GA: 온보딩 1단계 완료 추적 (사용자 입력)
+      trackOnboardingComplete(1, 'nickname_input', {
+        nickname_type: 'user_input',
+        nickname_length: trimmedNickname.length
+      });
+      trackUserSelection('nickname', 'user_input', 1);
+
       navigate('/onboarding/2');
     } else {
       showToast.error('올바른 닉네임을 입력해주세요');

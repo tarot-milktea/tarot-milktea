@@ -9,12 +9,13 @@ import ThemeToggle from '../components/etc/ThemeToggle';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
 import CardVideo from '../components/TarotCard/CardVideo';
+import { trackPageView, trackResultInteraction, trackTimeOnPage, trackError } from '../utils/analytics';
 
 function ResultPage() {
   const { resultId } = useParams<{ resultId: string }>();
   const navigate = useNavigate();
   const { resetSelection } = useCardStore();
-  const { clearSession, restoreFromStorage, predefinedCards } = useSessionStore();
+  const { clearSession, restoreFromStorage, predefinedCards, fetchPredefinedCards } = useSessionStore();
   const {
     setSessionId,
     resetResult,
@@ -29,6 +30,7 @@ function ResultPage() {
     adviceImageUrl
   } = useResultStore();
   const [loading, setLoading] = useState(true);
+  const [pageStartTime] = useState(performance.now());
 
   useEffect(() => {
     if (resultId) {
@@ -38,6 +40,12 @@ function ResultPage() {
       // Restore session data from sessionStorage
       restoreFromStorage();
 
+      // GA: 결과 페이지 조회 추적
+      trackPageView(`/result/${resultId}`, '타로 결과 페이지');
+      trackResultInteraction('view_complete', {
+        result_id: resultId
+      });
+
       setLoading(false);
     } else {
       navigate('/', { replace: true });
@@ -45,9 +53,37 @@ function ResultPage() {
 
     // Cleanup on unmount
     return () => {
+      // GA: 페이지 체류 시간 추적
+      const timeOnPage = Math.round(performance.now() - pageStartTime);
+      trackTimeOnPage('result_page', timeOnPage);
+
       resetResult();
     };
-  }, [resultId, navigate, setSessionId, resetResult, restoreFromStorage]);
+  }, [resultId, navigate, setSessionId, resetResult, restoreFromStorage, pageStartTime]);
+
+  /**
+   * TODO: 임시 해결책 - 백엔드 API 수정 후 삭제 예정
+   *
+   * 문제: 공유 링크로 접속한 사용자는 sessionStorage에 저장된 predefinedCards 데이터에 접근할 수 없음
+   * 임시 해결: predefinedCards가 없으면 별도 API 호출로 카드 정보 가져오기
+   *
+   * 백엔드 수정 완료 시 이 useEffect와 관련 로직을 모두 삭제하고,
+   * 결과 API 응답에 predefinedCards를 포함하도록 수정
+   */
+  useEffect(() => {
+    if (resultId && (!predefinedCards || predefinedCards.length === 0)) {
+      const loadPredefinedCards = async () => {
+        try {
+          await fetchPredefinedCards();
+        } catch (error) {
+          console.error('Failed to fetch predefined cards for shared link:', error);
+          // 카드 정보를 가져오지 못해도 텍스트는 보여줄 수 있으므로 에러를 throw하지 않음
+        }
+      };
+
+      loadPredefinedCards();
+    }
+  }, [resultId, predefinedCards, fetchPredefinedCards]);
 
   // Polling for result updates
   useEffect(() => {
@@ -117,6 +153,12 @@ function ResultPage() {
     if (resultId) {
       const shareUrl = `${window.location.origin}/result/${resultId}`;
 
+      // GA: 공유 버튼 클릭 추적
+      trackResultInteraction('share', {
+        result_id: resultId,
+        share_method: 'navigator' in window && 'share' in navigator ? 'native' : 'clipboard'
+      });
+
       try {
         if (navigator.share) {
           await navigator.share({
@@ -131,11 +173,17 @@ function ResultPage() {
         }
       } catch {
         showToast.error('공유에 실패했습니다');
+        trackError('share_failed', '공유 실패', 'result_page');
       }
     }
   };
 
   const handleRestartTarot = () => {
+    // GA: 새로운 타로 보기 클릭 추적
+    trackResultInteraction('restart', {
+      result_id: resultId || 'unknown'
+    });
+
     // 모든 상태 초기화
     resetSelection();    // 카드 스토어 초기화
     clearSession();      // 세션 스토어 초기화 (sessionStorage 포함)

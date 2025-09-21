@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { useColors } from '../hooks/useColors';
@@ -6,6 +7,7 @@ import { useSessionStore, type Category } from '../store/sessionStore';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
 import ThemeToggle from '../components/etc/ThemeToggle';
+import { trackOnboardingEnter, trackOnboardingComplete, trackUserSelection } from '../utils/analytics';
 
 function Onboarding2Page() {
   const navigate = useNavigate();
@@ -13,17 +15,30 @@ function Onboarding2Page() {
   const { categories, isLoading, error } = useDataStore();
   const { selectedCategory, setSelectedCategory } = useSessionStore();
 
+  // 컴포넌트 마운트 시 GA 추적
+  useEffect(() => {
+    trackOnboardingEnter(2, 'category_selection');
+  }, []);
+
   const handleCategorySelect = (category: Category) => {
     // 이미 선택된 카테고리를 다시 클릭하면 선택 해제 (토글)
     if (selectedCategory?.code === category.code) {
       setSelectedCategory(null);
     } else {
       setSelectedCategory(category);
+      // GA: 카테고리 선택 추적
+      trackUserSelection('category', category.code, 2);
     }
   };
 
   const handleNext = () => {
     if (selectedCategory) {
+      // GA: 온보딩 2단계 완료 추적
+      trackOnboardingComplete(2, 'category_selection', {
+        selected_category: selectedCategory.code,
+        category_name: selectedCategory.name
+      });
+
       navigate('/onboarding/3');
     }
   };

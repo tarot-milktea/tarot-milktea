@@ -66,17 +66,32 @@ const StyledButtonGroup = styled('div', {
   flex-wrap: ${props => props.wrap ? 'wrap' : 'nowrap'};
 
   /* 반응형 디자인 */
+  @media (max-width: 768px) {
+    /* 태블릿/모바일에서 버튼 크기에 따라 배치 결정 */
+    ${props => props.direction === 'row' && props.wrap && `
+      /* 버튼들이 좁은 화면에서도 좌우로 배치 가능한지 확인 */
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+      
+      & > * {
+        flex: 0 0 auto;
+        min-width: 120px;
+        max-width: 200px;
+      }
+    `}
+  }
+
   @media (max-width: 480px) {
-    /* 모바일에서는 세로 배치가 더 나을 수 있음 */
+    /* 매우 작은 화면에서만 세로 배치 */
     ${props => props.direction === 'row' && props.wrap && `
       flex-direction: column;
-      align-items: stretch;
+      align-items: center;
       
-      /* 모바일에서 버튼이 전체 너비를 차지 */
       & > * {
         width: 100%;
-        max-width: 300px;
-        margin: 0 auto;
+        max-width: 280px;
+        margin: 0;
       }
     `}
   }

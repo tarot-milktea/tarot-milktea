@@ -16,6 +16,7 @@ import {
   reducedMotionVariants,
   reducedMotionCardVariants
 } from '../utils/animations';
+import { trackOnboardingEnter, trackCardEvent, trackPerformance } from '../utils/analytics';
 
 function CardDrawPage() {
   const navigate = useNavigate();
@@ -45,9 +46,18 @@ function CardDrawPage() {
 
   // 컴포넌트 마운트 시 세션 데이터 제출
   useEffect(() => {
+    // GA: 카드 뽑기 페이지 진입 추적
+    trackOnboardingEnter(6, 'card_selection');
+
     const submitSession = async () => {
+      const startTime = performance.now();
       try {
         await submitSessionData();
+
+        const endTime = performance.now();
+        // GA: 세션 데이터 제출 성능 추적
+        trackPerformance('session_submit_time', Math.round(endTime - startTime));
+
       } catch (error) {
         console.error('CardDrawPage: 세션 데이터 제출 실패:', error);
       }
@@ -225,7 +235,17 @@ function CardDrawPage() {
               {/* <Button variant="secondary" size="medium" onClick={handleReset}>
                 다시 선택하기
               </Button> */}
-              <Button variant="primary" size="medium" onClick={() => navigate('/onboarding/loading')}>
+              <Button variant="primary" size="medium" onClick={() => {
+                // GA: 카드 선택 완료 추적
+                trackCardEvent('complete', {
+                  total_cards_selected: selectedCards.length,
+                  has_past_card: selectedCards.some(card => card.position === 'past'),
+                  has_present_card: selectedCards.some(card => card.position === 'present'),
+                  has_future_card: selectedCards.some(card => card.position === 'future')
+                });
+
+                navigate('/onboarding/loading');
+              }}>
                 결과 해석하기
               </Button>
             </ButtonGroup>
