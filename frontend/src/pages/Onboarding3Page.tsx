@@ -1,15 +1,13 @@
 import styled from '@emotion/styled';
+import { useNavigate } from 'react-router-dom';
 import { useColors } from '../hooks/useColors';
 import { useSessionStore, type Topic } from '../store/sessionStore';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
+import ThemeToggle from '../components/etc/ThemeToggle';
 
-interface Onboarding3PageProps {
-  onNext: () => void;
-  onPrev: () => void;
-}
-
-function Onboarding3Page({ onNext, onPrev }: Onboarding3PageProps) {
+function Onboarding3Page() {
+  const navigate = useNavigate();
   const { styles: globalStyles, getColor } = useColors();
   const { selectedCategory, selectedTopic, setSelectedTopic } = useSessionStore();
 
@@ -22,8 +20,20 @@ function Onboarding3Page({ onNext, onPrev }: Onboarding3PageProps) {
     }
   };
 
+  const handleNext = () => {
+    if (selectedTopic) {
+      navigate('/onboarding/4');
+    }
+  };
+
+  const handlePrev = () => {
+    navigate('/onboarding/2');
+  };
+
   return (
     <Container style={globalStyles.container}>
+      {/* 테마 토글 버튼 */}
+      <ThemeToggle position="fixed" />
       <Title 
         style={{
           ...globalStyles.heading,
@@ -78,14 +88,14 @@ function Onboarding3Page({ onNext, onPrev }: Onboarding3PageProps) {
         <Button 
           variant="secondary"
           size="large"
-          onClick={onPrev}
+          onClick={handlePrev}
         >
           이전
         </Button>
         <Button
           variant="primary"
           size="large"
-          onClick={onNext}
+          onClick={handleNext}
           disabled={!selectedTopic}
         >
           다음

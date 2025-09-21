@@ -24,13 +24,12 @@ export interface SelectedCard {
 
 export interface SessionData {
   nickname: string;
-  selectedCategory: Category | null;   
-  selectedTopic: Topic | null;         
+  selectedCategory: Category | null;
+  selectedTopic: Topic | null;
   selectedQuestion: string;
-  selectedReader: Reader | null;       
-  currentStep: number;
+  selectedReader: Reader | null;
   sessionId: string | null;
-  predefinedCards: PredefinedCard[];   
+  predefinedCards: PredefinedCard[];
 }
 
 // 에러 타입 정의
@@ -85,7 +84,6 @@ function isValidSessionData(data: unknown): data is Partial<SessionData> {
   // 필수 필드들 검증 (optional이 아닌 것들)
   if (typeof obj.nickname !== 'string') return false;
   if (typeof obj.selectedQuestion !== 'string') return false;
-  if (typeof obj.currentStep !== 'number') return false;
 
   // optional 필드들은 있으면 타입 검증, 없으면 패스
   if (obj.sessionId !== undefined && obj.sessionId !== null && typeof obj.sessionId !== 'string') {

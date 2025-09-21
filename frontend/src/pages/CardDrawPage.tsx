@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import styled from '@emotion/styled';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useCardStore } from '../store/cardStore';
 import { useSessionStore } from '../store/sessionStore';
 import TarotCard from '../components/TarotCard/TarotCard';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
+import ThemeToggle from '../components/etc/ThemeToggle';
 import { calculateAllCardPositions, getResponsiveScale, calculateAnimationDelay, getScreenType } from '../utils/cardLayout';
 import {
   cardContainerVariants,
@@ -15,12 +17,8 @@ import {
   reducedMotionCardVariants
 } from '../utils/animations';
 
-interface CardDrawPageProps {
-  onNext: () => void;
-  onPrev?: () => void;
-}
-
-function CardDrawPage({ onNext }: CardDrawPageProps) {
+function CardDrawPage() {
+  const navigate = useNavigate();
   const { selectedCards, isRevealing, startReveal, revealCard } = useCardStore();
   const { predefinedCards, submitSessionData } = useSessionStore();
   const [scale, setScale] = useState(1);
@@ -104,6 +102,9 @@ function CardDrawPage({ onNext }: CardDrawPageProps) {
 
   return (
     <Container>
+      {/* 테마 토글 버튼 */}
+      <ThemeToggle position="fixed" />
+
       <Character>
         🔮
       </Character>
@@ -224,7 +225,7 @@ function CardDrawPage({ onNext }: CardDrawPageProps) {
               {/* <Button variant="secondary" size="medium" onClick={handleReset}>
                 다시 선택하기
               </Button> */}
-              <Button variant="primary" size="medium" onClick={onNext}>
+              <Button variant="primary" size="medium" onClick={() => navigate('/onboarding/loading')}>
                 결과 해석하기
               </Button>
             </ButtonGroup>

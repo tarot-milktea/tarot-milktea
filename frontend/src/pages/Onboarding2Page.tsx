@@ -1,16 +1,14 @@
 import styled from '@emotion/styled';
+import { useNavigate } from 'react-router-dom';
 import { useColors } from '../hooks/useColors';
 import { useDataStore } from '../store/dataStore';
 import { useSessionStore, type Category } from '../store/sessionStore';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
+import ThemeToggle from '../components/etc/ThemeToggle';
 
-interface Onboarding2PageProps {
-  onNext: () => void;
-  onPrev: () => void;
-}
-
-function Onboarding2Page({ onNext, onPrev }: Onboarding2PageProps) {
+function Onboarding2Page() {
+  const navigate = useNavigate();
   const { styles: globalStyles, getColor } = useColors();
   const { categories, isLoading, error } = useDataStore();
   const { selectedCategory, setSelectedCategory } = useSessionStore();
@@ -24,8 +22,21 @@ function Onboarding2Page({ onNext, onPrev }: Onboarding2PageProps) {
     }
   };
 
+  const handleNext = () => {
+    if (selectedCategory) {
+      navigate('/onboarding/3');
+    }
+  };
+
+  const handlePrev = () => {
+    navigate('/onboarding/1');
+  };
+
   return (
     <Container style={globalStyles.container}>
+      {/* 테마 토글 버튼 */}
+      <ThemeToggle position="fixed" />
+
       <Title 
         style={{
           ...globalStyles.heading,
@@ -87,17 +98,17 @@ function Onboarding2Page({ onNext, onPrev }: Onboarding2PageProps) {
       )}
 
       <ButtonGroup gap="large">
-        <Button 
+        <Button
           variant="secondary"
           size="large"
-          onClick={onPrev}
+          onClick={handlePrev}
         >
           이전
         </Button>
         <Button
           variant="primary"
           size="large"
-          onClick={onNext}
+          onClick={handleNext}
           disabled={!selectedCategory}
         >
           다음

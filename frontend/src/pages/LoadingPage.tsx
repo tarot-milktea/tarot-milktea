@@ -1,27 +1,34 @@
 import { useEffect } from 'react';
 import styled from '@emotion/styled';
+import { useNavigate } from 'react-router-dom';
 import { useColors } from '../hooks/useColors';
+import { useSessionStore } from '../store/sessionStore';
+import ThemeToggle from '../components/etc/ThemeToggle';
 
-interface LoadingPageProps {
-  onComplete?: () => void;
-}
-
-function LoadingPage({ onComplete }: LoadingPageProps) {
+function LoadingPage() {
+  const navigate = useNavigate();
   const { styles: globalStyles, getColor } = useColors();
+  const { sessionId } = useSessionStore();
 
   // 3초 후 결과 페이지로 이동
   useEffect(() => {
-    if (onComplete) {
-      const timer = setTimeout(() => {
-        onComplete();
-      }, 3000);
+    const timer = setTimeout(() => {
+      if (sessionId) {
+        navigate(`/result/${sessionId}`);
+      } else {
+        // sessionId가 없으면 처음부터 다시 시작
+        navigate('/');
+      }
+    }, 3000);
 
-      return () => clearTimeout(timer);
-    }
-  }, [onComplete]);
+    return () => clearTimeout(timer);
+  }, [navigate, sessionId]);
 
   return (
     <Container style={globalStyles.container}>
+      {/* 테마 토글 버튼 */}
+      <ThemeToggle position="fixed" />
+
       {/* 배경 안개 효과 - 나중에 실제 안개 애니메이션으로 대체 */}
       <BackgroundFog 
         style={{
