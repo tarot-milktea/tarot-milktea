@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { useColors } from '../hooks/useColors';
@@ -14,6 +14,7 @@ function Onboarding5Page() {
   const { styles: globalStyles, getColor } = useColors();
   const { readers, isLoading, error } = useDataStore();
   const { selectedReader, setSelectedReader, createSession } = useSessionStore();
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
   // 컴포넌트 마운트 시 GA 추적
   useEffect(() => {
@@ -53,6 +54,10 @@ function Onboarding5Page() {
 
   const handlePrev = () => {
     navigate('/onboarding/4');
+  };
+
+  const handleImageError = (readerType: string) => {
+    setImageErrors(prev => new Set(prev).add(readerType));
   };
 
   return (
@@ -111,12 +116,22 @@ function Onboarding5Page() {
                   : 'transparent'
               }}
             >
-              <CharacterAvatar
-                style={{
-                  background: `linear-gradient(135deg, ${getColor('accent', '400')} 0%, ${getColor('accent', '600')} 100%)`
-                }}
-              >
-                {reader.type}
+              <CharacterAvatar>
+                {!imageErrors.has(reader.type) ? (
+                  <CharacterImage
+                    src={reader.imageUrl}
+                    alt={reader.name}
+                    onError={() => handleImageError(reader.type)}
+                  />
+                ) : (
+                  <FallbackText
+                    style={{
+                      background: `linear-gradient(135deg, ${getColor('accent', '400')} 0%, ${getColor('accent', '600')} 100%)`
+                    }}
+                  >
+                    {reader.type}
+                  </FallbackText>
+                )}
               </CharacterAvatar>
 
               <CharacterInfo>
@@ -210,16 +225,39 @@ const CharacterCard = styled.div<{ isSelected?: boolean }>`
 `;
 
 const CharacterAvatar = styled.div`
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
+  width: 140px;
+  height: 140px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  margin-bottom: 20px;
+  overflow: hidden;
+  position: relative;
+`;
+
+const CharacterImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 16px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+`;
+
+const FallbackText = styled.div`
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
   font-weight: bold;
   color: var(--color-primary-900);
-  margin-bottom: 20px;
 `;
 
 const CharacterInfo = styled.div`
