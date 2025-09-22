@@ -276,7 +276,6 @@ public class TaroServiceImpl implements TaroService {
             taroReading.getPastInterpretation(),
             taroReading.getPresentInterpretation(),
             taroReading.getFutureInterpretation(),
-            taroReading.getDrawnCards(),
             taroReading.getInterpretation() // summary
         );
 
