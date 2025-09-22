@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
-import { useNavigate } from 'react-router-dom';
 import { useColors } from '../hooks/useColors';
-import { useSessionStore } from '../store/sessionStore';
-import { trackOnboardingEnter, trackPerformance } from '../utils/analytics';
 
 // 신비로운 타로 명언들
 const MYSTICAL_QUOTES = [
@@ -19,17 +16,16 @@ const MYSTICAL_QUOTES = [
   '마법의 순간이 펼쳐지고 있습니다'
 ];
 
-function LoadingPage() {
-  const navigate = useNavigate();
+function LoadingPageDemo() {
   const { styles: globalStyles, getColor } = useColors();
-  const { sessionId } = useSessionStore();
 
   // 명언 로테이션 상태
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
   const [quoteVisible, setQuoteVisible] = useState(true);
 
-  // 디자인용 진행 상태 (실제 SSE 대신 시뮬레이션)
-  const [step, setStep] = useState(0);
+  // 데모용 진행 상태
+  const [demoProgress, setDemoProgress] = useState(0);
+  const [demoStep, setDemoStep] = useState(0);
   const [flippedCards, setFlippedCards] = useState([false, false, false]);
 
   // 명언 로테이션 효과
@@ -45,40 +41,40 @@ function LoadingPage() {
     return () => clearInterval(quoteInterval);
   }, []);
 
-  // 카드 애니메이션 시뮬레이션 (3초 동안)
+  // 데모용 진행 시뮬레이션
   useEffect(() => {
-    const stepInterval = setInterval(() => {
-      setStep(prev => {
-        const nextStep = prev + 1;
+    const progressInterval = setInterval(() => {
+      setDemoProgress(prev => {
+        if (prev >= 100) return 0; // 100% 도달하면 다시 0%부터 시작
+        return prev + 5;
+      });
+    }, 200);
+
+    return () => clearInterval(progressInterval);
+  }, []);
+
+  // 데모용 카드 플립 애니메이션
+  useEffect(() => {
+    const cardInterval = setInterval(() => {
+      setDemoStep(prev => {
+        const nextStep = (prev + 1) % 4; // 0-3 순환
+
+        // 카드 플립 상태 업데이트
         if (nextStep === 1) setFlippedCards([true, false, false]);
         else if (nextStep === 2) setFlippedCards([true, true, false]);
         else if (nextStep === 3) setFlippedCards([true, true, true]);
+        else setFlippedCards([false, false, false]);
+
         return nextStep;
       });
-    }, 800);
+    }, 2000);
 
-    return () => {
-      clearInterval(stepInterval);
-    };
+    return () => clearInterval(cardInterval);
   }, []);
 
-  // 컴포넌트 마운트 시 GA 추적 및 즉시 결과 페이지로 이동
-  useEffect(() => {
-    trackOnboardingEnter(7, 'loading');
-    const startTime = performance.now();
-    const loadingTime = Math.round(performance.now() - startTime);
-    trackPerformance('loading_page_time', loadingTime);
-
-    if (sessionId) {
-      navigate(`/result/${sessionId}`);
-    } else {
-      navigate('/');
-    }
-  }, [navigate, sessionId]);
-
-  // 현재 진행 상황에 따른 메시지
+  // 데모용 상태 메시지
   const getStatusMessage = () => {
-    switch (step) {
+    switch (demoStep) {
       case 0:
         return '결과를 생성 중입니다';
       case 1:
@@ -92,9 +88,18 @@ function LoadingPage() {
     }
   };
 
-
   return (
     <Container style={globalStyles.container}>
+      {/* 디자인 확인용 안내 */}
+      <DemoNotice
+        style={{
+          color: getColor('accent', '400'),
+          background: `${getColor('primary', '800')}90`
+        }}
+      >
+        🎨 LoadingPage 디자인 데모 - API 호출 없음
+      </DemoNotice>
+
       {/* 떠다니는 별들 배경 */}
       <StarField>
         {Array.from({ length: 12 }).map((_, i) => (
@@ -136,6 +141,29 @@ function LoadingPage() {
           </LoaderCenter>
         </MysticLoader>
 
+        {/* 진행률 표시 */}
+        <ProgressContainer>
+          <ProgressBar
+            style={{
+              backgroundColor: `${getColor('primary', '700')}50`
+            }}
+          >
+            <ProgressFill
+              style={{
+                width: `${demoProgress}%`,
+                background: `linear-gradient(90deg, ${getColor('accent', '400')}, ${getColor('accent', '300')})`
+              }}
+            />
+          </ProgressBar>
+          <ProgressText
+            style={{
+              ...globalStyles.body,
+              color: getColor('accent', '300')
+            }}
+          >
+            {Math.round(demoProgress)}% 완료
+          </ProgressText>
+        </ProgressContainer>
 
         {/* 상태 메시지 */}
         <Title
@@ -216,6 +244,19 @@ const Container = styled.div`
   min-height: 100vh;
   position: relative;
   overflow: hidden;
+`;
+
+const DemoNotice = styled.div`
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  z-index: 100;
+  backdrop-filter: blur(10px);
 `;
 
 const StarField = styled.div`
@@ -310,6 +351,33 @@ const LoaderCenter = styled.div`
   }
 `;
 
+const ProgressContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 300px;
+`;
+
+const ProgressBar = styled.div`
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+`;
+
+const ProgressFill = styled.div`
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s ease;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+`;
+
+const ProgressText = styled.span`
+  font-size: 0.9rem;
+  font-weight: 600;
+`;
 
 const Title = styled.h1`
   font-size: 2.2rem;
@@ -400,4 +468,4 @@ const CardLabel = styled.span`
   transition: color 0.3s ease;
 `;
 
-export default LoadingPage;
+export default LoadingPageDemo;
