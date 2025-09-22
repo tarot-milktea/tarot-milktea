@@ -63,8 +63,6 @@ application.properties
 application-*.properties
 application.yml
 application-*.yml
-!application-example.properties
-!application-template.yml
 
 # Logs
 # ----
