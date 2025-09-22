@@ -7,10 +7,11 @@ import { useDataStore } from '../store/dataStore';
 import Button from '../components/common/Button/Button';
 import NicknameInput from '../components/etc/NicknameInput';
 import Logo from '../components/common/Logo';
-import ThemeToggle from '../components/etc/ThemeToggle';
+// import ThemeToggle from '../components/etc/ThemeToggle';
 import { generateRandomNickname } from '../utils/nicknameGenerator';
 import { showToast } from '../components/common/Toast';
-import { trackOnboardingEnter, trackOnboardingComplete, trackUserSelection } from '../utils/analytics';
+import { useOnboardingTracking } from '../hooks/useAnalytics';
+import { SELECTION_TYPES } from '../utils/analyticsEvents';
 
 function Onboarding1Page() {
   const navigate = useNavigate();
@@ -20,13 +21,13 @@ function Onboarding1Page() {
   const [localNickname, setLocalNickname] = useState(nickname || '');
   const [isValid, setIsValid] = useState(false);
 
+  // Analytics 훅 사용
+  const { trackComplete, trackSelection } = useOnboardingTracking(1, 'nickname_input');
+
   // 컴포넌트 마운트 시 세션 복구 및 데이터 초기화
   useEffect(() => {
     restoreFromStorage();
     initializeData();
-
-    // GA: 온보딩 1단계 진입 추적
-    trackOnboardingEnter(1, 'nickname_input');
   }, [restoreFromStorage, initializeData]);
 
   const handleValidationChange = (valid: boolean) => {
@@ -42,12 +43,12 @@ function Onboarding1Page() {
       setNickname(randomNickname);
       showToast.success(`"${randomNickname}"으로 모험을 시작합니다!`);
 
-      // GA: 온보딩 1단계 완료 추적 (랜덤 닉네임)
-      trackOnboardingComplete(1, 'nickname_input', {
+      // Analytics 추적
+      trackComplete({
         nickname_type: 'random',
         nickname_length: randomNickname.length
       });
-      trackUserSelection('nickname', 'random_generated', 1);
+      trackSelection(SELECTION_TYPES.BUTTON_CLICK, 'random_generated');
 
       navigate('/onboarding/2');
       return;
@@ -58,12 +59,12 @@ function Onboarding1Page() {
       setNickname(trimmedNickname);
       showToast.success(`"${trimmedNickname}"님, 환영합니다!`);
 
-      // GA: 온보딩 1단계 완료 추적 (사용자 입력)
-      trackOnboardingComplete(1, 'nickname_input', {
+      // Analytics 추적
+      trackComplete({
         nickname_type: 'user_input',
         nickname_length: trimmedNickname.length
       });
-      trackUserSelection('nickname', 'user_input', 1);
+      trackSelection(SELECTION_TYPES.FORM_SUBMIT, 'user_input');
 
       navigate('/onboarding/2');
     } else {
@@ -74,7 +75,7 @@ function Onboarding1Page() {
   return (
     <Container style={globalStyles.container}>
       {/* 테마 토글 버튼 */}
-      <ThemeToggle position="fixed" />
+      {/* <ThemeToggle position="fixed" /> */}
 
       <HeaderSection>
         <Logo />

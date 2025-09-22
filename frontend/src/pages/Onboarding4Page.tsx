@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { useColors } from '../hooks/useColors';
@@ -6,14 +6,18 @@ import { useSessionStore } from '../store/sessionStore';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
 import Input from '../components/common/Input';
-import ThemeToggle from '../components/etc/ThemeToggle';
-import { trackOnboardingEnter, trackOnboardingComplete, trackUserSelection } from '../utils/analytics';
+// import ThemeToggle from '../components/etc/ThemeToggle';
+import { useOnboardingTracking } from '../hooks/useAnalytics';
+import { SELECTION_TYPES } from '../utils/analyticsEvents';
 
 function Onboarding4Page() {
   const navigate = useNavigate();
   const { styles: globalStyles, getColor } = useColors();
   const { selectedTopic, selectedQuestion, setSelectedQuestion } = useSessionStore();
   const [customQuestion, setCustomQuestion] = useState('');
+
+  // Analytics 훅
+  const { trackComplete, trackSelection } = useOnboardingTracking(4, 'question_input');
 
   const sampleQuestions = selectedTopic?.sampleQuestions || [];
 
@@ -32,19 +36,15 @@ function Onboarding4Page() {
     setSelectedQuestion(value);
   };
 
-  // 컴포넌트 마운트 시 GA 추적
-  useEffect(() => {
-    trackOnboardingEnter(4, 'question_input');
-  }, []);
 
   const handleNext = () => {
     if (selectedQuestion.trim()) {
-      // GA: 온보딩 4단계 완료 추적
-      trackOnboardingComplete(4, 'question_input', {
+      // Analytics 추적
+      trackComplete({
         question_length: selectedQuestion.trim().length,
         question_source: customQuestion ? 'custom' : 'sample'
       });
-      trackUserSelection('question', customQuestion ? 'custom_input' : 'sample_question', 4);
+      trackSelection(SELECTION_TYPES.QUESTION, customQuestion ? 'custom_input' : 'sample_question');
 
       navigate('/onboarding/5');
     }
@@ -57,7 +57,7 @@ function Onboarding4Page() {
   return (
     <Container style={globalStyles.container}>
       {/* 테마 토글 버튼 */}
-      <ThemeToggle position="fixed" />
+      {/* <ThemeToggle position="fixed" /> */}
       <Title 
         style={{
           ...globalStyles.heading,
