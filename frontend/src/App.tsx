@@ -7,6 +7,7 @@ import Onboarding4Page from './pages/Onboarding4Page';
 import Onboarding5Page from './pages/Onboarding5Page';
 import CardDrawPage from './pages/CardDrawPage';
 import LoadingPage from './pages/LoadingPage';
+import LoadingPageDemo from './pages/LoadingPageDemo';
 import ResultPage from './pages/ResultPage';
 import ErrorPage from './pages/ErrorPage';
 import ParticleBackground from './components/common/ParticleBackground/ParticleBackground';
@@ -46,6 +47,9 @@ function App() {
         <Route path="/onboarding/5" element={<Onboarding5Page />} />
         <Route path="/onboarding/card-draw" element={<CardDrawPage />} />
         <Route path="/onboarding/loading" element={<LoadingPage />} />
+
+        {/* 디자인 확인용 데모 페이지 */}
+        <Route path="/demo/loading" element={<LoadingPageDemo />} />
 
         {/* 결과 페이지 */}
         <Route path="/result/:resultId" element={<ResultPage />} />
