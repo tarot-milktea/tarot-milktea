@@ -56,7 +56,20 @@ export const useResultData = (resultId?: string) => {
   useEffect(() => {
     if (!resultId) return;
 
+    // 현재 세션의 resultId를 캡처하여 클로저로 보관
+    const currentSessionId = resultId;
+    console.log(`[Polling] Starting polling for session: ${currentSessionId}`);
+
     const handleResultUpdate = (data: ResultData) => {
+      // CRITICAL: 폴링 시작 시점의 sessionId와 현재 resultId가 일치하는지 확인
+      // 이전 세션의 데이터가 현재 세션에 섞이는 것을 방지
+      if (resultId !== currentSessionId) {
+        console.warn(`[ResultData] Ignoring stale data from session ${currentSessionId}, current session: ${resultId}`);
+        return;
+      }
+
+      console.log(`[ResultData] Processing data for session: ${currentSessionId}`);
+
       // 카드 해석 업데이트
       if (data.interpretations?.past) {
         setCardInterpretation('past', data.interpretations.past);
@@ -85,12 +98,12 @@ export const useResultData = (resultId?: string) => {
     };
 
     const handlePollingComplete = () => {
-      // console.log('Result data polling completed');
+      console.log(`[Polling] Completed for session: ${currentSessionId}`);
     };
 
     // 폴링 시작
     resultApiService.startPolling(
-      resultId,
+      currentSessionId,
       handleResultUpdate,
       handlePollingComplete
     ).then((cleanup) => {
@@ -99,6 +112,7 @@ export const useResultData = (resultId?: string) => {
 
     // 클린업
     return () => {
+      console.log(`[Polling] Cleaning up for session: ${currentSessionId}`);
       if (pollingCleanup.current) {
         pollingCleanup.current();
         pollingCleanup.current = null;
