@@ -55,12 +55,17 @@ class ResultApiService {
     onComplete: () => void
   ): Promise<() => void> {
     let polling = true;
+    let timeoutId: number | null = null;
 
     const poll = async () => {
       if (!polling) return;
 
       try {
         const data = await this.fetchResultData(sessionId);
+
+        // sessionId가 현재 폴링 대상과 일치하는지 확인
+        if (!polling) return; // 중간에 취소되었을 수 있음
+
         onUpdate(data);
 
         // 완료 상태면 폴링 중단
@@ -72,13 +77,13 @@ class ResultApiService {
 
         // 계속 폴링
         if (polling) {
-          setTimeout(poll, 5000);
+          timeoutId = window.setTimeout(poll, 5000);
         }
       } catch (error) {
         console.error('Polling error:', error);
         // 에러 발생해도 계속 폴링 (네트워크 일시 장애 대응)
         if (polling) {
-          setTimeout(poll, 5000);
+          timeoutId = window.setTimeout(poll, 5000);
         }
       }
     };
@@ -89,6 +94,10 @@ class ResultApiService {
     // 폴링 중단 함수 반환
     return () => {
       polling = false;
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
     };
   }
 }
