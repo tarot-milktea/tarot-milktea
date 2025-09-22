@@ -6,7 +6,7 @@ import { useSessionStore } from '../store/sessionStore';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
 import Input from '../components/common/Input';
-import ThemeToggle from '../components/etc/ThemeToggle';
+// import ThemeToggle from '../components/etc/ThemeToggle';
 import { useOnboardingTracking } from '../hooks/useAnalytics';
 import { SELECTION_TYPES } from '../utils/analyticsEvents';
 
@@ -57,7 +57,7 @@ function Onboarding4Page() {
   return (
     <Container style={globalStyles.container}>
       {/* 테마 토글 버튼 */}
-      <ThemeToggle position="fixed" />
+      {/* <ThemeToggle position="fixed" /> */}
       <Title 
         style={{
           ...globalStyles.heading,

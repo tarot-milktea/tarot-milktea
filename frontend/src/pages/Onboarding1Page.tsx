@@ -7,7 +7,7 @@ import { useDataStore } from '../store/dataStore';
 import Button from '../components/common/Button/Button';
 import NicknameInput from '../components/etc/NicknameInput';
 import Logo from '../components/common/Logo';
-import ThemeToggle from '../components/etc/ThemeToggle';
+// import ThemeToggle from '../components/etc/ThemeToggle';
 import { generateRandomNickname } from '../utils/nicknameGenerator';
 import { showToast } from '../components/common/Toast';
 import { useOnboardingTracking } from '../hooks/useAnalytics';
@@ -75,7 +75,7 @@ function Onboarding1Page() {
   return (
     <Container style={globalStyles.container}>
       {/* 테마 토글 버튼 */}
-      <ThemeToggle position="fixed" />
+      {/* <ThemeToggle position="fixed" /> */}
 
       <HeaderSection>
         <Logo />

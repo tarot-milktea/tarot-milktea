@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { useColors } from '../hooks/useColors';
 import { useSessionStore } from '../store/sessionStore';
-import ThemeToggle from '../components/etc/ThemeToggle';
+// import ThemeToggle from '../components/etc/ThemeToggle';
 import { trackOnboardingEnter, trackPerformance } from '../utils/analytics';
 
 function LoadingPage() {
@@ -39,7 +39,7 @@ function LoadingPage() {
   return (
     <Container style={globalStyles.container}>
       {/* 테마 토글 버튼 */}
-      <ThemeToggle position="fixed" />
+      {/* <ThemeToggle position="fixed" /> */}
 
       {/* 배경 안개 효과 - 나중에 실제 안개 애니메이션으로 대체 */}
       <BackgroundFog 

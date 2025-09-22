@@ -3,7 +3,7 @@ import { useResultData } from '../hooks/useResultData';
 import { useResultActions } from '../hooks/useResultActions';
 import { resultUtilService } from '../services/resultService';
 import Button from '../components/common/Button/Button';
-import ThemeToggle from '../components/etc/ThemeToggle';
+// import ThemeToggle from '../components/etc/ThemeToggle';
 import LoadingPage from './LoadingPage';
 import ResultHeader from '../components/result/ResultHeader';
 import CardInterpretationSection from '../components/result/CardInterpretationSection';
@@ -35,7 +35,7 @@ function ResultPage() {
     hasAnyData
   } = useResultData(resultId);
 
-  const { handleShare, handleRestart } = useResultActions(resultId);
+  const { handleShare, handleRestart, handleDownloadImage } = useResultActions(resultId);
 
   // resultId 유효성 검사
   if (!resultUtilService.isValidResultId(resultId)) {
@@ -61,7 +61,7 @@ function ResultPage() {
   return (
     <Container>
       {/* 테마 토글 버튼 */}
-      <ThemeToggle position="absolute" />
+      {/* <ThemeToggle position="absolute" /> */}
 
       <Content>
         {/* 헤더 */}
@@ -107,6 +107,7 @@ function ResultPage() {
         <ResultActions
           onRestart={handleRestart}
           onShare={handleShare}
+          onDownloadImage={adviceImageUrl ? () => handleDownloadImage(adviceImageUrl) : undefined}
         />
       </Content>
     </Container>

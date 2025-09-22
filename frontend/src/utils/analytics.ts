@@ -13,12 +13,13 @@ const shouldInitializeGA = isProduction || GA_ENABLE_DEV;
  */
 export const initializeGA = () => {
   if (!GA_MEASUREMENT_ID) {
-    console.warn('GA 측정 ID가 설정되지 않았습니다.');
+    if (isProduction) {
+      console.warn('GA 측정 ID가 설정되지 않았습니다.');
+    }
     return;
   }
 
   if (!shouldInitializeGA) {
-    console.log('개발 환경에서 GA가 비활성화되었습니다.');
     return;
   }
 
@@ -27,7 +28,9 @@ export const initializeGA = () => {
       testMode: !isProduction, // 개발 환경에서는 테스트 모드 활성화
     });
 
-    console.log('Google Analytics 초기화 완료:', GA_MEASUREMENT_ID);
+    if (isProduction) {
+      // console.log('Google Analytics 초기화 완료:', GA_MEASUREMENT_ID);
+    }
   } catch (error) {
     console.error('GA 초기화 실패:', error);
   }
@@ -46,7 +49,9 @@ export const trackPageView = (path: string, title?: string) => {
       title: title || document.title
     });
 
-    console.log('페이지뷰 추적:', path);
+    if (!isProduction) {
+      // console.log('페이지뷰 추적:', path);
+    }
   } catch (error) {
     console.error('페이지뷰 추적 실패:', error);
   }
@@ -64,7 +69,9 @@ export const trackEvent = (
   try {
     ReactGA.event(action, parameters);
 
-    console.log('이벤트 추적:', action, parameters);
+    if (!isProduction) {
+      // console.log('이벤트 추적:', action, parameters);
+    }
   } catch (error) {
     console.error('이벤트 추적 실패:', error);
   }
@@ -182,7 +189,9 @@ export const setUserProperty = (propertyName: string, value: string) => {
 
   try {
     ReactGA.set({ [propertyName]: value });
-    console.log('사용자 속성 설정:', propertyName, value);
+    if (!isProduction) {
+      // console.log('사용자 속성 설정:', propertyName, value);
+    }
   } catch (error) {
     console.error('사용자 속성 설정 실패:', error);
   }
@@ -194,9 +203,9 @@ export const setUserProperty = (propertyName: string, value: string) => {
 export const debugGA = () => {
   if (isProduction) return;
 
-  console.log('=== GA 디버그 정보 ===');
-  console.log('측정 ID:', GA_MEASUREMENT_ID);
-  console.log('환경:', isProduction ? 'Production' : 'Development');
-  console.log('GA 활성화:', shouldInitializeGA);
-  console.log('테스트 모드:', !isProduction);
+  // console.log('=== GA 디버그 정보 ===');
+  // console.log('측정 ID:', GA_MEASUREMENT_ID);
+  // console.log('환경:', isProduction ? 'Production' : 'Development');
+  // console.log('GA 활성화:', shouldInitializeGA);
+  // console.log('테스트 모드:', !isProduction);
 };

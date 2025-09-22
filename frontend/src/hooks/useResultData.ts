@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useResultStore } from '../store/resultStore';
+import { useResultStore, type ProcessingStatus } from '../store/resultStore';
 import { useSessionStore } from '../store/sessionStore';
 import { resultApiService, type ResultData } from '../services/resultService';
 
@@ -80,12 +80,12 @@ export const useResultData = (resultId?: string) => {
 
       // 처리 상태 업데이트
       if (data.status) {
-        setProcessingStatus(data.status as any, `상태: ${data.status}`, 100);
+        setProcessingStatus(data.status as ProcessingStatus, `상태: ${data.status}`, 100);
       }
     };
 
     const handlePollingComplete = () => {
-      console.log('Result data polling completed');
+      // console.log('Result data polling completed');
     };
 
     // 폴링 시작

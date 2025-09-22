@@ -61,9 +61,55 @@ export const useResultActions = (resultId?: string) => {
     }
   }, [resultId, trackShare]);
 
+  /**
+   * 결과 이미지 다운로드
+   */
+  const handleDownloadImage = useCallback(async (imageUrl?: string) => {
+    if (!imageUrl) return;
+
+    try {
+      console.log('Attempting to download image:', imageUrl);
+
+      // 먼저 fetch로 CORS 테스트
+      const response = await fetch(imageUrl);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      // CORS가 허용되면 blob으로 다운로드
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `tarot-result-${resultId || 'image'}.jpg`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // 메모리 정리
+      window.URL.revokeObjectURL(url);
+
+      console.log('Image downloaded successfully via blob');
+    } catch (error) {
+      console.error('Fetch download failed, falling back to new tab:', error);
+
+      // CORS 차단되면 새 탭에서 이미지 열기
+      try {
+        window.open(imageUrl, '_blank');
+        console.log('Fallback: Image opened in new tab');
+      } catch (fallbackError) {
+        console.error('Fallback also failed:', fallbackError);
+      }
+    }
+  }, [resultId]);
+
   return {
     handleShare,
     handleRestart,
-    handleCopyLink
+    handleCopyLink,
+    handleDownloadImage
   };
 };
