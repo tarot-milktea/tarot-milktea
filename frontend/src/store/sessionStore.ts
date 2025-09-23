@@ -208,14 +208,17 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   restoreFromStorage: () => {
     const saved = storageService.loadSessionData();
     if (saved) {
-      const isSessionConfirmed = !!saved.sessionId;
+      const current = get();
+      const isSessionConfirmed = !!(current.sessionId || saved.sessionId);
+
+      // Only set sessionId from storage when there is no sessionId already (preserve route-provided id)
       set({
         nickname: saved.nickname || '',
         selectedCategory: saved.selectedCategory || null,
         selectedTopic: saved.selectedTopic || null,
         selectedQuestion: saved.selectedQuestion || '',
         selectedReader: saved.selectedReader || null,
-        sessionId: saved.sessionId || null,
+        sessionId: current.sessionId || saved.sessionId || null,
         predefinedCards: saved.predefinedCards || [],
         isSessionConfirmed,
       });
