@@ -1,8 +1,9 @@
 package org.com.taro.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.List;
 
-@Schema(description = "타로 해석 결과 응답 (카드 정보 제외)")
+@Schema(description = "타로 해석 결과 응답")
 public class TaroResultResponse {
 
     @Schema(description = "세션 ID")
@@ -14,6 +15,9 @@ public class TaroResultResponse {
     @Schema(description = "해석 결과")
     private InterpretationsDto interpretations;
 
+    @Schema(description = "뽑힌 카드 목록 (과거, 현재, 미래)")
+    private List<TaroReadingResponse.DrawnCard> drawnCards;
+
     @Schema(description = "운세 점수", example = "75")
     private Integer fortuneScore;
 
@@ -23,10 +27,12 @@ public class TaroResultResponse {
     public TaroResultResponse() {}
 
     public TaroResultResponse(String sessionId, String status, InterpretationsDto interpretations,
+                              List<TaroReadingResponse.DrawnCard> drawnCards,
                               Integer fortuneScore, ResultImageDto resultImage) {
         this.sessionId = sessionId;
         this.status = status;
         this.interpretations = interpretations;
+        this.drawnCards = drawnCards;
         this.fortuneScore = fortuneScore;
         this.resultImage = resultImage;
     }
@@ -37,6 +43,8 @@ public class TaroResultResponse {
     public void setStatus(String status) { this.status = status; }
     public InterpretationsDto getInterpretations() { return interpretations; }
     public void setInterpretations(InterpretationsDto interpretations) { this.interpretations = interpretations; }
+    public List<TaroReadingResponse.DrawnCard> getDrawnCards() { return drawnCards; }
+    public void setDrawnCards(List<TaroReadingResponse.DrawnCard> drawnCards) { this.drawnCards = drawnCards; }
     public Integer getFortuneScore() { return fortuneScore; }
     public void setFortuneScore(Integer fortuneScore) { this.fortuneScore = fortuneScore; }
     public ResultImageDto getResultImage() { return resultImage; }
