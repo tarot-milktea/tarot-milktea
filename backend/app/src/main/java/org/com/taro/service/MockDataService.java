@@ -119,6 +119,7 @@ public class MockDataService {
             sessionId,
             "COMPLETED",
             interpretations,
+            cards,
             75,
             resultImage
         );
