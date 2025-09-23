@@ -20,15 +20,37 @@ function Onboarding1Page() {
   const { initializeData } = useDataStore();
   const [localNickname, setLocalNickname] = useState(nickname || '');
   const [isValid, setIsValid] = useState(false);
+  
+  // 화면 크기 상태 관리
+  const [isMobile, setIsMobile] = useState(false);
 
   // Analytics 훅 사용
   const { trackComplete, trackSelection } = useOnboardingTracking(1, 'nickname_input');
+
+  // 화면 크기 감지 함수
+  const checkMobile = () => {
+    setIsMobile(window.innerWidth <= 768);
+  };
 
   // 컴포넌트 마운트 시 세션 복구 및 데이터 초기화
   useEffect(() => {
     restoreFromStorage();
     initializeData();
   }, [restoreFromStorage, initializeData]);
+
+  // 화면 크기 감지 useEffect
+  useEffect(() => {
+    // 초기 체크
+    checkMobile();
+    
+    // 리사이즈 이벤트 리스너 등록
+    window.addEventListener('resize', checkMobile);
+    
+    // 클린업 함수
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
 
   const handleValidationChange = (valid: boolean) => {
     setIsValid(valid);
@@ -85,7 +107,10 @@ function Onboarding1Page() {
             color: getColor('primary', '200')
           }}
         >
-          신비로운 타로의 세계에 오신 것을 환영합니다
+          {isMobile 
+            ? "타로의 세계에 오신 것을 환영합니다" 
+            : "신비로운 타로의 세계에 오신 것을 환영합니다"
+          }
         </WelcomeText>
       </HeaderSection>
 
@@ -96,9 +121,15 @@ function Onboarding1Page() {
             color: getColor('primary', '300')
           }}
         >
-          운명의 여행을 시작하기 위한 당신의 이름을 알려주세요
+          {isMobile 
+            ? "운명을 여행할 당신의 이름을 알려주세요" 
+            : "운명의 여행을 시작하기 위한 당신의 이름을 알려주세요"
+          }
           <SubDescription style={{ color: getColor('primary', '400') }}>
-            비워두시면 우주가 선택한 신비로운 이름을 드려요 ✨
+            {isMobile 
+              ? "비워두면 랜덤 이름을 드려요 ✨" 
+              : "비워두시면 우주가 선택한 신비로운 이름을 드려요 ✨"
+            }
           </SubDescription>
         </Description>
 
