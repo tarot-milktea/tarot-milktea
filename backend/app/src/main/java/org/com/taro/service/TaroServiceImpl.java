@@ -288,10 +288,31 @@ public class TaroServiceImpl implements TaroService {
             );
         }
 
+        // 뽑힌 카드(Predefined/Drawn cards) 포함
+        List<TaroReadingResponse.DrawnCard> responseCards = new ArrayList<>();
+        List<DrawnCard> drawnCards = drawnCardRepository.findByReadingIdOrderByPosition(taroReading.getId());
+        for (DrawnCard drawnCard : drawnCards) {
+            TaroCardEntity cardEntity = taroCardRepository.findById(Long.valueOf(drawnCard.getCardId()))
+                    .orElseThrow(() -> new TaroServiceException("Card not found: " + drawnCard.getCardId()));
+
+            String orientation = drawnCard.getOrientation() == DrawnCard.Orientation.upright ?
+                    ValidationConstants.ORIENTATION_UPRIGHT : ValidationConstants.ORIENTATION_REVERSED;
+
+            responseCards.add(new TaroReadingResponse.DrawnCard(
+                    drawnCard.getPosition(),
+                    cardEntity.getId(),
+                    cardEntity.getNameKo(),
+                    cardEntity.getNameEn(),
+                    orientation,
+                    cardEntity.getVideoUrl()
+            ));
+        }
+
         return new TaroResultResponse(
             sessionId,
             status,
             interpretations,
+            responseCards,
             taroReading.getFortuneScore(),
             resultImage
         );
