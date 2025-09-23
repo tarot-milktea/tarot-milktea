@@ -110,7 +110,7 @@ class ShareService {
    * 결과 공유하기
    */
   async shareResult(resultId: string): Promise<ShareMethod> {
-    const shareUrl = `${window.location.origin}/result/${resultId}`;
+    const shareUrl = `${window.location.origin}/share/${resultId}`;
 
     try {
       // Web Share API 지원 여부 확인
@@ -139,7 +139,7 @@ class ShareService {
    * URL 복사하기 (fallback)
    */
   async copyToClipboard(resultId: string): Promise<void> {
-    const shareUrl = `${window.location.origin}/result/${resultId}`;
+    const shareUrl = `${window.location.origin}/share/${resultId}`;
 
     try {
       await navigator.clipboard.writeText(shareUrl);
