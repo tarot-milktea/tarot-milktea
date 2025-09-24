@@ -7,7 +7,7 @@ import { useSessionStore } from '../store/sessionStore';
 import TarotCard from '../components/TarotCard/TarotCard';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
-import ThemeToggle from '../components/etc/ThemeToggle';
+// import ThemeToggle from '../components/etc/ThemeToggle';
 import { calculateAllCardPositions, getResponsiveScale, calculateAnimationDelay, getScreenType } from '../utils/cardLayout';
 import {
   cardContainerVariants,
@@ -113,7 +113,7 @@ function CardDrawPage() {
   return (
     <Container>
       {/* 테마 토글 버튼 */}
-      <ThemeToggle position="fixed" />
+      {/* <ThemeToggle position="fixed" /> */}
 
       <Character>
         🔮
