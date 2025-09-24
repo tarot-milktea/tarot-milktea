@@ -34,18 +34,7 @@ function ProgressBar({ currentStep, totalSteps, className }: ProgressBarProps) {
   return (
     <ProgressContainer className={className}>
       <ProgressTrack>
-        {/* 배경 트랙의 단계 표시 */}
-        <StepMarkers>
-          {Array.from({ length: totalSteps }, (_, index) => (
-            <StepMarker
-              key={index}
-              isActive={index + 1 === currentStep}
-              isPassed={index + 1 < currentStep}
-            />
-          ))}
-        </StepMarkers>
-
-        {/* 진행된 부분의 트레일 */}
+        {/* 진행된 부분의 트레일 - 선이 움직이는 효과 */}
         <ProgressFill
           key={`fill-${animationKey}`}
           initial={{ width: `${previousDotPosition}%` }}
@@ -54,18 +43,6 @@ function ProgressBar({ currentStep, totalSteps, className }: ProgressBarProps) {
             duration: 0.8,
             ease: [0.25, 0.46, 0.45, 0.94],
           }}
-        />
-
-        {/* 움직이는 골드 닷 */}
-        <ProgressDot
-          key={`dot-${animationKey}`}
-          initial={{ left: `${previousDotPosition}%` }}
-          animate={{ left: `${currentDotPosition}%` }}
-          transition={{
-            duration: 0.8,
-            ease: [0.25, 0.46, 0.45, 0.94],
-          }}
-          style={{ marginLeft: '-6px' }}
         />
       </ProgressTrack>
     </ProgressContainer>
@@ -82,8 +59,6 @@ const ProgressContainer = styled.div`
   background-color: rgba(0, 0, 0, 0.25);
   z-index: 1000;
   display: flex;
-  padding: 0 24px;
-  box-sizing: border-box;
   align-items: center;
 `;
 
@@ -96,68 +71,18 @@ const ProgressTrack = styled.div`
   overflow: hidden;
 `;
 
-const ProgressDot = styled(motion.div)`
-  position: absolute;
-  top: 50%;
-  width: 12px;
-  height: 12px;
-  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-  border-radius: 50%;
-  transform: translateY(-50%);
-  box-shadow:
-    0 0 12px rgba(255, 215, 0, 0.6),
-    0 0 24px rgba(255, 215, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  z-index: 2;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    right: 2px;
-    bottom: 2px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, transparent 100%);
-    border-radius: 50%;
-  }
-`;
-
 const ProgressFill = styled(motion.div)`
   position: absolute;
   top: 0;
   left: 0;
   height: 100%;
   background: linear-gradient(90deg,
-    rgba(255, 215, 0, 0.8) 0%,
-    rgba(255, 215, 0, 0.4) 70%,
-    rgba(255, 215, 0, 0.1) 100%
+    rgba(255, 215, 0, 0.1) 0%,
+    rgba(255, 215, 0, 0.4) 30%,
+    rgba(255, 215, 0, 0.8) 100%
   );
   border-radius: 1px;
   z-index: 1;
-`;
-
-const StepMarkers = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  z-index: 0;
-`;
-
-const StepMarker = styled.div<{ isActive: boolean; isPassed: boolean }>`
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background-color: ${({ isActive, isPassed }) => {
-    if (isPassed) return 'rgba(255, 215, 0, 0.6)';
-    if (isActive) return 'rgba(255, 215, 0, 0.8)';
-    return 'rgba(255, 255, 255, 0.2)';
-  }};
-  transition: background-color 0.3s ease;
 `;
 
 export default ProgressBar;
