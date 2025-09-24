@@ -12,12 +12,15 @@ import { generateRandomNickname } from '../utils/nicknameGenerator';
 import { showToast } from '../components/common/Toast';
 import { useOnboardingTracking } from '../hooks/useAnalytics';
 import { SELECTION_TYPES } from '../utils/analyticsEvents';
+import ProgressBar from '../components/common/ProgressBar/ProgressBar';
+import { useProgressStore } from '../store/progressStore';
 
 function Onboarding1Page() {
   const navigate = useNavigate();
   const { styles: globalStyles, getColor } = useColors();
   const { nickname, setNickname, restoreFromStorage } = useSessionStore();
   const { initializeData } = useDataStore();
+  const { setCurrentPage, getCurrentStep, getTotalSteps } = useProgressStore();
   const [localNickname, setLocalNickname] = useState(nickname || '');
   const [isValid, setIsValid] = useState(false);
 
@@ -28,7 +31,8 @@ function Onboarding1Page() {
   useEffect(() => {
     restoreFromStorage();
     initializeData();
-  }, [restoreFromStorage, initializeData]);
+    setCurrentPage('onboarding-1');
+  }, [restoreFromStorage, initializeData, setCurrentPage]);
 
   const handleValidationChange = (valid: boolean) => {
     setIsValid(valid);
@@ -74,6 +78,7 @@ function Onboarding1Page() {
 
   return (
     <Container style={globalStyles.container}>
+      <ProgressBar currentStep={getCurrentStep()} totalSteps={getTotalSteps()} />
       {/* 테마 토글 버튼 */}
       {/* <ThemeToggle position="fixed" /> */}
 

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { useColors } from '../hooks/useColors';
@@ -7,14 +8,21 @@ import ButtonGroup from '../components/common/Button/ButtonGroup';
 // import ThemeToggle from '../components/etc/ThemeToggle';
 import { useOnboardingTracking } from '../hooks/useAnalytics';
 import { SELECTION_TYPES } from '../utils/analyticsEvents';
+import ProgressBar from '../components/common/ProgressBar/ProgressBar';
+import { useProgressStore } from '../store/progressStore';
 
 function Onboarding3Page() {
   const navigate = useNavigate();
   const { styles: globalStyles, getColor } = useColors();
   const { selectedCategory, selectedTopic, setSelectedTopic } = useSessionStore();
+  const { setCurrentPage, getCurrentStep, getTotalSteps } = useProgressStore();
 
   // Analytics 훅
   const { trackComplete, trackSelection } = useOnboardingTracking(3, 'topic_selection');
+
+  useEffect(() => {
+    setCurrentPage('onboarding-3');
+  }, [setCurrentPage]);
 
   const handleTopicSelect = (topic: Topic) => {
     // 이미 선택된 주제를 다시 클릭하면 선택 해제 (토글)
@@ -45,6 +53,7 @@ function Onboarding3Page() {
 
   return (
     <Container style={globalStyles.container}>
+      <ProgressBar currentStep={getCurrentStep()} totalSteps={getTotalSteps()} />
       {/* 테마 토글 버튼 */}
       {/* <ThemeToggle position="fixed" /> */}
       <Title 

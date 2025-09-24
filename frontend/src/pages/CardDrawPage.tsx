@@ -17,11 +17,14 @@ import {
   reducedMotionCardVariants
 } from '../utils/animations';
 import { trackOnboardingEnter, trackCardEvent, trackPerformance } from '../utils/analytics';
+import ProgressBar from '../components/common/ProgressBar/ProgressBar';
+import { useProgressStore } from '../store/progressStore';
 
 function CardDrawPage() {
   const navigate = useNavigate();
   const { selectedCards, isRevealing, startReveal, revealCard } = useCardStore();
   const { predefinedCards, submitSessionData } = useSessionStore();
+  const { setCurrentPage, getCurrentStep, getTotalSteps } = useProgressStore();
   const [scale, setScale] = useState(1);
   const [isReducedMotion, setIsReducedMotion] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
@@ -46,6 +49,8 @@ function CardDrawPage() {
 
   // 컴포넌트 마운트 시 세션 데이터 제출
   useEffect(() => {
+    // 진행률 상태 업데이트
+    setCurrentPage('card-draw');
     // GA: 카드 뽑기 페이지 진입 추적
     trackOnboardingEnter(6, 'card_selection');
 
@@ -112,6 +117,7 @@ function CardDrawPage() {
 
   return (
     <Container>
+      <ProgressBar currentStep={getCurrentStep()} totalSteps={getTotalSteps()} />
       {/* 테마 토글 버튼 */}
       {/* <ThemeToggle position="fixed" /> */}
 

@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useColors } from '../hooks/useColors';
 import { useSessionStore } from '../store/sessionStore';
 import { trackOnboardingEnter, trackPerformance } from '../utils/analytics';
+import ProgressBar from '../components/common/ProgressBar/ProgressBar';
+import { useProgressStore } from '../store/progressStore';
 
 // 신비로운 타로 명언들
 const MYSTICAL_QUOTES = [
@@ -23,6 +25,7 @@ function LoadingPage() {
   const navigate = useNavigate();
   const { styles: globalStyles, getColor } = useColors();
   const { sessionId } = useSessionStore();
+  const { setCurrentPage, getCurrentStep, getTotalSteps } = useProgressStore();
 
   // 명언 로테이션 상태
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
@@ -64,6 +67,8 @@ function LoadingPage() {
 
   // 컴포넌트 마운트 시 GA 추적 및 즉시 결과 페이지로 이동
   useEffect(() => {
+    // 진행률 상태 업데이트 (loading은 card-draw와 같은 단계)
+    setCurrentPage('loading');
     trackOnboardingEnter(7, 'loading');
     const startTime = performance.now();
     const loadingTime = Math.round(performance.now() - startTime);
@@ -95,6 +100,7 @@ function LoadingPage() {
 
   return (
     <Container style={globalStyles.container}>
+      <ProgressBar currentStep={getCurrentStep()} totalSteps={getTotalSteps()} />
       {/* 떠다니는 별들 배경 */}
       <StarField>
         {Array.from({ length: 12 }).map((_, i) => (
