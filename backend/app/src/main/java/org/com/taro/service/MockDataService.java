@@ -9,6 +9,8 @@ import org.com.taro.dto.SubmitRequest;
 import org.com.taro.exception.SessionNotFoundException;
 import org.com.taro.exception.TaroServiceException;
 import org.com.taro.constants.ValidationConstants;
+import org.com.taro.enums.CardSuit;
+import org.com.taro.enums.CardOrientation;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -126,32 +128,32 @@ public class MockDataService {
     }
 
     public boolean isValidCategoryCode(String categoryCode) {
-        return ValidationConstants.CATEGORY_LOVE.equals(categoryCode) ||
-               ValidationConstants.CATEGORY_JOB.equals(categoryCode) ||
-               ValidationConstants.CATEGORY_MONEY.equals(categoryCode);
+        return "LOVE".equals(categoryCode) ||
+               "JOB".equals(categoryCode) ||
+               "MONEY".equals(categoryCode);
     }
 
     public boolean isValidTopicCode(String categoryCode, String topicCode) {
-        if (ValidationConstants.CATEGORY_LOVE.equals(categoryCode)) {
+        if ("LOVE".equals(categoryCode)) {
             return Arrays.asList("REUNION", "NEW_LOVE", "CURRENT_RELATIONSHIP", "MARRIAGE", "BREAKUP").contains(topicCode);
-        } else if (ValidationConstants.CATEGORY_JOB.equals(categoryCode)) {
+        } else if ("JOB".equals(categoryCode)) {
             return Arrays.asList("JOB_CHANGE", "PROMOTION", "NEW_JOB", "CAREER_PATH", "WORKPLACE").contains(topicCode);
-        } else if (ValidationConstants.CATEGORY_MONEY.equals(categoryCode)) {
+        } else if ("MONEY".equals(categoryCode)) {
             return Arrays.asList("INVESTMENT", "SAVINGS", "DEBT", "INCOME", "BUSINESS").contains(topicCode);
         }
         return false;
     }
 
     public boolean isValidCard(String suit, String number) {
-        if (ValidationConstants.SUIT_MAJOR.equals(suit)) {
+        if (CardSuit.MAJOR.getCode().equals(suit)) {
             try {
                 int num = Integer.parseInt(number);
                 return num >= 1 && num <= 22;
             } catch (NumberFormatException e) {
                 return false;
             }
-        } else if (Arrays.asList(ValidationConstants.SUIT_WANDS, ValidationConstants.SUIT_CUPS,
-                                ValidationConstants.SUIT_SWORDS, ValidationConstants.SUIT_PENTACLES).contains(suit)) {
+        } else if (Arrays.asList(CardSuit.WANDS.getCode(), CardSuit.CUPS.getCode(),
+                                CardSuit.SWORDS.getCode(), CardSuit.PENTACLES.getCode()).contains(suit)) {
             return Arrays.asList("ACE", "2", "3", "4", "5", "6", "7", "8", "9", "10",
                                 "PAGE", "KNIGHT", "QUEEN", "KING").contains(number);
         }
@@ -320,7 +322,7 @@ public class MockDataService {
 
         for (int i = 0; i < majorArcana.length; i++) {
             String videoUrl = ValidationConstants.VIDEO_BASE_URL + majorArcanaVideoFiles[i];
-            cards.add(new TaroCard(cardId++, majorArcana[i], majorArcanaEn[i], ValidationConstants.SUIT_MAJOR, String.valueOf(i + 1),
+            cards.add(new TaroCard(cardId++, majorArcana[i], majorArcanaEn[i], CardSuit.MAJOR.getCode(), String.valueOf(i + 1),
                 "https://example.com/card-major-" + (i + 1) + ".jpg", videoUrl,
                 "정방향: " + majorArcana[i] + "의 긍정적 의미", "역방향: " + majorArcana[i] + "의 도전적 의미"));
         }
@@ -379,8 +381,8 @@ public class MockDataService {
 
                 usedCards.add(cardIndex);
                 TaroCard card = taroCards.get(cardIndex);
-                String orientation = random.nextBoolean() ? ValidationConstants.ORIENTATION_UPRIGHT : ValidationConstants.ORIENTATION_REVERSED;
-                String meaning = ValidationConstants.ORIENTATION_UPRIGHT.equals(orientation) ? card.getMeaningUpright() : card.getMeaningReversed();
+                String orientation = random.nextBoolean() ? CardOrientation.UPRIGHT.getCode() : CardOrientation.REVERSED.getCode();
+                String meaning = CardOrientation.UPRIGHT.getCode().equals(orientation) ? card.getMeaningUpright() : card.getMeaningReversed();
 
                 drawnCards.add(new TaroReadingResponse.DrawnCard(
                     position, card.getId(), card.getNameKo(), card.getNameEn(),

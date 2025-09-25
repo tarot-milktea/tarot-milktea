@@ -1,6 +1,7 @@
 package org.com.taro.entity;
 
 import jakarta.persistence.*;
+import org.com.taro.enums.CardSuit;
 
 @Entity
 @Table(name = "taro_cards")
@@ -37,11 +38,6 @@ public class TaroCardEntity {
 
     @Column(name = "meaning_reversed", columnDefinition = "TEXT")
     private String meaningReversed;
-
-
-    public enum CardSuit {
-        MAJOR, WANDS, CUPS, SWORDS, PENTACLES
-    }
 
     // 기본 생성자
     public TaroCardEntity() {}

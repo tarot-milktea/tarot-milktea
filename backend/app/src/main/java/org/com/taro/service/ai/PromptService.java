@@ -4,6 +4,8 @@ import org.com.taro.dto.SubmitRequest;
 import org.com.taro.dto.TaroResultResponse;
 import org.com.taro.entity.*;
 import org.com.taro.repository.*;
+import org.com.taro.constants.ValidationConstants;
+import org.com.taro.service.ReferenceDataService;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
@@ -17,19 +19,22 @@ public class PromptService {
     private final CategoryRepository categoryRepository;
     private final TopicRepository topicRepository;
     private final ReaderRepository readerRepository;
+    private final ReferenceDataService referenceDataService;
 
     public PromptService(TaroReadingRepository taroReadingRepository,
                         DrawnCardRepository drawnCardRepository,
                         TaroCardRepository taroCardRepository,
                         CategoryRepository categoryRepository,
                         TopicRepository topicRepository,
-                        ReaderRepository readerRepository) {
+                        ReaderRepository readerRepository,
+                        ReferenceDataService referenceDataService) {
         this.taroReadingRepository = taroReadingRepository;
         this.drawnCardRepository = drawnCardRepository;
         this.taroCardRepository = taroCardRepository;
         this.categoryRepository = categoryRepository;
         this.topicRepository = topicRepository;
         this.readerRepository = readerRepository;
+        this.referenceDataService = referenceDataService;
     }
 
     // Deprecated - Use createCardPrompt() for individual cards instead
@@ -46,8 +51,12 @@ public class PromptService {
             // Fallback to default descriptions
         }
 
-        // 기본 설명
-        switch (readerType) {
+        // 기본 설명 - 데이터베이스에서 검증된 리더 타입 사용
+        if (!referenceDataService.isValidReaderType(readerType)) {
+            return "전문적인 어조로 해석";
+        }
+
+        switch (readerType.toUpperCase()) {
             case "F": return "감성적이고 따뜻한 어조로 해석";
             case "T": return "논리적이고 현실적인 어조로 해석";
             case "FT": return "감성과 이성의 균형잡힌 어조로 해석";
@@ -67,8 +76,12 @@ public class PromptService {
             // Fallback to default descriptions
         }
 
-        // 기본 시스템 프롬프트
-        switch (readerType) {
+        // 기본 시스템 프롬프트 - 데이터베이스에서 검증된 리더 타입 사용
+        if (!referenceDataService.isValidReaderType(readerType)) {
+            return "당신은 전문 타로 리더입니다. 정확하고 도움이 되는 해석을 제공해주세요.";
+        }
+
+        switch (readerType.toUpperCase()) {
             case "F":
                 return "당신은 30년 경력의 감성적인 타로 리더입니다. " +
                        "감정을 중시하고 따뜻한 해석을 제공하며, 상담자의 마음에 공감하는 스타일로 답변합니다.";
@@ -113,7 +126,7 @@ public class PromptService {
         }
     }
     
-    // Helper methods - now using DB data
+    // Helper methods - now using ValidationConstants with DB fallback
     private String getCategoryName(String categoryCode) {
         try {
             Optional<Category> categoryOpt = categoryRepository.findByCode(categoryCode);
@@ -121,16 +134,10 @@ public class PromptService {
                 return categoryOpt.get().getName();
             }
         } catch (Exception e) {
-            // Fall back to default if DB lookup fails
+            // Fall back to ValidationConstants if DB lookup fails
         }
-
-        // 기본 매핑
-        switch (categoryCode) {
-            case "LOVE": return "연애";
-            case "JOB": return "취업";
-            case "MONEY": return "금전";
-            default: return categoryCode;
-        }
+        // Use ValidationConstants for consistent mapping
+        return referenceDataService.getCategoryName(categoryCode);
     }
 
     private String getTopicName(String topicCode) {
@@ -140,28 +147,10 @@ public class PromptService {
                 return topicOpt.get().getName();
             }
         } catch (Exception e) {
-            // Fall back to default if DB lookup fails
+            // Fall back to ValidationConstants if DB lookup fails
         }
-
-        // 기본 매핑
-        switch (topicCode) {
-            case "REUNION": return "재회";
-            case "NEW_LOVE": return "새로운 인연";
-            case "CURRENT_RELATIONSHIP": return "현재 연애";
-            case "MARRIAGE": return "결혼";
-            case "BREAKUP": return "이별";
-            case "JOB_CHANGE": return "이직";
-            case "PROMOTION": return "승진";
-            case "NEW_JOB": return "취업";
-            case "CAREER_PATH": return "커리어";
-            case "WORKPLACE": return "직장생활";
-            case "INVESTMENT": return "투자";
-            case "SAVINGS": return "저축";
-            case "DEBT": return "부채";
-            case "INCOME": return "수입";
-            case "BUSINESS": return "사업";
-            default: return topicCode;
-        }
+        // Use ValidationConstants for consistent mapping
+        return referenceDataService.getTopicName(topicCode);
     }
 
     // 헬퍼 메서드: 세션의 저장된 카드 조회
@@ -266,9 +255,9 @@ public class PromptService {
     // 헬퍼 메서드: 포지션 이름 변환
     private String getPositionName(int position) {
         switch (position) {
-            case 1: return "과거";
-            case 2: return "현재";
-            case 3: return "미래";
+            case ValidationConstants.PAST_POSITION: return ValidationConstants.TIMEFRAME_PAST;
+            case ValidationConstants.PRESENT_POSITION: return ValidationConstants.TIMEFRAME_PRESENT;
+            case ValidationConstants.FUTURE_POSITION: return ValidationConstants.TIMEFRAME_FUTURE;
             default: return "위치" + position;
         }
     }

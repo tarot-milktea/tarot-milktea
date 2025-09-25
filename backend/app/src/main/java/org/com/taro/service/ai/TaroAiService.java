@@ -12,6 +12,9 @@ import org.com.taro.entity.TaroReading;
 import org.com.taro.entity.TaroCardEntity;
 import org.com.taro.repository.*;
 import org.com.taro.service.SSEManager;
+import org.com.taro.constants.ValidationConstants;
+import org.com.taro.constants.StatusConstants;
+import org.com.taro.service.ReferenceDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -58,6 +61,9 @@ public class TaroAiService {
     @Autowired
     private TaroCardRepository taroCardRepository;
 
+    @Autowired
+    private ReferenceDataService referenceDataService;
+
     /**
      * 순차적 AI 처리 메인 메서드 과거 -> 현재 -> 미래 -> 총평 -> 이미지 순서로 처리
      */
@@ -91,19 +97,19 @@ public class TaroAiService {
 
             // 1. 과거 카드 해석 (position = 1)
             String pastInterpretation = interpretCardWithConversation(sessionId, drawnCards.get(0),
-                    request, "과거", conversationHistory);
+                    request, ValidationConstants.TIMEFRAME_PAST, conversationHistory);
             updateProcessingStatus(sessionId, TaroSession.ProcessingStatus.PAST_COMPLETED);
             sseManager.sendCardInterpretedEvent(sessionId, 1, pastInterpretation);
 
             // 2. 현재 카드 해석 (position = 2) - 과거 컨텍스트 포함
             String presentInterpretation = interpretCardWithConversation(sessionId,
-                    drawnCards.get(1), request, "현재", conversationHistory);
+                    drawnCards.get(1), request, ValidationConstants.TIMEFRAME_PRESENT, conversationHistory);
             updateProcessingStatus(sessionId, TaroSession.ProcessingStatus.PRESENT_COMPLETED);
             sseManager.sendCardInterpretedEvent(sessionId, 2, presentInterpretation);
 
             // 3. 미래 카드 해석 (position = 3) - 과거/현재 컨텍스트 포함
             String futureInterpretation = interpretCardWithConversation(sessionId,
-                    drawnCards.get(2), request, "미래", conversationHistory);
+                    drawnCards.get(2), request, ValidationConstants.TIMEFRAME_FUTURE, conversationHistory);
             updateProcessingStatus(sessionId, TaroSession.ProcessingStatus.FUTURE_COMPLETED);
             sseManager.sendCardInterpretedEvent(sessionId, 3, futureInterpretation);
 
@@ -115,7 +121,7 @@ public class TaroAiService {
 
             // 4. 총평 생성
             updateProcessingStatus(sessionId, TaroSession.ProcessingStatus.SUMMARY_PROCESSING);
-            sseManager.sendStatusEvent(sessionId, "SUMMARY_PROCESSING", "총평을 생성하고 있습니다...", 80);
+            sseManager.sendStatusEvent(sessionId, StatusConstants.STATUS_SUMMARY_PROCESSING, "총평을 생성하고 있습니다...", 80);
 
             String summary = generateSummary(pastInterpretation, presentInterpretation,
                     futureInterpretation, request);
@@ -130,7 +136,7 @@ public class TaroAiService {
 
             // 6. 이미지 생성
             updateProcessingStatus(sessionId, TaroSession.ProcessingStatus.IMAGE_PROCESSING);
-            sseManager.sendStatusEvent(sessionId, "IMAGE_PROCESSING", "조언 이미지를 생성하고 있습니다...", 90);
+            sseManager.sendStatusEvent(sessionId, StatusConstants.STATUS_IMAGE_PROCESSING, "조언 이미지를 생성하고 있습니다...", 90);
 
             ImageGenerationResult imageResult = generateAdviceImage(summary, request, sessionId);
             taroReading.setResultImageUrl(imageResult.getImageUrl());
@@ -165,7 +171,7 @@ public class TaroAiService {
                     timeFrame + " 카드를 해석하고 있습니다...", getProgressForTimeFrame(timeFrame));
 
             // 이전 해석이 있는지 확인 (과거가 아닌 경우)
-            boolean hasPreviousContext = !timeFrame.equals("과거");
+            boolean hasPreviousContext = !timeFrame.equals(ValidationConstants.TIMEFRAME_PAST);
 
             // 리더 타입별 카드 프롬프트 생성
             String cardPrompt =
@@ -217,8 +223,8 @@ public class TaroAiService {
 
         // 기본 상담 정보
         prompt.append("상담 정보:\n");
-        prompt.append("- 카테고리: ").append(getCategoryName(request.getCategoryCode())).append("\n");
-        prompt.append("- 주제: ").append(getTopicName(request.getTopicCode())).append("\n");
+        prompt.append("- 카테고리: ").append(referenceDataService.getCategoryName(request.getCategoryCode())).append("\n");
+        prompt.append("- 주제: ").append(referenceDataService.getTopicName(request.getTopicCode())).append("\n");
         prompt.append("- 질문: \"").append(request.getQuestionText()).append("\"\n\n");
 
         // 카드 정보 추가
@@ -255,56 +261,7 @@ public class TaroAiService {
         return prompt.toString();
     }
 
-    // 헬퍼 메서드들 (기존 PromptService에서 가져온 것들)
-    private String getCategoryName(String categoryCode) {
-        switch (categoryCode) {
-            case "LOVE":
-                return "연애";
-            case "JOB":
-                return "취업";
-            case "MONEY":
-                return "금전";
-            default:
-                return categoryCode;
-        }
-    }
-
-    private String getTopicName(String topicCode) {
-        switch (topicCode) {
-            case "REUNION":
-                return "재회";
-            case "NEW_LOVE":
-                return "새로운 인연";
-            case "CURRENT_RELATIONSHIP":
-                return "현재 연애";
-            case "MARRIAGE":
-                return "결혼";
-            case "BREAKUP":
-                return "이별";
-            case "JOB_CHANGE":
-                return "이직";
-            case "PROMOTION":
-                return "승진";
-            case "NEW_JOB":
-                return "취업";
-            case "CAREER_PATH":
-                return "커리어";
-            case "WORKPLACE":
-                return "직장생활";
-            case "INVESTMENT":
-                return "투자";
-            case "SAVINGS":
-                return "저축";
-            case "DEBT":
-                return "부채";
-            case "INCOME":
-                return "수입";
-            case "BUSINESS":
-                return "사업";
-            default:
-                return topicCode;
-        }
-    }
+    // 헬퍼 메서드들은 ValidationConstants로 이동됨 - getCategoryName(), getTopicName() 사용
 
     /**
      * 개별 카드 해석 (Deprecated - 대화 컨텍스트 없이)
@@ -449,13 +406,13 @@ public class TaroAiService {
     private TaroSession.ProcessingStatus getProcessingStatusForTimeFrame(String timeFrame,
             boolean isProcessing) {
         switch (timeFrame) {
-            case "과거":
+            case ValidationConstants.TIMEFRAME_PAST:
                 return isProcessing ? TaroSession.ProcessingStatus.PAST_PROCESSING
                         : TaroSession.ProcessingStatus.PAST_COMPLETED;
-            case "현재":
+            case ValidationConstants.TIMEFRAME_PRESENT:
                 return isProcessing ? TaroSession.ProcessingStatus.PRESENT_PROCESSING
                         : TaroSession.ProcessingStatus.PRESENT_COMPLETED;
-            case "미래":
+            case ValidationConstants.TIMEFRAME_FUTURE:
                 return isProcessing ? TaroSession.ProcessingStatus.FUTURE_PROCESSING
                         : TaroSession.ProcessingStatus.FUTURE_COMPLETED;
             default:
@@ -468,11 +425,11 @@ public class TaroAiService {
      */
     private Integer getProgressForTimeFrame(String timeFrame) {
         switch (timeFrame) {
-            case "과거":
+            case ValidationConstants.TIMEFRAME_PAST:
                 return 20;
-            case "현재":
+            case ValidationConstants.TIMEFRAME_PRESENT:
                 return 40;
-            case "미래":
+            case ValidationConstants.TIMEFRAME_FUTURE:
                 return 60;
             default:
                 return 0;
