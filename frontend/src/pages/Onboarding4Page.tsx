@@ -9,13 +9,15 @@ import Input from '../components/common/Input';
 // import ThemeToggle from '../components/etc/ThemeToggle';
 import { useOnboardingTracking } from '../hooks/useAnalytics';
 import { SELECTION_TYPES } from '../utils/analyticsEvents';
+import QuestionInput from '../components/etc/QuestionInput/QuestionInput';
+import { validateQuestion } from '../utils/nicknameGenerator';
 
 function Onboarding4Page() {
   const navigate = useNavigate();
   const { styles: globalStyles, getColor } = useColors();
   const { selectedTopic, selectedQuestion, setSelectedQuestion } = useSessionStore();
   const [customQuestion, setCustomQuestion] = useState('');
-
+  const [isQuestionValid, setIsQuestionValid] = useState(false);
   // Analytics 훅
   const { trackComplete, trackSelection } = useOnboardingTracking(4, 'question_input');
 
@@ -29,6 +31,10 @@ function Onboarding4Page() {
       setSelectedQuestion(question);
       setCustomQuestion('');
     }
+  };
+
+  const handleQuestionValidationChange = (isValid: boolean) => {
+    setIsQuestionValid(isValid);
   };
 
   const handleCustomQuestionChange = (value: string) => {
@@ -100,14 +106,17 @@ function Onboarding4Page() {
         >
           직접 작성하기
         </CustomInputLabel>
-        <Input
-          as="textarea"
+        <QuestionInput
+          // as="textarea"
           placeholder="궁금한 질문을 자유롭게 작성해주세요..."
           inputSize="medium"
-          rows={4}
-          resize="vertical"
+          // rows={4}
+          // resize="vertical"
           value={customQuestion}
-          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleCustomQuestionChange(e.target.value)}
+          // onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleCustomQuestionChange(e.target.value)}
+          onChange={handleCustomQuestionChange}
+          onValidationChange={handleQuestionValidationChange}
+          showLiveValidation={true}
         />
       </CustomInput>
 
