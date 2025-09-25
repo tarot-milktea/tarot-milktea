@@ -116,12 +116,52 @@ export function calculateAllCardPositions(screenType?: 'mobile' | 'tablet' | 'de
  * 반응형을 위한 스케일 팩터 계산
  */
 export function getResponsiveScale(containerWidth: number): number {
-  const baseWidth = 1200; // 기준 너비
-  const minScale = 0.5; // 최소 스케일
-  const maxScale = 1.2; // 최대 스케일
-  
+  const screenType = getScreenType();
+
+  let baseWidth: number;
+  let minScale: number;
+  let maxScale: number;
+
+  // 화면 크기별 차등 스케일링 적용
+  if (screenType === 'mobile') {
+    baseWidth = 600; // 모바일 기준 너비
+    minScale = 0.8; // 모바일에서는 덜 축소
+    maxScale = 1.0;
+  } else if (screenType === 'tablet') {
+    baseWidth = 800; // 태블릿 기준 너비
+    minScale = 0.75;
+    maxScale = 1.1;
+  } else {
+    baseWidth = 900; // 데스크톱 기준 너비 (1200 -> 900으로 조정)
+    minScale = 0.7; // 최소 스케일 상향 조정 (0.5 -> 0.7)
+    maxScale = 1.2;
+  }
+
   const scale = Math.min(maxScale, Math.max(minScale, containerWidth / baseWidth));
   return scale;
+}
+
+/**
+ * 카드 레이아웃의 실제 필요한 높이를 계산 (실제 카드 위치 기반)
+ */
+export function calculateLayoutHeight(screenType?: 'mobile' | 'tablet' | 'desktop'): number {
+  const positions = calculateAllCardPositions(screenType);
+
+  if (positions.length === 0) return 400;
+
+  // 모든 카드 위치에서 최상단과 최하단 Y 좌표를 찾음
+  const yPositions = positions.map(pos => pos.y);
+  const minY = Math.min(...yPositions);
+  const maxY = Math.max(...yPositions);
+
+  // 카드 크기 고려 (카드 높이의 절반씩 위아래로 추가)
+  const cardHeight = 80; // 실제 카드 높이
+  const padding = 40; // 최소 여유 공간
+
+  const totalHeight = (maxY - minY) + cardHeight + (padding * 2);
+
+  // 최소/최대 높이 제한
+  return Math.max(300, Math.min(600, totalHeight));
 }
 
 /**
@@ -131,11 +171,11 @@ export function calculateAnimationDelay(cardIndex: number): number {
   const baseDelay = 0.05; // 기본 지연 시간 (초)
   const incrementPerCard = 0.015; // 카드당 추가 지연 시간
   const rowDelay = 0.08; // 줄별 추가 지연 시간
-  
+
   const { CARDS_PER_ROW } = LAYOUT_CONFIG;
   const row = Math.floor(cardIndex / CARDS_PER_ROW);
   const indexInRow = cardIndex % CARDS_PER_ROW;
-  
+
   // 좌에서 우로 순차적으로 나타나도록 계산
   // 각 줄의 시작 시간 + 해당 줄에서의 위치별 지연
   return baseDelay + (row * rowDelay) + (indexInRow * incrementPerCard);
