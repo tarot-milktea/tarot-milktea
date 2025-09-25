@@ -69,7 +69,7 @@ function CardDrawPage() {
     };
 
     submitSession();
-  }, [submitSessionData]);
+  }, [submitSessionData, setCurrentPage]);
 
   useEffect(() => {
     // 접근성을 위한 reduced motion 감지
