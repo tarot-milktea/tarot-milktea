@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { useColors } from '../hooks/useColors';
@@ -10,16 +10,23 @@ import Input from '../components/common/Input';
 import { useOnboardingTracking } from '../hooks/useAnalytics';
 import { SELECTION_TYPES } from '../utils/analyticsEvents';
 import QuestionInput from '../components/etc/QuestionInput/QuestionInput';
-import { validateQuestion } from '../utils/nicknameGenerator';
+import ProgressBar from '../components/common/ProgressBar/ProgressBar';
+import { useProgressStore } from '../store/progressStore';
+
 
 function Onboarding4Page() {
   const navigate = useNavigate();
   const { styles: globalStyles, getColor } = useColors();
   const { selectedTopic, selectedQuestion, setSelectedQuestion } = useSessionStore();
+  const { setCurrentPage, getCurrentStep, getTotalSteps } = useProgressStore();
   const [customQuestion, setCustomQuestion] = useState('');
   const [isQuestionValid, setIsQuestionValid] = useState(false);
   // Analytics 훅
   const { trackComplete, trackSelection } = useOnboardingTracking(4, 'question_input');
+
+  useEffect(() => {
+    setCurrentPage('onboarding-4');
+  }, [setCurrentPage]);
 
   const sampleQuestions = selectedTopic?.sampleQuestions || [];
 
@@ -62,6 +69,7 @@ function Onboarding4Page() {
 
   return (
     <Container style={globalStyles.container}>
+      <ProgressBar currentStep={getCurrentStep()} totalSteps={getTotalSteps()} />
       {/* 테마 토글 버튼 */}
       {/* <ThemeToggle position="fixed" /> */}
       <Title 

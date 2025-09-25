@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useResultData } from '../hooks/useResultData';
 import { useResultActions } from '../hooks/useResultActions';
@@ -10,6 +11,8 @@ import CardInterpretationSection from '../components/result/CardInterpretationSe
 import SummarySection from '../components/result/SummarySection';
 import ResultImageSection from '../components/result/ResultImageSection';
 import ResultActions from '../components/result/ResultActions';
+import ProgressBar from '../components/common/ProgressBar/ProgressBar';
+import { useProgressStore } from '../store/progressStore';
 import {
   Container,
   Content,
@@ -21,6 +24,12 @@ import {
 function ResultPage() {
   const { resultId } = useParams<{ resultId: string }>();
   const navigate = useNavigate();
+  const { setCurrentPage, getCurrentStep, getTotalSteps } = useProgressStore();
+
+  // 진행률 상태 업데이트
+  useEffect(() => {
+    setCurrentPage('result');
+  }, [setCurrentPage]);
 
   // 커스텀 훅들
   const {
@@ -60,6 +69,7 @@ function ResultPage() {
 
   return (
     <Container>
+      <ProgressBar currentStep={getCurrentStep()} totalSteps={getTotalSteps()} />
       {/* 테마 토글 버튼 */}
       {/* <ThemeToggle position="absolute" /> */}
 

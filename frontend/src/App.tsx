@@ -9,6 +9,7 @@ import CardDrawPage from './pages/CardDrawPage';
 import LoadingPage from './pages/LoadingPage';
 import LoadingPageDemo from './pages/LoadingPageDemo';
 import ResultPage from './pages/ResultPage';
+import SharePage from './pages/SharePage';
 import ErrorPage from './pages/ErrorPage';
 import ParticleBackground from './components/common/ParticleBackground/ParticleBackground';
 import { initializeGA, trackPageView, debugGA } from './utils/analytics';
@@ -53,6 +54,9 @@ function App() {
 
         {/* 결과 페이지 */}
         <Route path="/result/:resultId" element={<ResultPage />} />
+
+        {/* 공유 페이지 */}
+        <Route path="/share/:sessionId" element={<SharePage />} />
 
         {/* 에러 페이지 */}
         <Route path="*" element={<ErrorPage />} />

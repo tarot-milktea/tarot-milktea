@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { useColors } from '../hooks/useColors';
@@ -8,15 +9,22 @@ import ButtonGroup from '../components/common/Button/ButtonGroup';
 // import ThemeToggle from '../components/etc/ThemeToggle';
 import { useOnboardingTracking } from '../hooks/useAnalytics';
 import { SELECTION_TYPES } from '../utils/analyticsEvents';
+import ProgressBar from '../components/common/ProgressBar/ProgressBar';
+import { useProgressStore } from '../store/progressStore';
 
 function Onboarding2Page() {
   const navigate = useNavigate();
   const { styles: globalStyles, getColor } = useColors();
   const { categories, isLoading, error } = useDataStore();
   const { selectedCategory, setSelectedCategory } = useSessionStore();
+  const { setCurrentPage, getCurrentStep, getTotalSteps } = useProgressStore();
 
   // Analytics 훅
   const { trackComplete, trackSelection } = useOnboardingTracking(2, 'category_selection');
+
+  useEffect(() => {
+    setCurrentPage('onboarding-2');
+  }, [setCurrentPage]);
 
   const handleCategorySelect = (category: Category) => {
     // 이미 선택된 카테고리를 다시 클릭하면 선택 해제 (토글)
@@ -47,6 +55,7 @@ function Onboarding2Page() {
 
   return (
     <Container style={globalStyles.container}>
+      <ProgressBar currentStep={getCurrentStep()} totalSteps={getTotalSteps()} />
       {/* 테마 토글 버튼 */}
       {/* <ThemeToggle position="fixed" /> */}
 
