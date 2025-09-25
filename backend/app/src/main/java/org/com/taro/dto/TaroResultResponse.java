@@ -9,6 +9,12 @@ public class TaroResultResponse {
     @Schema(description = "세션 ID")
     private String sessionId;
 
+    @Schema(description = "닉네임")
+    private String nickname;
+
+    @Schema(description = "질문 텍스트")
+    private String questionText;
+
     @Schema(description = "처리 상태")
     private String status;
 
@@ -26,10 +32,12 @@ public class TaroResultResponse {
 
     public TaroResultResponse() {}
 
-    public TaroResultResponse(String sessionId, String status, InterpretationsDto interpretations,
+    public TaroResultResponse(String sessionId, String nickname, String questionText, String status, InterpretationsDto interpretations,
                               List<TaroReadingResponse.DrawnCard> drawnCards,
                               Integer fortuneScore, ResultImageDto resultImage) {
         this.sessionId = sessionId;
+        this.nickname = nickname;
+        this.questionText = questionText;
         this.status = status;
         this.interpretations = interpretations;
         this.drawnCards = drawnCards;
@@ -39,6 +47,10 @@ public class TaroResultResponse {
 
     public String getSessionId() { return sessionId; }
     public void setSessionId(String sessionId) { this.sessionId = sessionId; }
+    public String getNickname() { return nickname; }
+    public void setNickname(String nickname) { this.nickname = nickname; }
+    public String getQuestionText() { return questionText; }
+    public void setQuestionText(String questionText) { this.questionText = questionText; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public InterpretationsDto getInterpretations() { return interpretations; }

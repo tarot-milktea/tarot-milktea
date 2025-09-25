@@ -309,6 +309,8 @@ public class TaroServiceImpl implements TaroService {
 
         return new TaroResultResponse(
             sessionId,
+            session.getNickname(),
+            taroReading.getQuestionText(),
             status,
             interpretations,
             responseCards,
