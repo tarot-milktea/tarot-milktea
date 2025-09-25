@@ -6,6 +6,7 @@ import org.com.taro.repository.*;
 import org.com.taro.exception.SessionNotFoundException;
 import org.com.taro.exception.TaroServiceException;
 import org.com.taro.constants.ValidationConstants;
+import org.com.taro.enums.CardOrientation;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +23,6 @@ public class TaroServiceImpl implements TaroService {
     private final ReaderRepository readerRepository;
     private final TaroReadingRepository taroReadingRepository;
     private final DrawnCardRepository drawnCardRepository;
-    private final TopicSampleQuestionRepository topicSampleQuestionRepository;
 
     public TaroServiceImpl(TaroSessionRepository taroSessionRepository,
                           TaroCardRepository taroCardRepository,
@@ -39,7 +39,6 @@ public class TaroServiceImpl implements TaroService {
         this.readerRepository = readerRepository;
         this.taroReadingRepository = taroReadingRepository;
         this.drawnCardRepository = drawnCardRepository;
-        this.topicSampleQuestionRepository = topicSampleQuestionRepository;
     }
 
     @Override
@@ -238,7 +237,7 @@ public class TaroServiceImpl implements TaroService {
                     .orElseThrow(() -> new TaroServiceException("Card not found: " + drawnCard.getCardId()));
 
                 String orientation = drawnCard.getOrientation() == DrawnCard.Orientation.upright ?
-                    ValidationConstants.ORIENTATION_UPRIGHT : ValidationConstants.ORIENTATION_REVERSED;
+                    CardOrientation.UPRIGHT.getCode() : CardOrientation.REVERSED.getCode();
 
                 responseCards.add(new TaroReadingResponse.DrawnCard(
                     drawnCard.getPosition(),
@@ -296,7 +295,7 @@ public class TaroServiceImpl implements TaroService {
                     .orElseThrow(() -> new TaroServiceException("Card not found: " + drawnCard.getCardId()));
 
             String orientation = drawnCard.getOrientation() == DrawnCard.Orientation.upright ?
-                    ValidationConstants.ORIENTATION_UPRIGHT : ValidationConstants.ORIENTATION_REVERSED;
+                    CardOrientation.UPRIGHT.getCode() : CardOrientation.REVERSED.getCode();
 
             responseCards.add(new TaroReadingResponse.DrawnCard(
                     drawnCard.getPosition(),

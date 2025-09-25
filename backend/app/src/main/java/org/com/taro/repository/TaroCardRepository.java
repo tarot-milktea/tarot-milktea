@@ -1,7 +1,7 @@
 package org.com.taro.repository;
 
 import org.com.taro.entity.TaroCardEntity;
-import org.com.taro.entity.TaroSession;
+import org.com.taro.enums.CardSuit;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,10 +17,10 @@ public interface TaroCardRepository extends JpaRepository<TaroCardEntity, Long> 
     Optional<TaroCardEntity> findByCardId(Integer cardId);
 
     // 특정 슈트의 카드들 찾기
-    List<TaroCardEntity> findBySuit(TaroCardEntity.CardSuit suit);
+    List<TaroCardEntity> findBySuit(CardSuit suit);
 
     // 특정 슈트와 번호로 카드 찾기
-    Optional<TaroCardEntity> findBySuitAndNumber(TaroCardEntity.CardSuit suit, String number);
+    Optional<TaroCardEntity> findBySuitAndNumber(CardSuit suit, String number);
 
     // 카드 이름으로 검색 (한국어)
     List<TaroCardEntity> findByNameKoContaining(String nameKo);
