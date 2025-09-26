@@ -65,7 +65,7 @@ public class TTSController {
 
         CompletableFuture.runAsync(() -> {
             try {
-                logger.debug("GMS API 호출 시작: /audio/speech");
+                logger.info("🚀 GMS API 호출 시작: /audio/speech, 요청 데이터: {}", gmsRequest);
 
                 webClient.post()
                     .uri("/audio/speech")
@@ -76,60 +76,80 @@ public class TTSController {
                     .bodyToFlux(String.class)
                     .doOnNext(chunk -> {
                         try {
-                            // SSE 형식으로 클라이언트에 전송
-                            if (chunk.startsWith("data: ")) {
-                                String data = chunk.substring(6).trim();
-                                if (!data.equals("[DONE]")) {
-                                    emitter.send(SseEmitter.event().data(data));
-                                }
+                            logger.info("📦 GMS API 응답 청크 수신: {}", chunk.length() > 100 ?
+                                chunk.substring(0, 100) + "..." : chunk);
+
+                            // GMS API가 이미 JSON 형태로 응답하므로 그대로 전달
+                            if (chunk != null && !chunk.trim().isEmpty()) {
+                                emitter.send(SseEmitter.event().data(chunk));
+                                logger.info("✅ 클라이언트로 데이터 전송 완료");
                             }
                         } catch (IOException e) {
-                            logger.error("SSE 데이터 전송 중 오류 발생", e);
+                            logger.error("❌ SSE 데이터 전송 중 오류 발생", e);
                             emitter.completeWithError(e);
                         }
                     })
                     .doOnComplete(() -> {
-                        logger.info("TTS 스트림 완료");
+                        logger.info("🏁 TTS 스트림 완료");
                         emitter.complete();
                     })
                     .doOnError(error -> {
-                        logger.error("GMS API 호출 중 오류 발생", error);
+                        logger.error("💥 GMS API 호출 중 오류 발생: {}", error.getMessage(), error);
                         try {
                             String errorMessage = String.format(
                                 "{\"type\":\"error\",\"error\":\"%s\"}",
                                 error.getMessage().replace("\"", "\\\"")
                             );
                             emitter.send(SseEmitter.event().data(errorMessage));
+                            logger.info("📤 에러 메시지 클라이언트로 전송: {}", errorMessage);
                         } catch (IOException e) {
-                            logger.error("에러 메시지 전송 중 오류 발생", e);
+                            logger.error("❌ 에러 메시지 전송 중 오류 발생", e);
                         }
                         emitter.completeWithError(error);
                     })
                     .subscribe();
 
             } catch (Exception e) {
-                logger.error("TTS 처리 중 예외 발생", e);
+                logger.error("🔥 TTS 처리 중 예외 발생: {}", e.getMessage(), e);
                 try {
                     String errorMessage = String.format(
                         "{\"type\":\"error\",\"error\":\"%s\"}",
                         e.getMessage().replace("\"", "\\\"")
                     );
                     emitter.send(SseEmitter.event().data(errorMessage));
+                    logger.info("📤 예외 에러 메시지 클라이언트로 전송: {}", errorMessage);
                 } catch (IOException ioException) {
-                    logger.error("에러 메시지 전송 중 IO 예외 발생", ioException);
+                    logger.error("❌ 에러 메시지 전송 중 IO 예외 발생", ioException);
                 }
                 emitter.completeWithError(e);
             }
         });
 
         // SSE 연결 해제 시 정리 작업
-        emitter.onCompletion(() -> logger.info("TTS SSE 연결 완료"));
+        emitter.onCompletion(() -> logger.info("✅ TTS SSE 연결 완료"));
         emitter.onTimeout(() -> {
-            logger.warn("TTS SSE 연결 타임아웃");
+            logger.warn("⏰ TTS SSE 연결 타임아웃 (60초)");
             emitter.complete();
         });
-        emitter.onError(throwable -> logger.error("TTS SSE 연결 오류", throwable));
+        emitter.onError(throwable -> logger.error("❌ TTS SSE 연결 오류: {}", throwable.getMessage(), throwable));
 
         return emitter;
+    }
+
+    @GetMapping("/ping")
+    @Operation(summary = "TTS 서비스 상태 확인", description = "TTS 서비스와 GMS API 연결 상태 확인")
+    public Map<String, Object> ping() {
+        logger.info("🏓 TTS Ping 요청");
+
+        Map<String, Object> response = Map.of(
+            "status", "OK",
+            "service", "TTS",
+            "timestamp", System.currentTimeMillis(),
+            "gms_base_url", openAIConfig.getBaseUrl(),
+            "message", "TTS service is running"
+        );
+
+        logger.info("✅ TTS Ping 응답: {}", response);
+        return response;
     }
 }
