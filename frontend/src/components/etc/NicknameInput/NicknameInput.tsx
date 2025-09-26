@@ -47,8 +47,8 @@ const NicknameInput = forwardRef<HTMLInputElement, NicknameInputProps>(({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
 
-    // 15자 초과 방지 (UI에서 입력 자체를 막음)
-    if (newValue.length > 15) {
+    // 12자 초과 방지 (UI에서 입력 자체를 막음)
+    if (newValue.length > 12) {
       return;
     }
 
