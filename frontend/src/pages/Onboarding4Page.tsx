@@ -6,6 +6,7 @@ import { useSessionStore } from '../store/sessionStore';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
 import Input from '../components/common/Input';
+import SelectableButton from '../components/common/Button/SelectableButton';
 // import ThemeToggle from '../components/etc/ThemeToggle';
 import { useOnboardingTracking } from '../hooks/useAnalytics';
 import { SELECTION_TYPES } from '../utils/analyticsEvents';
@@ -83,25 +84,14 @@ function Onboarding4Page() {
 
       <QuestionList>
         {sampleQuestions.map((question, index) => (
-          <QuestionButton
+          <SelectableButton
             key={index}
             onClick={() => handleQuestionSelect(question)}
             isSelected={selectedQuestion === question && !customQuestion}
-            style={{
-              ...globalStyles.card,
-              border: `2px solid ${
-                selectedQuestion === question && !customQuestion
-                  ? getColor('accent', '400')
-                  : getColor('primary', '700')
-              }`,
-              backgroundColor: selectedQuestion === question && !customQuestion
-                ? getColor('accent', '900')
-                : 'transparent',
-              color: getColor('primary', '200')
-            }}
+            textAlign="left"
           >
             {question}
-          </QuestionButton>
+          </SelectableButton>
         ))}
       </QuestionList>
 
@@ -172,20 +162,6 @@ const QuestionList = styled.div`
   margin-bottom: 30px;
 `;
 
-const QuestionButton = styled.button<{ isSelected?: boolean }>`
-  padding: 20px 25px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 1rem;
-  text-align: left;
-  background: none;
-  border-radius: 12px;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  }
-`;
 
 const CustomInput = styled.div`
   padding: 30px;

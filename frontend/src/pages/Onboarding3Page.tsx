@@ -5,6 +5,7 @@ import { useColors } from '../hooks/useColors';
 import { useSessionStore, type Topic } from '../store/sessionStore';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
+import SelectableButton from '../components/common/Button/SelectableButton';
 // import ThemeToggle from '../components/etc/ThemeToggle';
 import { useOnboardingTracking } from '../hooks/useAnalytics';
 import { SELECTION_TYPES } from '../utils/analyticsEvents';
@@ -83,26 +84,14 @@ function Onboarding3Page() {
 
       <SubtopicGrid>
         {selectedCategory?.topics.map((topic) => (
-          <SubtopicButton
+          <SelectableButton
             key={topic.code}
             onClick={() => handleTopicSelect(topic)}
             isSelected={selectedTopic?.code === topic.code}
-            style={{
-              ...globalStyles.card,
-              border: `2px solid ${
-                selectedTopic?.code === topic.code
-                  ? getColor('accent', '400')
-                  : getColor('primary', '700')
-              }`,
-              backgroundColor: selectedTopic?.code === topic.code
-                ? getColor('accent', '900')
-                : 'transparent',
-              color: getColor('primary', '200')
-            }}
           >
             <TopicTitle>{topic.name}</TopicTitle>
             <TopicDescription>{topic.description}</TopicDescription>
-          </SubtopicButton>
+          </SelectableButton>
         ))}
       </SubtopicGrid>
 
@@ -161,19 +150,6 @@ const SubtopicGrid = styled.div`
   margin-bottom: 40px;
 `;
 
-const SubtopicButton = styled.button<{ isSelected?: boolean }>`
-  padding: 30px 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 1.1rem;
-  background: none;
-  border-radius: 12px;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  }
-`;
 
 const TopicTitle = styled.h3`
   font-size: 16px;
