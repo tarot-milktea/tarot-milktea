@@ -22,6 +22,8 @@ public class TTSRequest {
     @DecimalMax(value = "4.0", message = "속도는 4.0 이하여야 합니다")
     private Float speed = 1.0f; // 기본값: 1.0
 
+    private String instructions; // 추가 지시사항
+
     public TTSRequest() {}
 
     public TTSRequest(String text, String voice, String model, Float speed) {
@@ -29,6 +31,14 @@ public class TTSRequest {
         this.voice = voice != null ? voice : "nova";
         this.model = model != null ? model : "gpt-4o-mini-tts";
         this.speed = speed != null ? speed : 1.0f;
+    }
+
+    public TTSRequest(String text, String voice, String model, Float speed, String instructions) {
+        this.text = text;
+        this.voice = voice != null ? voice : "nova";
+        this.model = model != null ? model : "gpt-4o-mini-tts";
+        this.speed = speed != null ? speed : 1.0f;
+        this.instructions = instructions;
     }
 
     public String getText() {
@@ -61,5 +71,13 @@ public class TTSRequest {
 
     public void setSpeed(Float speed) {
         this.speed = speed != null ? speed : 1.0f;
+    }
+
+    public String getInstructions() {
+        return instructions;
+    }
+
+    public void setInstructions(String instructions) {
+        this.instructions = instructions;
     }
 }

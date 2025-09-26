@@ -44,8 +44,9 @@ public class TTSController {
         @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     public SseEmitter generateTTSSpeech(@Valid @RequestBody TTSRequest request, HttpServletResponse response) {
-        logger.info("TTS 음성 변환 요청: text length={}, voice={}, model={}, speed={}",
-                request.getText().length(), request.getVoice(), request.getModel(), request.getSpeed());
+        logger.info("TTS 음성 변환 요청: text length={}, voice={}, model={}, speed={}, instructions={}",
+                request.getText().length(), request.getVoice(), request.getModel(), request.getSpeed(),
+                request.getInstructions() != null ? "설정됨" : "없음");
 
         // SSE 전용 헤더 설정
         response.setHeader("Cache-Control", "no-cache");
@@ -55,13 +56,25 @@ public class TTSController {
         SseEmitter emitter = new SseEmitter(60000L); // 60초 타임아웃
 
         // GMS API 요청 본문 생성
-        Map<String, Object> gmsRequest = Map.of(
-            "model", request.getModel(),
-            "input", request.getText(),
-            "voice", request.getVoice(),
-            "speed", request.getSpeed(),
-            "stream_format", "sse"
-        );
+        Map<String, Object> gmsRequest;
+        if (request.getInstructions() != null && !request.getInstructions().trim().isEmpty()) {
+            gmsRequest = Map.of(
+                "model", request.getModel(),
+                "input", request.getText(),
+                "voice", request.getVoice(),
+                "speed", request.getSpeed(),
+                "instructions", request.getInstructions(),
+                "stream_format", "sse"
+            );
+        } else {
+            gmsRequest = Map.of(
+                "model", request.getModel(),
+                "input", request.getText(),
+                "voice", request.getVoice(),
+                "speed", request.getSpeed(),
+                "stream_format", "sse"
+            );
+        }
 
         CompletableFuture.runAsync(() -> {
             try {
