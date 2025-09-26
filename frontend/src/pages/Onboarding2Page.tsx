@@ -6,6 +6,7 @@ import { useDataStore } from '../store/dataStore';
 import { useSessionStore, type Category } from '../store/sessionStore';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
+import SelectableButton from '../components/common/Button/SelectableButton';
 // import ThemeToggle from '../components/etc/ThemeToggle';
 import { useOnboardingTracking } from '../hooks/useAnalytics';
 import { SELECTION_TYPES } from '../utils/analyticsEvents';
@@ -95,26 +96,14 @@ function Onboarding2Page() {
       {!isLoading && !error && (
         <TopicGrid>
           {categories.map((category) => (
-            <TopicButton
+            <SelectableButton
               key={category.code}
               onClick={() => handleCategorySelect(category)}
               isSelected={selectedCategory?.code === category.code}
-              style={{
-                ...globalStyles.card,
-                border: `2px solid ${
-                  selectedCategory?.code === category.code
-                    ? getColor('accent', '400')
-                    : getColor('primary', '700')
-                }`,
-                backgroundColor: selectedCategory?.code === category.code
-                  ? getColor('accent', '900')
-                  : 'transparent',
-                color: getColor('primary', '200')
-              }}
             >
               <CategoryTitle>{category.name}</CategoryTitle>
               <CategoryDescription>{category.description}</CategoryDescription>
-            </TopicButton>
+            </SelectableButton>
           ))}
         </TopicGrid>
       )}
@@ -169,19 +158,6 @@ const TopicGrid = styled.div`
   margin-bottom: 40px;
 `;
 
-const TopicButton = styled.button<{ isSelected?: boolean }>`
-  padding: 30px 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 1.2rem;
-  background: none;
-  border-radius: 12px;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  }
-`;
 
 const CategoryTitle = styled.h3`
   font-size: 18px;

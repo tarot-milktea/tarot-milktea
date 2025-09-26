@@ -6,6 +6,7 @@ import { useDataStore } from '../store/dataStore';
 import { useSessionStore, type Reader } from '../store/sessionStore';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
+import SelectableButton from '../components/common/Button/SelectableButton';
 // import ThemeToggle from '../components/etc/ThemeToggle';
 import { useOnboardingTracking } from '../hooks/useAnalytics';
 import { SELECTION_TYPES } from '../utils/analyticsEvents';
@@ -113,14 +114,18 @@ function Onboarding5Page() {
               isSelected={selectedReader?.type === reader.type}
               style={{
                 ...globalStyles.card,
-                border: `2px solid ${
+                border: `1px solid ${
                   selectedReader?.type === reader.type
-                    ? getColor('accent', '400')
+                    ? '#FFD700'
                     : getColor('primary', '700')
                 }`,
-                backgroundColor: selectedReader?.type === reader.type
-                  ? getColor('accent', '900')
-                  : 'transparent'
+                backgroundColor: 'transparent',
+                boxShadow: selectedReader?.type === reader.type
+                  ? '0 0 20px rgba(255, 215, 0, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.1)'
+                  : 'none',
+                animation: selectedReader?.type === reader.type
+                  ? 'shimmer 2s ease-in-out infinite'
+                  : 'none'
               }}
             >
               <CharacterAvatar>
@@ -193,6 +198,15 @@ const Container = styled.div`
   justify-content: center;
   text-align: center;
   padding: 60px 20px;
+
+  @keyframes shimmer {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.1);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.8), inset 0 0 30px rgba(255, 215, 0, 0.2);
+    }
+  }
 `;
 
 const Title = styled.h1`
