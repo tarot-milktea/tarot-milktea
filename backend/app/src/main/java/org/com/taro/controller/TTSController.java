@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -43,9 +44,17 @@ public class TTSController {
         @ApiResponse(responseCode = "400", description = "잘못된 요청"),
         @ApiResponse(responseCode = "500", description = "서버 오류")
     })
-    public SseEmitter generateTTSSpeech(@Valid @RequestBody TTSRequest request) {
+    public SseEmitter generateTTSSpeech(@Valid @RequestBody TTSRequest request, HttpServletResponse response) {
         logger.info("TTS 음성 변환 요청: text length={}, voice={}, model={}, speed={}",
                 request.getText().length(), request.getVoice(), request.getModel(), request.getSpeed());
+
+        // CORS 헤더 명시적 설정
+        response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        response.setHeader("Access-Control-Allow-Headers", "*");
+        response.setHeader("Cache-Control", "no-cache");
+        response.setHeader("Connection", "keep-alive");
+        response.setContentType("text/event-stream");
 
         SseEmitter emitter = new SseEmitter(60000L); // 60초 타임아웃
 
@@ -126,5 +135,14 @@ public class TTSController {
         emitter.onError(throwable -> logger.error("TTS SSE 연결 오류", throwable));
 
         return emitter;
+    }
+
+    @RequestMapping(value = "/speech", method = RequestMethod.OPTIONS)
+    public void handlePreflight(HttpServletResponse response) {
+        response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+        response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+        response.setHeader("Access-Control-Max-Age", "3600");
+        response.setStatus(HttpServletResponse.SC_OK);
     }
 }
