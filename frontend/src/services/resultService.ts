@@ -3,6 +3,7 @@ import { trackError } from '../utils/analytics';
 
 // 결과 데이터 인터페이스
 export interface ResultData {
+  nickname?: string;
   interpretations?: {
     past?: string;
     present?: string;

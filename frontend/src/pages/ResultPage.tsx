@@ -38,6 +38,7 @@ function ResultPage() {
     fortuneScore,
     adviceImageUrl,
     predefinedCards,
+    nickname,
     isLoading,
     hasError,
     error,
@@ -75,7 +76,7 @@ function ResultPage() {
 
       <Content>
         {/* 헤더 */}
-        <ResultHeader error={hasError ? error : undefined} />
+        <ResultHeader nickname={nickname || undefined} error={hasError ? error : undefined} />
 
         {/* 카드 해석 - 가로 배치 */}
         <CardsGrid>

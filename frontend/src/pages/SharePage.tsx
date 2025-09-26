@@ -93,7 +93,7 @@ function SharePage() {
     <Container>
       <Content>
         {/* 헤더 */}
-        <ResultHeader />
+        <ResultHeader nickname={data.nickname} />
 
         {/* 카드 해석 - 가로 배치 */}
         <CardsGrid>

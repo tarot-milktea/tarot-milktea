@@ -25,6 +25,7 @@ interface ProcessingStatusInfo {
 interface ResultState {
   // SSE Connection State
   sessionId: string | null;
+  nickname: string | null;
   isProcessing: boolean;
   processingStatus: ProcessingStatusInfo | null;
   error: string | null;
@@ -53,6 +54,7 @@ interface ResultState {
 
   // Actions
   setSessionId: (sessionId: string) => void;
+  setNickname: (nickname: string) => void;
   setProcessingStatus: (status: ProcessingStatus, message: string, progress: number) => void;
   setCardInterpretation: (cardType: CardType, interpretation: string) => void;
   setSummary: (summary: string, score?: number) => void;
@@ -72,6 +74,7 @@ interface ResultState {
 
 const initialState = {
   sessionId: null,
+  nickname: null,
   isProcessing: false,
   processingStatus: null,
   error: null,
@@ -96,6 +99,10 @@ export const useResultStore = create<ResultState>((set, get) => ({
 
   setSessionId: (sessionId: string) => {
     set({ sessionId, isProcessing: true });
+  },
+
+  setNickname: (nickname: string) => {
+    set({ nickname });
   },
 
   setProcessingStatus: (status: ProcessingStatus, message: string, progress: number) => {
