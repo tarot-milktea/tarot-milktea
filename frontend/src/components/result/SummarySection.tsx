@@ -1,4 +1,5 @@
 import styled from '@emotion/styled';
+import { resultUtilService } from '../../services/resultService';
 
 interface SummarySectionProps {
   summary?: string;
@@ -6,15 +7,24 @@ interface SummarySectionProps {
 }
 
 function SummarySection({ summary, fortuneScore }: SummarySectionProps) {
+  const fortuneMessage = fortuneScore !== null && fortuneScore !== undefined
+    ? resultUtilService.getFortuneMessage(fortuneScore)
+    : null;
+
   return (
     <SummaryContainer>
       <SummaryHeader>
         <SummaryTitle>📋 종합 해석</SummaryTitle>
         {fortuneScore !== null && fortuneScore !== undefined && (
-          <ScoreDisplay>
-            <ScoreNumber>{fortuneScore}</ScoreNumber>
-            <ScoreLabel>/100</ScoreLabel>
-          </ScoreDisplay>
+          <ScoreCapsule>
+            <ScoreText>
+              <ScoreNumber>{fortuneScore}</ScoreNumber>
+              <ScoreLabel>/100</ScoreLabel>
+            </ScoreText>
+            {fortuneMessage && (
+              <FortuneMessage>{fortuneMessage}</FortuneMessage>
+            )}
+          </ScoreCapsule>
         )}
       </SummaryHeader>
 
@@ -39,10 +49,10 @@ const SummaryHeader = styled.div`
   align-items: center;
   margin-bottom: 16px;
 
-  @media (max-width: 768px) {
+  @media (max-width: 480px) {
     flex-direction: column;
     gap: 12px;
-    text-align: center;
+    align-items: flex-start;
   }
 `;
 
@@ -53,25 +63,45 @@ const SummaryTitle = styled.h3`
   margin: 0;
 `;
 
-const ScoreDisplay = styled.div`
+const ScoreCapsule = styled.div`
+  background: var(--color-primary-800);
+  border: 2px solid var(--color-accent-400);
+  border-radius: 24px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: fit-content;
+`;
+
+const ScoreText = styled.div`
   display: flex;
   align-items: baseline;
-  gap: 4px;
-  background: var(--color-primary-800);
-  padding: 8px 16px;
-  border-radius: 20px;
-  border: 2px solid var(--color-accent-400);
+  gap: 2px;
 `;
 
 const ScoreNumber = styled.span`
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--color-accent-300);
 `;
 
 const ScoreLabel = styled.span`
-  font-size: 1rem;
+  font-size: 0.8rem;
   color: var(--color-primary-300);
+`;
+
+const FortuneMessage = styled.span`
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-accent-200);
+  word-break: keep-all;
+
+  &::before {
+    content: "•";
+    color: var(--color-primary-400);
+    margin-right: 6px;
+  }
 `;
 
 const SummaryText = styled.div`

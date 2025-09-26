@@ -13,6 +13,8 @@ export interface DrawnCard {
 // 공유 페이지용 결과 데이터 인터페이스
 export interface ShareResultData {
   sessionId: string;
+  nickname: string;
+  questionText: string;
   status: string;
   interpretations: {
     past: string;
