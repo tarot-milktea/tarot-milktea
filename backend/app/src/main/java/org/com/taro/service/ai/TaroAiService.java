@@ -338,55 +338,55 @@ public class TaroAiService {
      */
     private Integer calculateFortuneScore(String summary) {
         if (summary == null || summary.trim().isEmpty()) {
-            return 50; // 기본 점수
+            return 85; // 기본 점수 (80-100 범위의 중간값)
         }
 
-        int score = 50; // 기본 점수
+        int score = 85; // 기본 점수 (80-100 범위의 중간값)
         String summaryLower = summary.toLowerCase();
 
-        // 강한 긍정 지표 (+25점)
+        // 강한 긍정 지표 (+15점)
         if (summaryLower.contains("매우 좋") || summaryLower.contains("훌륭")
                 || summaryLower.contains("최고") || summaryLower.contains("완벽")) {
-            score += 25;
+            score += 15;
         }
-        // 일반 긍정 지표 (+20점)
+        // 일반 긍정 지표 (+10점)
         else if (summaryLower.contains("성공") || summaryLower.contains("좋")
                 || summaryLower.contains("긍정") || summaryLower.contains("성장")
                 || summaryLower.contains("발전") || summaryLower.contains("번영")) {
-            score += 20;
+            score += 10;
         }
-        // 약한 긍정 지표 (+10점)
+        // 약한 긍정 지표 (+5점)
         else if (summaryLower.contains("사랑") || summaryLower.contains("조화")
                 || summaryLower.contains("평화") || summaryLower.contains("기쁨")
                 || summaryLower.contains("희망") || summaryLower.contains("안정")) {
-            score += 10;
-        }
-
-        // 강한 부정 지표 (-25점)
-        if (summaryLower.contains("매우 어려") || summaryLower.contains("심각")
-                || summaryLower.contains("위험") || summaryLower.contains("절망")) {
-            score -= 25;
-        }
-        // 일반 부정 지표 (-15점)
-        else if (summaryLower.contains("도전") || summaryLower.contains("어려움")
-                || summaryLower.contains("고민") || summaryLower.contains("장애물")
-                || summaryLower.contains("문제") || summaryLower.contains("갈등")) {
-            score -= 15;
-        }
-        // 약한 부정 지표 (-5점)
-        else if (summaryLower.contains("주의") || summaryLower.contains("신중")
-                || summaryLower.contains("고려") || summaryLower.contains("점검")) {
-            score -= 5;
-        }
-
-        // 전환/변화 키워드 (중립적이지만 약간 긍정적 +5점)
-        if (summaryLower.contains("변화") || summaryLower.contains("전환")
-                || summaryLower.contains("새로운") || summaryLower.contains("기회")) {
             score += 5;
         }
 
-        // 점수가 유효 범위 내에 있도록 보장 (1-100)
-        return Math.max(1, Math.min(100, score));
+        // 강한 부정 지표 (-5점, 최소 80점 보장)
+        if (summaryLower.contains("매우 어려") || summaryLower.contains("심각")
+                || summaryLower.contains("위험") || summaryLower.contains("절망")) {
+            score -= 5;
+        }
+        // 일반 부정 지표 (-3점)
+        else if (summaryLower.contains("도전") || summaryLower.contains("어려움")
+                || summaryLower.contains("고민") || summaryLower.contains("장애물")
+                || summaryLower.contains("문제") || summaryLower.contains("갈등")) {
+            score -= 3;
+        }
+        // 약한 부정 지표 (-2점)
+        else if (summaryLower.contains("주의") || summaryLower.contains("신중")
+                || summaryLower.contains("고려") || summaryLower.contains("점검")) {
+            score -= 2;
+        }
+
+        // 전환/변화 키워드 (중립적이지만 약간 긍정적 +3점)
+        if (summaryLower.contains("변화") || summaryLower.contains("전환")
+                || summaryLower.contains("새로운") || summaryLower.contains("기회")) {
+            score += 3;
+        }
+
+        // 점수가 80-100 범위 내에 있도록 보장
+        return Math.max(80, Math.min(100, score));
     }
 
     /**

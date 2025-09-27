@@ -23,8 +23,8 @@ public final class ValidationConstants {
     public static final int FUTURE_POSITION = 3; // 미래 카드 위치
 
     // Fortune score range - 운세 점수 범위
-    public static final int MIN_FORTUNE_SCORE = 60; // 최소 운세 점수
-    public static final int MAX_FORTUNE_SCORE = 99; // 최대 운세 점수
+    public static final int MIN_FORTUNE_SCORE = 80; // 최소 운세 점수
+    public static final int MAX_FORTUNE_SCORE = 100; // 최대 운세 점수
 
     // Video URL base - 동영상 URL 베이스
     public static final String VIDEO_BASE_URL = "https://j13a601.p.ssafy.io/media/"; // 카드 동영상 베이스 URL
