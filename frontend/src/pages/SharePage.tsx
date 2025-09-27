@@ -4,7 +4,7 @@ import Button from '../components/common/Button/Button';
 import ResultHeader from '../components/result/ResultHeader';
 import CardInterpretationSection from '../components/result/CardInterpretationSection';
 import SummarySection from '../components/result/SummarySection';
-import ResultImageSection from '../components/result/ResultImageSection';
+import LuckyCardSection from '../components/result/LuckyCardSection';
 import ShareResultActions from '../components/result/ShareResultActions';
 import {
   Container,
@@ -128,8 +128,8 @@ function SharePage() {
           fortuneScore={data.fortuneScore}
         />
 
-        {/* 결과 이미지 */}
-        <ResultImageSection imageUrl={data.resultImage.url} />
+        {/* 행운 카드 */}
+        <LuckyCardSection luckyCard={data.luckyCard} />
 
         {/* 액션 버튼 (새로운 타로 보기만) */}
         <ShareResultActions />

@@ -4,8 +4,14 @@ export const Container = styled.div`
   min-height: 100vh;
   background-color: var(--color-background);
   color: var(--color-text);
-  padding: 40px 20px;
+  padding: 20px 0;
   position: relative;
+  display: flex;
+  flex-direction: column;
+
+  @media (max-width: 768px) {
+    padding: 10px 0;
+  }
 `;
 
 export const Content = styled.div`

@@ -26,7 +26,6 @@ const TTSPlayer: React.FC<TTSPlayerProps> = ({
     error,
     progress,
     isPlaying,
-    hasAudioData,
     requestTTSStream,
     playAudio,
     stopAudio,

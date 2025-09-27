@@ -4,6 +4,7 @@ import { trackError } from '../utils/analytics';
 // 결과 데이터 인터페이스
 export interface ResultData {
   nickname?: string;
+  questionText?: string;
   interpretations?: {
     past?: string;
     present?: string;
@@ -11,9 +12,10 @@ export interface ResultData {
     summary?: string;
   };
   fortuneScore?: number;
-  resultImage?: {
-    url: string;
-    description?: string;
+  luckyCard?: {
+    name: string;
+    message: string;
+    imageUrl: string;
   };
   status?: string;
 }
