@@ -34,6 +34,14 @@ export interface GetPredefinedCardsResponse {
   cards: PredefinedCard[];
 }
 
+export interface TTSRequest {
+  text: string;
+  voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
+  model?: string;
+  speed?: number;
+  instructions?: string;
+}
+
 
 class TarotApiService {
   // 주제 목록 가져오기
@@ -144,6 +152,44 @@ class TarotApiService {
     } catch (error) {
       console.error('Failed to create session with cards:', error);
       throw new Error('세션 생성 및 카드 로드에 실패했습니다');
+    }
+  }
+
+  // TTS SSE 스트리밍 요청
+  async requestTTSStream(
+    text: string,
+    voice: string = 'nova',
+    instructions?: string
+  ): Promise<Response> {
+    try {
+      const requestBody: TTSRequest = {
+        text,
+        voice: voice as TTSRequest['voice'],
+        model: 'gpt-4o-mini-tts',
+        speed: 1.0
+      };
+
+      if (instructions) {
+        requestBody.instructions = instructions;
+      }
+
+      const response = await fetch('https://j13a601.p.ssafy.io/api/tts/speech', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream'
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response;
+    } catch (error) {
+      console.error('Failed to request TTS stream:', error);
+      throw new Error('TTS 스트리밍 요청에 실패했습니다');
     }
   }
 }

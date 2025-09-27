@@ -24,9 +24,10 @@ export interface ShareResultData {
   };
   drawnCards: DrawnCard[];
   fortuneScore: number;
-  resultImage: {
-    url: string;
-    description: string;
+  luckyCard: {
+    name: string;
+    message: string;
+    imageUrl: string;
   };
 }
 

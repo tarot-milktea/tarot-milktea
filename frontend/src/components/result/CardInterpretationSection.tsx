@@ -33,7 +33,6 @@ function CardInterpretationSection({
               autoPlay={true}
               context="result-page"
               videoUrl={card.videoUrl}
-              cardName={card.nameKo}
             />
           </div>
           <CardInfo>
