@@ -12,9 +12,8 @@ import jakarta.validation.constraints.*;
                   "}")
 public class SubmitRequest {
     
-    @Schema(description = "선택한 카테고리 코드", example = "LOVE")
+    @Schema(description = "선택한 카테고리 코드 (데이터베이스에서 관리)", example = "LOVE")
     @NotBlank(message = "카테고리 코드는 필수입니다")
-    @Pattern(regexp = "^(LOVE|JOB|MONEY)$", message = "유효하지 않은 카테고리 코드입니다. 사용 가능한 값: LOVE, JOB, MONEY")
     private String categoryCode;
     
     @Schema(description = "선택한 주제 코드", example = "REUNION")
@@ -26,9 +25,8 @@ public class SubmitRequest {
     @Size(max = 200, message = "질문은 200자 이하로 입력해주세요")
     private String questionText;
     
-    @Schema(description = "선택한 리더 타입", example = "F")
+    @Schema(description = "선택한 리더 타입 (데이터베이스에서 관리)", example = "F")
     @NotBlank(message = "리더 타입은 필수입니다")
-    @Pattern(regexp = "^(F|T|FT)$", message = "유효하지 않은 리더 타입입니다. 사용 가능한 값: F, T, FT")
     private String readerType;
     
 
