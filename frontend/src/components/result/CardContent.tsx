@@ -2,7 +2,7 @@ import styled from '@emotion/styled';
 import CardVideo from '../TarotCard/CardVideo';
 import type { PredefinedCard } from '../../store/sessionStore';
 
-interface CardInterpretationSectionProps {
+interface CardContentProps {
   title: string;
   icon: string;
   card?: PredefinedCard;
@@ -10,17 +10,17 @@ interface CardInterpretationSectionProps {
   videoSize?: 'small' | 'large';
 }
 
-function CardInterpretationSection({
+function CardContent({
   title,
   icon,
   card,
   interpretation,
-  videoSize = 'small'
-}: CardInterpretationSectionProps) {
+  videoSize = 'large'
+}: CardContentProps) {
   const defaultText = `${title.includes('과거') ? '과거' : title.includes('현재') ? '현재' : '미래'} 해석을 불러오는 중...`;
 
   return (
-    <CardSection>
+    <ContentContainer>
       <CardTitle>{icon} {title}</CardTitle>
 
       {card && (
@@ -44,25 +44,33 @@ function CardInterpretationSection({
         </CardVideoContainer>
       )}
 
-      <CardContent>
+      <CardInterpretation>
         {interpretation || defaultText}
-      </CardContent>
-    </CardSection>
+      </CardInterpretation>
+    </ContentContainer>
   );
 }
 
-const CardSection = styled.div`
-  background: var(--color-primary-800);
-  border: 1px solid var(--color-primary-600);
-  border-radius: 12px;
-  padding: 20px;
-  min-height: 500px;
+const ContentContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
+  flex: 1;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  min-height: 0;
+  width: 100%;
+`;
+
+const CardTitle = styled.h2`
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-accent-300);
+  margin: 0;
 
   @media (max-width: 768px) {
-    min-height: 450px;
+    font-size: 1.75rem;
   }
 `;
 
@@ -70,25 +78,25 @@ const CardVideoContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  margin: 0 auto 16px auto;
+  gap: 16px;
 
   /* 타로 카드 비율: 대략 7:12 */
-  width: 140px;
+  width: 200px;
 
   .card-video-wrapper {
-    width: 140px;
-    height: 240px;
-    border-radius: 8px;
+    width: 200px;
+    height: 340px;
+    border-radius: 12px;
     overflow: hidden;
+    box-shadow: var(--shadow-lg);
   }
 
   @media (max-width: 768px) {
-    width: 120px;
+    width: 160px;
 
     .card-video-wrapper {
-      width: 120px;
-      height: 200px;
+      width: 160px;
+      height: 280px;
     }
   }
 `;
@@ -97,12 +105,12 @@ const CardInfo = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   text-align: center;
 `;
 
-const CardName = styled.h4`
-  font-size: 1rem;
+const CardName = styled.h3`
+  font-size: 1.25rem;
   font-weight: 600;
   color: var(--color-primary-200);
   margin: 0;
@@ -111,25 +119,23 @@ const CardName = styled.h4`
 const OrientationBadge = styled.div<{ isReversed: boolean }>`
   background: ${props => props.isReversed ? 'var(--color-warning-400)' : 'var(--color-success-400)'};
   color: var(--color-primary-900);
-  padding: 4px 12px;
-  border-radius: 16px;
-  font-size: 0.75rem;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.875rem;
   font-weight: 600;
   border: 2px solid ${props => props.isReversed ? 'var(--color-warning-600)' : 'var(--color-success-600)'};
 `;
 
-const CardTitle = styled.h3`
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--color-accent-300);
-  margin: 0 0 16px 0;
-  text-align: center;
-`;
-
-const CardContent = styled.div`
+const CardInterpretation = styled.div`
   color: var(--color-primary-200);
-  line-height: 1.6;
-  font-size: 0.95rem;
+  line-height: 1.7;
+  font-size: 1.1rem;
+  max-width: 600px;
+  white-space: pre-wrap;
+
+  @media (max-width: 768px) {
+    font-size: 1rem;
+  }
 `;
 
-export default CardInterpretationSection;
+export default CardContent;

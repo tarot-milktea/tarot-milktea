@@ -1,36 +1,46 @@
-import React, { useMemo } from 'react';
-import styled from '@emotion/styled';
-import { useCardStore } from '../../store/cardStore';
-import type { PredefinedCard } from '../../store/sessionStore';
-import CardVideo from './CardVideo';
+import React, { useMemo } from "react";
+import styled from "@emotion/styled";
+import { useCardStore } from "../../store/cardStore";
+import type { PredefinedCard } from "../../store/sessionStore";
+import CardVideo from "./CardVideo";
 
 interface TarotCardProps {
   cardId: number;
-  size?: 'small' | 'large';
+  size?: "small" | "large";
   predefinedCard?: PredefinedCard;
 }
 
-const TarotCard: React.FC<TarotCardProps> = ({ cardId, size = 'small', predefinedCard }) => {
-  const { selectedCards, selectCard, deselectCard, isRevealing, revealedCards } = useCardStore();
+const TarotCard: React.FC<TarotCardProps> = ({
+  cardId,
+  size = "small",
+  predefinedCard,
+}) => {
+  const {
+    selectedCards,
+    selectCard,
+    deselectCard,
+    isRevealing,
+    revealedCards,
+  } = useCardStore();
 
   const cardState = useMemo(() => {
-    const isSelected = selectedCards.some(card => card.id === cardId);
-    const selectedCard = selectedCards.find(card => card.id === cardId);
+    const isSelected = selectedCards.some((card) => card.id === cardId);
+    const selectedCard = selectedCards.find((card) => card.id === cardId);
     const isRevealed = revealedCards.includes(cardId);
-    
+
     return {
       isSelected,
       selectedCard,
-      isRevealed
+      isRevealed,
     };
   }, [selectedCards, revealedCards, cardId]);
-  
+
   const { isSelected, selectedCard, isRevealed } = cardState;
   const isFlipped = isRevealing && isSelected && isRevealed;
-  
+
   const handleClick = () => {
     if (isRevealing) return;
-    
+
     if (isSelected) {
       deselectCard(cardId);
     } else if (selectedCards.length < 3) {
@@ -38,15 +48,17 @@ const TarotCard: React.FC<TarotCardProps> = ({ cardId, size = 'small', predefine
     }
   };
 
-
   return (
-    <CardContainer 
+    <CardContainer
       onClick={handleClick}
       size={size}
       isSelected={isSelected}
       isRevealing={isRevealing}
     >
-      <CardInner isFlipped={isFlipped} isReversed={isFlipped && predefinedCard?.orientation === 'reversed'}>
+      <CardInner
+        isFlipped={isFlipped}
+        isReversed={isFlipped && predefinedCard?.orientation === "reversed"}
+      >
         <CardBack isSelected={isSelected}>
           <CardPattern>
             <PatternElement />
@@ -56,16 +68,20 @@ const TarotCard: React.FC<TarotCardProps> = ({ cardId, size = 'small', predefine
           </CardPattern>
           <CardNumber>{cardId}</CardNumber>
         </CardBack>
-        <CardFront isReversed={predefinedCard?.orientation === 'reversed'}>
+        <CardFront isReversed={predefinedCard?.orientation === "reversed"}>
           {selectedCard && (
             <>
               <PositionLabel>
-                {selectedCard.position === 'past' && '과거'}
-                {selectedCard.position === 'present' && '현재'}
-                {selectedCard.position === 'future' && '미래'}
+                {selectedCard.position === "past" && "과거"}
+                {selectedCard.position === "present" && "현재"}
+                {selectedCard.position === "future" && "미래"}
               </PositionLabel>
-              <OrientationIndicator isReversed={predefinedCard?.orientation === 'reversed'}>
-                {predefinedCard?.orientation === 'upright' ? '정방향' : '역방향'}
+              <OrientationIndicator
+                isReversed={predefinedCard?.orientation === "reversed"}
+              >
+                {predefinedCard?.orientation === "upright"
+                  ? "정방향"
+                  : "역방향"}
               </OrientationIndicator>
             </>
           )}
@@ -73,49 +89,59 @@ const TarotCard: React.FC<TarotCardProps> = ({ cardId, size = 'small', predefine
           {isFlipped ? (
             <CardVideo
               cardId={predefinedCard?.cardId || cardId}
-              isReversed={predefinedCard?.orientation === 'reversed'}
+              isReversed={predefinedCard?.orientation === "reversed"}
               size={size}
               autoPlay={true}
               videoUrl={predefinedCard?.videoUrl}
-              cardName={predefinedCard?.nameKo}
             />
           ) : (
             <CardImagePlaceholder />
           )}
         </CardFront>
       </CardInner>
-      
+
+      {/* 카드 라벨은 카드 컨테이너 바깥쪽에 고정 */}
+      {isFlipped && predefinedCard?.nameKo && (
+        <CardNameLabel size={size}>{predefinedCard.nameKo}</CardNameLabel>
+      )}
     </CardContainer>
   );
 };
 
 const CardContainer = styled.div<{
-  size: 'small' | 'large';
+  size: "small" | "large";
   isSelected: boolean;
   isRevealing: boolean;
 }>`
   perspective: 1000px;
-  cursor: ${props => props.isRevealing ? 'default' : 'pointer'};
+  cursor: ${(props) => (props.isRevealing ? "default" : "pointer")};
   position: relative;
-  
-  ${props => props.size === 'small' ? `
+
+  ${(props) =>
+    props.size === "small"
+      ? `
     width: 60px;
     height: 90px;
-  ` : `
+  `
+      : `
     width: 200px;
     height: 300px;
   `}
-  
-  ${props => props.isSelected && `
+
+  ${(props) =>
+    props.isSelected &&
+    `
     filter: drop-shadow(0 0 20px var(--color-accent-400));
     transform: scale(1.05);
   `}
   
   transition: all 0.3s ease;
-  
+
   &:hover {
-    ${props => !props.isRevealing && `
-      transform: translateY(-5px) ${props.isSelected ? 'scale(1.05)' : ''};
+    ${(props) =>
+      !props.isRevealing &&
+      `
+      transform: translateY(-5px) ${props.isSelected ? "scale(1.05)" : ""};
     `}
   }
 `;
@@ -126,12 +152,17 @@ const CardInner = styled.div<{ isFlipped: boolean; isReversed?: boolean }>`
   transform-style: preserve-3d;
   transition: transform 0.8s ease;
   position: relative;
-  
-  ${props => props.isFlipped && `
-    transform: rotateY(180deg) ${props.isReversed ? 'rotateZ(180deg)' : ''};
+
+  ${(props) =>
+    props.isFlipped &&
+    `
+    transform: rotateY(180deg) ${props.isReversed ? "rotateZ(180deg)" : ""};
   `}
-  
-  ${props => !props.isFlipped && props.isReversed && `
+
+  ${(props) =>
+    !props.isFlipped &&
+    props.isReversed &&
+    `
     transform: rotateZ(180deg);
   `}
 `;
@@ -146,8 +177,9 @@ const CardBack = styled.div<{
   height: 100%;
   backface-visibility: hidden;
   border-radius: 12px;
-  background: linear-gradient(135deg, 
-    var(--color-primary-800) 0%, 
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-800) 0%,
     var(--color-primary-700) 50%,
     var(--color-primary-800) 100%
   );
@@ -158,8 +190,10 @@ const CardBack = styled.div<{
   justify-content: center;
   overflow: hidden;
   box-sizing: border-box;
-  
-  ${props => props.isSelected && `
+
+  ${(props) =>
+    props.isSelected &&
+    `
     border-color: var(--color-accent-400);
     background: linear-gradient(135deg, 
       var(--color-primary-700) 0%, 
@@ -188,8 +222,10 @@ const CardFront = styled.div<{ isReversed?: boolean }>`
   justify-content: center;
   border: 2px solid var(--color-card-front-border);
   box-sizing: border-box;
-  
-  ${props => props.isReversed && `
+
+  ${(props) =>
+    props.isReversed &&
+    `
     border-color: var(--color-gold-400);
     background: linear-gradient(135deg, 
       var(--color-card-front-bg) 0%, 
@@ -205,14 +241,16 @@ const CardPattern = styled.div`
   width: 100%;
   height: 100%;
   opacity: 0.3;
-  background: radial-gradient(circle at 30% 30%, 
-    var(--color-accent-500) 0%, 
-    transparent 50%
-  ),
-  radial-gradient(circle at 70% 70%, 
-    var(--color-gold-400) 0%, 
-    transparent 50%
-  );
+  background: radial-gradient(
+      circle at 30% 30%,
+      var(--color-accent-500) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 70% 70%,
+      var(--color-gold-400) 0%,
+      transparent 50%
+    );
 `;
 
 const PatternElement = styled.div`
@@ -221,11 +259,23 @@ const PatternElement = styled.div`
   height: 20px;
   border: 1px solid var(--color-card-pattern-element);
   border-radius: 50%;
-  
-  &:nth-of-type(1) { top: 20%; left: 20%; }
-  &:nth-of-type(2) { top: 20%; right: 20%; }
-  &:nth-of-type(3) { bottom: 20%; left: 20%; }
-  &:nth-of-type(4) { bottom: 20%; right: 20%; }
+
+  &:nth-of-type(1) {
+    top: 20%;
+    left: 20%;
+  }
+  &:nth-of-type(2) {
+    top: 20%;
+    right: 20%;
+  }
+  &:nth-of-type(3) {
+    bottom: 20%;
+    left: 20%;
+  }
+  &:nth-of-type(4) {
+    bottom: 20%;
+    right: 20%;
+  }
 `;
 
 const CardNumber = styled.div`
@@ -259,9 +309,9 @@ const CardImagePlaceholder = styled.div`
   justify-content: center;
   color: var(--color-card-placeholder-text);
   font-size: 0.75rem;
-  
+
   &::before {
-    content: '카드 영상';
+    content: "카드 영상";
   }
 `;
 
@@ -270,7 +320,8 @@ const OrientationIndicator = styled.div<{ isReversed: boolean }>`
   bottom: 10px;
   left: 50%;
   transform: translateX(-50%);
-  background: ${props => props.isReversed ? 'var(--color-gold-400)' : 'var(--color-accent-400)'};
+  background: ${(props) =>
+    props.isReversed ? "var(--color-gold-400)" : "var(--color-accent-400)"};
   color: var(--color-primary-900);
   padding: 2px 8px;
   border-radius: 8px;
@@ -278,5 +329,22 @@ const OrientationIndicator = styled.div<{ isReversed: boolean }>`
   font-weight: 600;
 `;
 
+const CardNameLabel = styled.div<{ size: "small" | "large" }>`
+  position: absolute;
+  bottom: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: var(--color-accent-400);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: ${(props) => (props.size === "large" ? "1rem" : "0.75rem")};
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+  opacity: 0.9;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 3;
+`;
 
 export default TarotCard;

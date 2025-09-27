@@ -26,7 +26,6 @@ export const useSSE = ({
   const {
     setCardInterpretation,
     setSummary,
-    setAdviceImage,
     setProcessingStatus,
     setError: setStoreError,
     clearError: clearStoreError
@@ -66,7 +65,7 @@ export const useSSE = ({
 
         case 'image_generated':
           console.log('Image generated:', data);
-          setAdviceImage(data.imageUrl);
+          // Image handling logic can be added here if needed
           break;
 
         case 'completed':
@@ -87,7 +86,7 @@ export const useSSE = ({
     } catch (err) {
       console.error('Failed to parse SSE data:', err, event.data);
     }
-  }, [setCardInterpretation, setSummary, setAdviceImage, setProcessingStatus, setStoreError, clearStoreError]);
+  }, [setCardInterpretation, setSummary, setProcessingStatus, setStoreError, clearStoreError]);
 
   const connect = useCallback(() => {
     if (!sessionId || !enabled || eventSourceRef.current) {
