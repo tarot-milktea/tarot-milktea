@@ -50,6 +50,9 @@ public class TaroReading {
     @Column(name = "result_image_text", columnDefinition = "TEXT")
     private String resultImageText;
 
+    @Column(name = "lucky_card_id")
+    private Integer luckyCardId;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -71,6 +74,10 @@ public class TaroReading {
 
     @OneToMany(mappedBy = "reading", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<DrawnCard> drawnCards;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lucky_card_id", referencedColumnName = "id", insertable = false, updatable = false)
+    private LuckyCard luckyCard;
 
     public TaroReading() {}
 
@@ -240,5 +247,21 @@ public class TaroReading {
 
     public void setDrawnCards(List<DrawnCard> drawnCards) {
         this.drawnCards = drawnCards;
+    }
+
+    public Integer getLuckyCardId() {
+        return luckyCardId;
+    }
+
+    public void setLuckyCardId(Integer luckyCardId) {
+        this.luckyCardId = luckyCardId;
+    }
+
+    public LuckyCard getLuckyCard() {
+        return luckyCard;
+    }
+
+    public void setLuckyCard(LuckyCard luckyCard) {
+        this.luckyCard = luckyCard;
     }
 }

@@ -23,6 +23,7 @@ public class TaroServiceImpl implements TaroService {
     private final ReaderRepository readerRepository;
     private final TaroReadingRepository taroReadingRepository;
     private final DrawnCardRepository drawnCardRepository;
+    private final ReferenceDataService referenceDataService;
 
     public TaroServiceImpl(TaroSessionRepository taroSessionRepository,
                           TaroCardRepository taroCardRepository,
@@ -31,7 +32,8 @@ public class TaroServiceImpl implements TaroService {
                           ReaderRepository readerRepository,
                           TaroReadingRepository taroReadingRepository,
                           DrawnCardRepository drawnCardRepository,
-                          TopicSampleQuestionRepository topicSampleQuestionRepository) {
+                          TopicSampleQuestionRepository topicSampleQuestionRepository,
+                          ReferenceDataService referenceDataService) {
         this.taroSessionRepository = taroSessionRepository;
         this.taroCardRepository = taroCardRepository;
         this.categoryRepository = categoryRepository;
@@ -39,6 +41,7 @@ public class TaroServiceImpl implements TaroService {
         this.readerRepository = readerRepository;
         this.taroReadingRepository = taroReadingRepository;
         this.drawnCardRepository = drawnCardRepository;
+        this.referenceDataService = referenceDataService;
     }
 
     @Override
@@ -188,6 +191,11 @@ public class TaroServiceImpl implements TaroService {
             taroReading.setTopicCode(topicCode);
             taroReading.setQuestionText(questionText);
             taroReading.setReaderType(readerType);
+
+            // 랜덤 행운 카드 선택 (1-30)
+            Integer luckyCardId = referenceDataService.selectRandomLuckyCardId();
+            taroReading.setLuckyCardId(luckyCardId);
+
             taroReadingRepository.save(taroReading);
 
             // 제출 완료 상태 업데이트 (AI 처리는 비동기로 진행)
@@ -278,13 +286,16 @@ public class TaroServiceImpl implements TaroService {
             taroReading.getInterpretation() // summary
         );
 
-        // 결과 이미지 구성
-        TaroResultResponse.ResultImageDto resultImage = null;
-        if (taroReading.getResultImageUrl() != null) {
-            resultImage = new TaroResultResponse.ResultImageDto(
-                taroReading.getResultImageUrl(),
-                taroReading.getResultImageText()
-            );
+        // 행운 카드 구성
+        TaroResultResponse.LuckyCardDto luckyCard = null;
+        if (taroReading.getLuckyCardId() != null) {
+            luckyCard = referenceDataService.findLuckyCardById(taroReading.getLuckyCardId())
+                .map(card -> new TaroResultResponse.LuckyCardDto(
+                    card.getName(),
+                    card.getMessage(),
+                    card.getImageUrl()
+                ))
+                .orElse(null);
         }
 
         // 뽑힌 카드(Predefined/Drawn cards) 포함
@@ -315,7 +326,7 @@ public class TaroServiceImpl implements TaroService {
             interpretations,
             responseCards,
             taroReading.getFortuneScore(),
-            resultImage
+            luckyCard
         );
     }
 
