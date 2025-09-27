@@ -111,10 +111,11 @@ public class MockDataService {
             "총평: " + questionText + "에 대한 기본 답변입니다."
         );
 
-        // 결과 이미지 구성
-        TaroResultResponse.ResultImageDto resultImage = new TaroResultResponse.ResultImageDto(
-            "https://example.com/result-" + sessionId + ".jpg",
-            "기본 조언 이미지"
+        // 행운 카드 구성
+        TaroResultResponse.LuckyCardDto luckyCard = new TaroResultResponse.LuckyCardDto(
+            "행운의 별",
+            "오늘은 새로운 시작을 위한 완벽한 날입니다. 용기를 내어 한 걸음 내딛어보세요.",
+            "https://example.com/lucky-cards/star.jpg"
         );
 
         return new TaroResultResponse(
@@ -125,7 +126,7 @@ public class MockDataService {
             interpretations,
             cards,
             75,
-            resultImage
+            luckyCard
         );
     }
 

@@ -27,14 +27,14 @@ public class TaroResultResponse {
     @Schema(description = "운세 점수", example = "75")
     private Integer fortuneScore;
 
-    @Schema(description = "결과 이미지")
-    private ResultImageDto resultImage;
+    @Schema(description = "행운 카드")
+    private LuckyCardDto luckyCard;
 
     public TaroResultResponse() {}
 
     public TaroResultResponse(String sessionId, String nickname, String questionText, String status, InterpretationsDto interpretations,
                               List<TaroReadingResponse.DrawnCard> drawnCards,
-                              Integer fortuneScore, ResultImageDto resultImage) {
+                              Integer fortuneScore, LuckyCardDto luckyCard) {
         this.sessionId = sessionId;
         this.nickname = nickname;
         this.questionText = questionText;
@@ -42,7 +42,7 @@ public class TaroResultResponse {
         this.interpretations = interpretations;
         this.drawnCards = drawnCards;
         this.fortuneScore = fortuneScore;
-        this.resultImage = resultImage;
+        this.luckyCard = luckyCard;
     }
 
     public String getSessionId() { return sessionId; }
@@ -59,8 +59,8 @@ public class TaroResultResponse {
     public void setDrawnCards(List<TaroReadingResponse.DrawnCard> drawnCards) { this.drawnCards = drawnCards; }
     public Integer getFortuneScore() { return fortuneScore; }
     public void setFortuneScore(Integer fortuneScore) { this.fortuneScore = fortuneScore; }
-    public ResultImageDto getResultImage() { return resultImage; }
-    public void setResultImage(ResultImageDto resultImage) { this.resultImage = resultImage; }
+    public LuckyCardDto getLuckyCard() { return luckyCard; }
+    public void setLuckyCard(LuckyCardDto luckyCard) { this.luckyCard = luckyCard; }
 
     @Schema(description = "해석 결과")
     public static class InterpretationsDto {
@@ -95,24 +95,30 @@ public class TaroResultResponse {
         public void setSummary(String summary) { this.summary = summary; }
     }
 
-    @Schema(description = "결과 이미지")
-    public static class ResultImageDto {
-        @Schema(description = "이미지 URL")
-        private String url;
+    @Schema(description = "행운 카드")
+    public static class LuckyCardDto {
+        @Schema(description = "카드 이름")
+        private String name;
 
-        @Schema(description = "이미지 설명")
-        private String description;
+        @Schema(description = "카드 메시지")
+        private String message;
 
-        public ResultImageDto() {}
+        @Schema(description = "카드 이미지 URL")
+        private String imageUrl;
 
-        public ResultImageDto(String url, String description) {
-            this.url = url;
-            this.description = description;
+        public LuckyCardDto() {}
+
+        public LuckyCardDto(String name, String message, String imageUrl) {
+            this.name = name;
+            this.message = message;
+            this.imageUrl = imageUrl;
         }
 
-        public String getUrl() { return url; }
-        public void setUrl(String url) { this.url = url; }
-        public String getDescription() { return description; }
-        public void setDescription(String description) { this.description = description; }
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public String getMessage() { return message; }
+        public void setMessage(String message) { this.message = message; }
+        public String getImageUrl() { return imageUrl; }
+        public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     }
 }

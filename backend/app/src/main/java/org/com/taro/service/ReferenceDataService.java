@@ -1,9 +1,11 @@
 package org.com.taro.service;
 
 import org.com.taro.entity.Category;
+import org.com.taro.entity.LuckyCard;
 import org.com.taro.entity.Reader;
 import org.com.taro.entity.Topic;
 import org.com.taro.repository.CategoryRepository;
+import org.com.taro.repository.LuckyCardRepository;
 import org.com.taro.repository.ReaderRepository;
 import org.com.taro.repository.TopicRepository;
 import org.springframework.cache.annotation.Cacheable;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 /**
  * Service for managing reference data from database instead of enums
@@ -22,13 +25,18 @@ public class ReferenceDataService {
     private final CategoryRepository categoryRepository;
     private final TopicRepository topicRepository;
     private final ReaderRepository readerRepository;
+    private final LuckyCardRepository luckyCardRepository;
+    private final Random random;
 
     public ReferenceDataService(CategoryRepository categoryRepository,
                               TopicRepository topicRepository,
-                              ReaderRepository readerRepository) {
+                              ReaderRepository readerRepository,
+                              LuckyCardRepository luckyCardRepository) {
         this.categoryRepository = categoryRepository;
         this.topicRepository = topicRepository;
         this.readerRepository = readerRepository;
+        this.luckyCardRepository = luckyCardRepository;
+        this.random = new Random();
     }
 
     // Category operations - 카테고리 관련 메서드
@@ -187,5 +195,22 @@ public class ReferenceDataService {
         }
 
         return message.toString();
+    }
+
+    // Lucky Card operations - 행운 카드 관련 메서드
+
+    /**
+     * 랜덤 행운 카드 ID 생성 (1-30)
+     */
+    public Integer selectRandomLuckyCardId() {
+        return random.nextInt(30) + 1;
+    }
+
+    @Cacheable("luckyCard")
+    public Optional<LuckyCard> findLuckyCardById(Integer id) {
+        if (id == null || id < 1 || id > 30) {
+            return Optional.empty();
+        }
+        return luckyCardRepository.findById(id);
     }
 }
