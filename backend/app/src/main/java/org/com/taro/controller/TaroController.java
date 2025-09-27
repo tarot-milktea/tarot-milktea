@@ -143,15 +143,7 @@ public class TaroController {
             // 비동기 AI 처리 시작
             taroAiService.processSequentially(sessionId, request);
 
-        return ResponseEntity.ok(new SubmitResultResponse(
-            true,
-            "타로 해석이 시작되었습니다. 잠시 후 결과를 확인해주세요",
-            sessionId,
-            request.getCategoryCode(),
-            request.getTopicCode(),
-            request.getQuestionText(),
-            request.getReaderType()
-        ));
+            return ResponseEntity.ok(new SubmitResultResponse(true, "타로 해석이 시작되었습니다. SSE를 통해 진행상황을 확인하세요.", sessionId));
 
         } catch (InvalidRequestException e) {
             return ResponseEntity.badRequest()
@@ -302,11 +294,9 @@ public class TaroController {
             // 처리 상태에 따른 응답
             if ("CREATED".equals(result.getStatus()) || "CARDS_GENERATED".equals(result.getStatus()) ||
                 "SUBMITTED".equals(result.getStatus())) {
-                // 아직 처리가 시작되었거나 초기 단계인 경우 클라이언트가 재시도할 수 있도록 202 Accepted와 Retry-After 헤더를 반환
-                // 425는 RFC 8470의 Too Early 용도로 쓰이며 일부 클라이언트/프록시에서 처리되지 않을 수 있으므로 202로 변경
-                return ResponseEntity.status(202)
-                        .header("Retry-After", "3") // 클라이언트에 3초 후 다시 시도 권고
-                        .body(new ErrorResponse(202, "처리 중입니다", "타로 해석이 진행 중입니다. 잠시 후 다시 시도해주세요."));
+                // 아직 시작되지 않은 경우만 425 에러
+                return ResponseEntity.status(425) // Too Early
+                        .body(new ErrorResponse(425, "아직 처리 중입니다", "타로 해석이 진행 중입니다. 잠시 후 다시 시도해주세요."));
             }
 
             // 처리 중이거나 완료된 경우 모두 중간 결과 포함하여 200 반환
