@@ -264,11 +264,39 @@ public class TaroAiService {
                 timeFrame, hasPreviousContext);
         prompt.append(readerSpecificPrompt);
 
-        // 구어체 및 3줄 제한 추가 강조 - 상징적 해석을 반영하도록 수정
-        prompt.append("\n\n위 상징적 관점을 바탕으로, 표면적 의미를 넘어서는 깊이 있는 통찰을 ");
-        prompt.append("'요', '네요', '죠' 등의 친근한 구어체로 3줄 이내로 전달해주세요.");
+        // 리더 타입별 구어체 응답 형식 지시
+        String responseFormat = getResponseFormatInstruction(request.getReaderType());
+        prompt.append("\n\n").append(responseFormat);
 
         return prompt.toString();
+    }
+
+    /**
+     * 리더 타입별 응답 형식 지시사항 생성
+     */
+    private String getResponseFormatInstruction(String readerType) {
+        if (!referenceDataService.isValidReaderType(readerType)) {
+            return "위 상징적 관점을 바탕으로, 친근한 구어체로 5줄 이내로 자연스럽게 이야기해주세요. " +
+                   "블릿포인트나 부제목 없이 마치 친구에게 말하듯 편안하게 답변해주세요.";
+        }
+
+        switch (readerType.toUpperCase()) {
+            case "F": // 감성형
+                return "위 상징적 관점을 바탕으로, 따뜻하고 공감하는 구어체로 답변해주세요. " +
+                       "'~해요', '~네요', '~거든요' 같은 부드러운 말투로 5줄 이내로 이야기하세요. " +
+                       "마치 오래된 친구가 위로하듯 자연스럽게, 블릿포인트나 구조화된 형식 없이 답변해주세요.";
+            case "T": // 논리형
+                return "위 상징적 관점을 바탕으로, 명확하고 실용적인 구어체로 답변해주세요. " +
+                       "'~입니다', '~해보세요', '~것 같아요' 같은 현실적인 말투로 5줄 이내로 설명하세요. " +
+                       "핵심을 짚어주되 친근하게, 블릿포인트나 구조화된 형식 없이 자연스럽게 답변해주세요.";
+            case "FT": // 균형형
+                return "위 상징적 관점을 바탕으로, 지혜롭고 균형잡힌 구어체로 답변해주세요. " +
+                       "'~죠', '~거예요', '~인 것 같아요' 같은 편안한 말투로 5줄 이내로 조언하세요. " +
+                       "감정과 현실을 조화롭게 엮어서, 블릿포인트나 구조화된 형식 없이 자연스럽게 답변해주세요.";
+            default:
+                return "위 상징적 관점을 바탕으로, 친근한 구어체로 5줄 이내로 자연스럽게 이야기해주세요. " +
+                       "블릿포인트나 부제목 없이 마치 친구에게 말하듯 편안하게 답변해주세요.";
+        }
     }
 
     // 헬퍼 메서드들은 ValidationConstants로 이동됨 - getCategoryName(), getTopicName() 사용
