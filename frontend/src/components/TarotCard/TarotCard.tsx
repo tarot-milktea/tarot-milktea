@@ -345,6 +345,10 @@ const CardNameLabel = styled.div<{ size: "small" | "large" }>`
   pointer-events: none;
   white-space: nowrap;
   z-index: 3;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
 `;
 
 export default TarotCard;
