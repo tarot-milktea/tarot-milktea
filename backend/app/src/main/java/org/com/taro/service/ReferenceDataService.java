@@ -159,6 +159,12 @@ public class ReferenceDataService {
                 .orElse("");
     }
 
+    public String getReaderVideoUrl(String type) {
+        return findReaderByType(type)
+                .map(Reader::getVideoUrl)
+                .orElse("");
+    }
+
     public String getAvailableReaderTypesMessage() {
         List<Reader> readers = getAllReaders();
         if (readers.isEmpty()) {
