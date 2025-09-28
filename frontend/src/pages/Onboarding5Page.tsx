@@ -3,6 +3,7 @@ import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { useColors } from '../hooks/useColors';
 import { useSessionStore } from '../store/sessionStore';
+import { useDataStore } from '../store/dataStore';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
 import SelectableButton from '../components/common/Button/SelectableButton';
@@ -17,7 +18,8 @@ import { useTTS } from '../hooks/useTTS';
 function Onboarding5Page() {
   const navigate = useNavigate();
   const { styles: globalStyles, getColor } = useColors();
-  const { selectedTopic, selectedQuestion, setSelectedQuestion, createSession, selectedReader } = useSessionStore();
+  const { selectedTopic, selectedQuestion, setSelectedQuestion, submitSessionData, selectedReader, restoreFromStorage } = useSessionStore();
+  const { initializeData } = useDataStore();
   const { setCurrentPage, getCurrentStep, getTotalSteps } = useProgressStore();
   const [customQuestion, setCustomQuestion] = useState('');
   const [isQuestionValid, setIsQuestionValid] = useState(false);
@@ -33,8 +35,10 @@ function Onboarding5Page() {
   });
 
   useEffect(() => {
+    restoreFromStorage();
+    initializeData();
     setCurrentPage('onboarding-5');
-  }, [setCurrentPage]);
+  }, [restoreFromStorage, initializeData, setCurrentPage]);
 
   const sampleQuestions = selectedTopic?.sampleQuestions || [];
 
@@ -136,9 +140,6 @@ function Onboarding5Page() {
     stopAudio();
 
     try {
-      // 질문 입력 완료 후 세션 생성 (미리 정해진 카드들도 함께 가져옴)
-      await createSession();
-
       // Analytics 추적
       trackComplete({
         question_length: selectedQuestion.trim().length,
@@ -146,9 +147,12 @@ function Onboarding5Page() {
       });
       trackSelection(SELECTION_TYPES.QUESTION, customQuestion ? 'custom_input' : 'sample_question');
 
+      // 세션 데이터 제출 (세션은 이미 Onboarding1에서 생성됨)
+      await submitSessionData();
+
       navigate('/onboarding/card-draw');
     } catch (error) {
-      console.error('Failed to create session:', error);
+      console.error('Failed to submit session data:', error);
       // TODO: 에러 처리 (토스트 메시지 등)
     }
   };

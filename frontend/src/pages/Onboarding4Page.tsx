@@ -3,6 +3,7 @@ import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { useColors } from '../hooks/useColors';
 import { useSessionStore, type Topic } from '../store/sessionStore';
+import { useDataStore } from '../store/dataStore';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
 import SelectableButton from '../components/common/Button/SelectableButton';
@@ -16,7 +17,8 @@ import { useTTS } from '../hooks/useTTS';
 function Onboarding4Page() {
   const navigate = useNavigate();
   const { styles: globalStyles, getColor } = useColors();
-  const { selectedCategory, selectedTopic, setSelectedTopic, selectedReader } = useSessionStore();
+  const { selectedCategory, selectedTopic, setSelectedTopic, selectedReader, restoreFromStorage } = useSessionStore();
+  const { initializeData } = useDataStore();
   const { setCurrentPage, getCurrentStep, getTotalSteps } = useProgressStore();
 
   // Analytics 훅
@@ -30,8 +32,10 @@ function Onboarding4Page() {
   });
 
   useEffect(() => {
+    restoreFromStorage();
+    initializeData();
     setCurrentPage('onboarding-4');
-  }, [setCurrentPage]);
+  }, [restoreFromStorage, initializeData, setCurrentPage]);
 
   // 타입별 TTS 설정 함수
   const getTTSSettings = (topic: Topic) => {

@@ -18,12 +18,13 @@ import { useProgressStore } from '../store/progressStore';
 function Onboarding1Page() {
   const navigate = useNavigate();
   const { styles: globalStyles, getColor } = useColors();
-  const { nickname, setNickname, restoreFromStorage } = useSessionStore();
+  const { nickname, setNickname, restoreFromStorage, createSession } = useSessionStore();
   const { initializeData } = useDataStore();
   const { setCurrentPage, getCurrentStep, getTotalSteps } = useProgressStore();
   const [localNickname, setLocalNickname] = useState(nickname || '');
   const [isValid, setIsValid] = useState(false);
-  
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
+
   // 화면 크기 상태 관리
   const [isMobile, setIsMobile] = useState(false);
 
@@ -60,41 +61,49 @@ function Onboarding1Page() {
     setIsValid(valid);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const trimmedNickname = localNickname.trim();
+    let finalNickname = trimmedNickname;
 
     // 빈 입력인 경우 랜덤 닉네임 생성
     if (!trimmedNickname) {
-      const randomNickname = generateRandomNickname();
-      setNickname(randomNickname);
-      showToast.success(`"${randomNickname}"으로 모험을 시작합니다!`);
+      finalNickname = generateRandomNickname();
+      setNickname(finalNickname);
+      showToast.success(`"${finalNickname}"으로 모험을 시작합니다!`);
 
       // Analytics 추적
       trackComplete({
         nickname_type: 'random',
-        nickname_length: randomNickname.length
+        nickname_length: finalNickname.length
       });
       trackSelection(SELECTION_TYPES.BUTTON_CLICK, 'random_generated');
-
-      navigate('/onboarding/2');
-      return;
-    }
-
-    // 유효한 닉네임인 경우 진행
-    if (isValid) {
-      setNickname(trimmedNickname);
-      showToast.success(`"${trimmedNickname}"님, 환영합니다!`);
+    } else if (isValid) {
+      setNickname(finalNickname);
+      showToast.success(`"${finalNickname}"님, 환영합니다!`);
 
       // Analytics 추적
       trackComplete({
         nickname_type: 'user_input',
-        nickname_length: trimmedNickname.length
+        nickname_length: finalNickname.length
       });
       trackSelection(SELECTION_TYPES.FORM_SUBMIT, 'user_input');
-
-      navigate('/onboarding/2');
     } else {
       showToast.error('올바른 닉네임을 입력해주세요');
+      return;
+    }
+
+    // 세션 생성
+    setIsCreatingSession(true);
+    try {
+      await createSession();
+
+      // 세션 생성 성공 후 다음 페이지로 이동
+      navigate('/onboarding/2');
+    } catch (error) {
+      console.error('Failed to create session:', error);
+      showToast.error('세션 생성에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsCreatingSession(false);
     }
   };
 
@@ -155,8 +164,9 @@ function Onboarding1Page() {
             variant="primary"
             size="large"
             onClick={handleNext}
+            disabled={isCreatingSession}
           >
-            시작하기
+            {isCreatingSession ? '세션 생성 중...' : '시작하기'}
           </Button>
         </InputCard>
       </ContentSection>

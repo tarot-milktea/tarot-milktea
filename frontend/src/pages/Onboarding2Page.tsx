@@ -19,8 +19,8 @@ import ReaderVideo from "../components/common/ReaderVideo/ReaderVideo";
 function Onboarding2Page() {
   const navigate = useNavigate();
   const { styles: globalStyles, getColor } = useColors();
-  const { readers, isLoading, error } = useDataStore();
-  const { selectedReader, setSelectedReader } = useSessionStore();
+  const { readers, isLoading, error, initializeData } = useDataStore();
+  const { selectedReader, setSelectedReader, restoreFromStorage } = useSessionStore();
   const { setCurrentPage, getCurrentStep, getTotalSteps } = useProgressStore();
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
@@ -31,8 +31,10 @@ function Onboarding2Page() {
   );
 
   useEffect(() => {
+    restoreFromStorage();
+    initializeData();
     setCurrentPage("onboarding-2");
-  }, [setCurrentPage]);
+  }, [restoreFromStorage, initializeData, setCurrentPage]);
 
   // TTS 훅
   const {
