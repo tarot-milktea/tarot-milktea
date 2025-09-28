@@ -124,6 +124,7 @@ const SummaryText = styled.div`
   font-size: 1.1rem;
   white-space: pre-wrap;
   width: 100%;
+  text-align: left;
 
   @media (max-width: 768px) {
     font-size: 1rem;
