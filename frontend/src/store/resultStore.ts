@@ -27,6 +27,7 @@ interface ResultState {
   sessionId: string | null;
   nickname: string | null;
   questionText: string | null;
+  readerType: string | null; // 리더 타입 (T, F, FT 등)
   isProcessing: boolean;
   processingStatus: ProcessingStatusInfo | null;
   error: string | null;
@@ -60,6 +61,7 @@ interface ResultState {
   setSessionId: (sessionId: string) => void;
   setNickname: (nickname: string) => void;
   setQuestionText: (questionText: string) => void;
+  setReaderType: (readerType: string) => void;
   setProcessingStatus: (status: ProcessingStatus, message: string, progress: number) => void;
   setCardInterpretation: (cardType: CardType, interpretation: string) => void;
   setSummary: (summary: string, score?: number) => void;
@@ -81,6 +83,7 @@ const initialState = {
   sessionId: null,
   nickname: null,
   questionText: null,
+  readerType: null,
   isProcessing: false,
   processingStatus: null,
   error: null,
@@ -112,6 +115,10 @@ export const useResultStore = create<ResultState>((set, get) => ({
 
   setQuestionText: (questionText: string) => {
     set({ questionText });
+  },
+
+  setReaderType: (readerType: string) => {
+    set({ readerType });
   },
 
   setProcessingStatus: (status: ProcessingStatus, message: string, progress: number) => {

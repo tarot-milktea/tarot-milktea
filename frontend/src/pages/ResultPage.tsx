@@ -17,6 +17,7 @@ import ResultActions from '../components/result/ResultActions';
 import ProgressBar from '../components/common/ProgressBar/ProgressBar';
 import { useProgressStore } from '../store/progressStore';
 import { useTTS } from '../hooks/useTTS';
+import { getVoiceByReaderType } from '../utils/voiceMapping';
 import {
   Container,
   ErrorContainer,
@@ -96,6 +97,7 @@ function ResultPage() {
     predefinedCards,
     nickname,
     questionText,
+    readerType,
     isLoading,
     hasAnyData
   } = useResultData(resultId);
@@ -141,7 +143,9 @@ function ResultPage() {
       }
 
       if (textToSpeak && !hasInitialTTSPlayed) {
-        await requestTTSStream(textToSpeak, 'nova');
+        // readerType에 따라 화자 결정
+        const voice = getVoiceByReaderType(readerType ?? undefined);
+        await requestTTSStream(textToSpeak, voice);
         setHasInitialTTSPlayed(true);
       }
     };
@@ -150,7 +154,7 @@ function ResultPage() {
     if (!hasInitialTTSPlayed) {
       playStepTTS();
     }
-  }, [currentStep, cardInterpretations, summary, luckyCard, hasAnyData, hasInitialTTSPlayed, requestTTSStream]);
+  }, [currentStep, cardInterpretations, summary, luckyCard, hasAnyData, hasInitialTTSPlayed, requestTTSStream, readerType]);
 
   // 단계 변경 시 TTS 상태 리셋
   useEffect(() => {
