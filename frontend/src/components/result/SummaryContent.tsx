@@ -1,4 +1,5 @@
 import styled from '@emotion/styled';
+import TypingText from '../common/TypingText/TypingText';
 import { resultUtilService } from '../../services/resultService';
 
 interface SummaryContentProps {
@@ -29,7 +30,12 @@ function SummaryContent({ summary, fortuneScore }: SummaryContentProps) {
       </SummaryHeader>
 
       <SummaryText>
-        {summary || '종합 해석을 생성하는 중...'}
+        <TypingText
+          text={summary || '종합 해석을 생성하는 중...'}
+          typingSpeed={30}
+          delay={500}
+          showCursor={true}
+        />
       </SummaryText>
     </ContentContainer>
   );

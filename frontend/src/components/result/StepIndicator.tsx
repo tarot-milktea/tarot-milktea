@@ -30,7 +30,7 @@ function StepIndicator({ currentStep }: StepIndicatorProps) {
     <IndicatorContainer>
       <DotsContainer>
         {/* <StartIcon>🔮</StartIcon> */}
-        {STEPS.slice(0, -1).map((step, index) => (
+        {STEPS.map((step, index) => (
           <Dot key={step} $isActive={index <= currentIndex} />
         ))}
         {/* <EndIcon>🍀</EndIcon> */}

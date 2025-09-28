@@ -1,4 +1,5 @@
 import styled from '@emotion/styled';
+import TypingText from '../common/TypingText/TypingText';
 import FlippableLuckyCard from './FlippableLuckyCard';
 
 interface LuckyContentProps {
@@ -23,7 +24,14 @@ function LuckyContent({
       {luckyCard && (
         <CardInfo>
           <CardName>{luckyCard.name}</CardName>
-          <CardMessage>{luckyCard.message}</CardMessage>
+          <CardMessage>
+            <TypingText
+              text={luckyCard.message}
+              typingSpeed={30}
+              delay={500}
+              showCursor={true}
+            />
+          </CardMessage>
         </CardInfo>
       )}
     </ContentContainer>

@@ -40,7 +40,6 @@ function ResultPage() {
 
   // 단계별 상태 관리
   const [currentStep, setCurrentStep] = useState<ResultStep>('past');
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [hasInitialTTSPlayed, setHasInitialTTSPlayed] = useState(false);
 
   // 단계별 데이터
@@ -55,47 +54,38 @@ function ResultPage() {
     return stepMap[step];
   }, []);
 
+  // TTS 통합
+  const { requestTTSStream, isPlaying: isTTSPlaying, stopAudio } = useTTS({
+    autoPlay: true,
+    onComplete: () => {
+      // 자동넘어가기 기능 제거됨
+      // TTS 완료 후 사용자가 수동으로 다음 버튼을 눌러야 함
+    }
+  });
 
   // 단계 전환 함수들
   const goToNextStep = useCallback(() => {
     const currentIndex = getStepData(currentStep).index;
     if (currentIndex < STEPS.length - 1) {
+      // 기존 TTS 중단
+      stopAudio();
       setCurrentStep(STEPS[currentIndex + 1]);
     }
-  }, [currentStep, getStepData]);
+  }, [currentStep, getStepData, stopAudio]);
 
   const goToPreviousStep = useCallback(() => {
     const currentIndex = getStepData(currentStep).index;
     if (currentIndex > 0) {
+      // 기존 TTS 중단
+      stopAudio();
       setCurrentStep(STEPS[currentIndex - 1]);
     }
-  }, [currentStep, getStepData]);
+  }, [currentStep, getStepData, stopAudio]);
 
-  // TTS 통합
-  const { requestTTSStream, isPlaying: isTTSPlaying, stopAudio } = useTTS({
-    autoPlay: true,
-    onComplete: () => {
-      if (isAutoPlaying && currentStep !== 'lucky') {
-        // 2초 후 다음 단계로 자동 진행
-        setTimeout(() => {
-          goToNextStep();
-        }, 2000);
-      }
-    }
-  });
-
-  // 자동 재생 토글
-  const toggleAutoPlay = useCallback(() => {
-    setIsAutoPlaying(prev => !prev);
-  }, []);
-
-  // TTS 스킵
+  // TTS 스킵 (TTS만 중단, 다음으로 넘어가지 않음)
   const skipTTS = useCallback(() => {
     stopAudio();
-    if (isAutoPlaying && currentStep !== 'lucky') {
-      goToNextStep();
-    }
-  }, [stopAudio, isAutoPlaying, currentStep, goToNextStep]);
+  }, [stopAudio]);
 
   // 커스텀 훅들
   const {
@@ -117,7 +107,7 @@ function ResultPage() {
 
   // 단계별 TTS 재생
   useEffect(() => {
-    if (!hasAnyData || !isAutoPlaying) return;
+    if (!hasAnyData) return;
 
     const playStepTTS = async () => {
       let textToSpeak = '';
@@ -160,7 +150,7 @@ function ResultPage() {
     if (!hasInitialTTSPlayed) {
       playStepTTS();
     }
-  }, [currentStep, cardInterpretations, summary, luckyCard, hasAnyData, isAutoPlaying, hasInitialTTSPlayed, requestTTSStream]);
+  }, [currentStep, cardInterpretations, summary, luckyCard, hasAnyData, hasInitialTTSPlayed, requestTTSStream]);
 
   // 단계 변경 시 TTS 상태 리셋
   useEffect(() => {
@@ -271,8 +261,6 @@ function ResultPage() {
           onPrevious={goToPreviousStep}
           onNext={goToNextStep}
           onSkipTTS={skipTTS}
-          autoPlayEnabled={isAutoPlaying}
-          onToggleAutoPlay={toggleAutoPlay}
         />
       </StepContainer>
     </Container>
