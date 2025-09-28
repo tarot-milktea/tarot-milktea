@@ -1,5 +1,6 @@
 import styled from '@emotion/styled';
 import CardVideo from '../TarotCard/CardVideo';
+import TypingText from '../common/TypingText/TypingText';
 import type { PredefinedCard } from '../../store/sessionStore';
 
 interface CardContentProps {
@@ -45,7 +46,12 @@ function CardContent({
       )}
 
       <CardInterpretation>
-        {interpretation || defaultText}
+        <TypingText
+          text={interpretation || defaultText}
+          typingSpeed={30}
+          delay={500}
+          showCursor={true}
+        />
       </CardInterpretation>
     </ContentContainer>
   );

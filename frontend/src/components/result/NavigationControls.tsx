@@ -9,8 +9,6 @@ interface NavigationControlsProps {
   onPrevious: () => void;
   onNext: () => void;
   onSkipTTS: () => void;
-  autoPlayEnabled: boolean;
-  onToggleAutoPlay: () => void;
 }
 
 function NavigationControls({
@@ -20,9 +18,7 @@ function NavigationControls({
   isTTSPlaying,
   onPrevious,
   onNext,
-  onSkipTTS,
-  autoPlayEnabled,
-  onToggleAutoPlay
+  onSkipTTS
 }: NavigationControlsProps) {
   return (
     <ControlsContainer>
@@ -57,15 +53,6 @@ function NavigationControls({
           </Button>
         )}
       </ButtonGroup>
-
-      <SettingsGroup>
-        <AutoPlayToggle onClick={onToggleAutoPlay} $isEnabled={autoPlayEnabled}>
-          <ToggleIcon>{autoPlayEnabled ? '🔊' : '🔇'}</ToggleIcon>
-          <ToggleText>
-            {autoPlayEnabled ? '자동 진행' : '수동 진행'}
-          </ToggleText>
-        </AutoPlayToggle>
-      </SettingsGroup>
     </ControlsContainer>
   );
 }
@@ -88,55 +75,6 @@ const ButtonGroup = styled.div`
     flex-direction: column;
     gap: 8px;
   }
-`;
-
-const SettingsGroup = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
-
-const AutoPlayToggle = styled.button<{ $isEnabled: boolean }>`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: ${props => props.$isEnabled
-    ? 'var(--color-accent-600)'
-    : 'var(--color-primary-700)'
-  };
-  border: 1px solid ${props => props.$isEnabled
-    ? 'var(--color-accent-400)'
-    : 'var(--color-primary-500)'
-  };
-  border-radius: 20px;
-  padding: 8px 16px;
-  color: ${props => props.$isEnabled
-    ? 'var(--color-primary-900)'
-    : 'var(--color-primary-200)'
-  };
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background: ${props => props.$isEnabled
-      ? 'var(--color-accent-500)'
-      : 'var(--color-primary-600)'
-    };
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
-`;
-
-const ToggleIcon = styled.span`
-  font-size: 1rem;
-`;
-
-const ToggleText = styled.span`
-  font-size: 0.875rem;
 `;
 
 export default NavigationControls;
