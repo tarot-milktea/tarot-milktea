@@ -170,7 +170,8 @@ public class TaroServiceImpl implements TaroService {
                 reader.getType(),
                 reader.getName(),
                 reader.getDescription(),
-                reader.getImageUrl()
+                reader.getImageUrl(),
+                reader.getVideoUrl()
             )
         ).collect(java.util.stream.Collectors.toList());
     }

@@ -37,6 +37,9 @@ public class ReaderResponse {
         @Schema(description = "리더 이미지 URL", example = "https://example.com/reader-f.jpg")
         private String imageUrl;
 
+        @Schema(description = "리더 비디오 URL", example = "https://example.com/reader-f.mp4")
+        private String videoUrl;
+
         public Reader() {}
 
         public Reader(String type, String name, String description, String imageUrl) {
@@ -44,6 +47,14 @@ public class ReaderResponse {
             this.name = name;
             this.description = description;
             this.imageUrl = imageUrl;
+        }
+
+        public Reader(String type, String name, String description, String imageUrl, String videoUrl) {
+            this.type = type;
+            this.name = name;
+            this.description = description;
+            this.imageUrl = imageUrl;
+            this.videoUrl = videoUrl;
         }
 
         public String getType() { return type; }
@@ -54,5 +65,7 @@ public class ReaderResponse {
         public void setDescription(String description) { this.description = description; }
         public String getImageUrl() { return imageUrl; }
         public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+        public String getVideoUrl() { return videoUrl; }
+        public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
     }
 }

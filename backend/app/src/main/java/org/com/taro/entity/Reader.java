@@ -20,6 +20,9 @@ public class Reader {
     @Column(name = "image_url", length = 500)
     private String imageUrl;
 
+    @Column(name = "video_url", length = 500)
+    private String videoUrl;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -30,6 +33,15 @@ public class Reader {
         this.name = name;
         this.description = description;
         this.imageUrl = imageUrl;
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public Reader(String type, String name, String description, String imageUrl, String videoUrl) {
+        this.type = type;
+        this.name = name;
+        this.description = description;
+        this.imageUrl = imageUrl;
+        this.videoUrl = videoUrl;
         this.createdAt = LocalDateTime.now();
     }
 
@@ -68,6 +80,14 @@ public class Reader {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public String getVideoUrl() {
+        return videoUrl;
+    }
+
+    public void setVideoUrl(String videoUrl) {
+        this.videoUrl = videoUrl;
     }
 
     public LocalDateTime getCreatedAt() {
