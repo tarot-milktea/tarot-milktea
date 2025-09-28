@@ -13,6 +13,7 @@ import { SELECTION_TYPES } from "../utils/analyticsEvents";
 import ProgressBar from "../components/common/ProgressBar/ProgressBar";
 import { useProgressStore } from "../store/progressStore";
 import { useTTS } from "../hooks/useTTS";
+import { getTTSSettings } from "../utils/voiceMapping";
 
 function Onboarding2Page() {
   const navigate = useNavigate();
@@ -44,40 +45,6 @@ function Onboarding2Page() {
     onError: (error) => console.error("TTS error:", error),
   });
 
-  // 타입별 TTS 설정 함수
-  const getTTSSettings = (readerType: string, readerName: string) => {
-    const baseText = `안녕하세요, 저는 ${readerName}입니다. 당신의 타로 리더가 되어 운명의 길을 안내해드리겠습니다.`;
-
-    switch (readerType) {
-      case "F":
-        return {
-          voice: "nova" as const,
-          instruction:
-            "친근하고 따뜻한 여성의 목소리로, 마치 가까운 언니나 친구가 조언해주는 것처럼 부드럽고 다정하게 말해주세요.",
-          text: `${baseText}`,
-        };
-      case "T":
-        return {
-          voice: "onyx" as const,
-          instruction:
-            "차분하고 신중한 남성의 목소리로, 깊이 있고 진중한 톤으로 신뢰감 있게 말해주세요.",
-          text: `${baseText}`,
-        };
-      case "FT":
-        return {
-          voice: "fable" as const,
-          instruction:
-            "신비롭고 매력적인 목소리로, 마치 고대의 현자가 운명을 읽어주는 것처럼 신비로우면서도 따뜻하게 말해주세요.",
-          text: `${baseText}`,
-        };
-      default:
-        return {
-          voice: "nova" as const,
-          instruction: "친근하고 자연스러운 목소리로 말해주세요.",
-          text: baseText,
-        };
-    }
-  };
 
   const handleReaderSelect = async (reader: Reader) => {
     // TTS 중지
