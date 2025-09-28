@@ -19,11 +19,23 @@ import {
 import { trackOnboardingEnter, trackCardEvent, trackPerformance } from '../utils/analytics';
 import ProgressBar from '../components/common/ProgressBar/ProgressBar';
 import { useProgressStore } from '../store/progressStore';
+import ReaderVideo from '../components/common/ReaderVideo/ReaderVideo';
+import { useTTS } from '../hooks/useTTS';
+
+// 리더 타입별 로컬 비디오 매핑
+const getLocalVideoUrl = (readerType: string): string | null => {
+  const videoMap: Record<string, string> = {
+    'f': '/f.webm',
+    't': '/t.webm',
+    'tf': '/tf.webm'
+  };
+  return videoMap[readerType] || null;
+};
 
 function CardDrawPage() {
   const navigate = useNavigate();
   const { selectedCards, isRevealing, startReveal, revealCard } = useCardStore();
-  const { predefinedCards, submitSessionData } = useSessionStore();
+  const { predefinedCards, submitSessionData, selectedReader } = useSessionStore();
   const { setCurrentPage, getCurrentStep, getTotalSteps } = useProgressStore();
   const [scale, setScale] = useState(1);
   const [isReducedMotion, setIsReducedMotion] = useState(false);
@@ -31,6 +43,18 @@ function CardDrawPage() {
   const [screenType, setScreenType] = useState<'mobile' | 'tablet' | 'desktop'>(() => {
     if (typeof window === 'undefined') return 'desktop';
     return getScreenType();
+  });
+
+  // TTS 훅
+  const {
+    requestTTSStream,
+    stopAudio,
+    isPlaying: ttsIsPlaying,
+    isLoading: ttsLoading,
+  } = useTTS({
+    autoPlay: true,
+    onComplete: () => console.log("CardDraw TTS completed"),
+    onError: (error) => console.error("CardDraw TTS error:", error),
   });
   
   // 카드 위치 계산을 메모이제이션
@@ -50,7 +74,7 @@ function CardDrawPage() {
     [isReducedMotion]
   );
 
-  // 컴포넌트 마운트 시 세션 데이터 제출
+  // 컴포넌트 마운트 시 세션 데이터 제출 및 TTS 재생
   useEffect(() => {
     // 진행률 상태 업데이트
     setCurrentPage('card-draw');
@@ -71,8 +95,21 @@ function CardDrawPage() {
       }
     };
 
+    // TTS 재생
+    const playTTS = async () => {
+      try {
+        await requestTTSStream(
+          "운명이 당신을 부르고 있습니다. 카드 세 장을 뽑아주세요.",
+          "nova"
+        );
+      } catch (error) {
+        console.error("CardDraw TTS 재생 실패:", error);
+      }
+    };
+
     submitSession();
-  }, [submitSessionData, setCurrentPage]);
+    playTTS();
+  }, [submitSessionData, setCurrentPage, requestTTSStream]);
 
   useEffect(() => {
     // 접근성을 위한 reduced motion 감지
@@ -125,7 +162,23 @@ function CardDrawPage() {
       {/* <ThemeToggle position="fixed" /> */}
 
       <Character>
-        🔮
+        {selectedReader && getLocalVideoUrl(selectedReader.type) ? (
+          <ReaderVideo
+            videoUrl={getLocalVideoUrl(selectedReader.type)!}
+            readerName={selectedReader.name}
+            readerType={selectedReader.type}
+            autoPlay={true}
+            isPlaying={true}
+            size="large"
+            shape="rectangle"
+            showFallback={true}
+            fallbackImageUrl={selectedReader.imageUrl}
+          />
+        ) : selectedReader ? (
+          <CharacterImage src={selectedReader.imageUrl} alt={selectedReader.name} />
+        ) : (
+          "🔮"
+        )}
       </Character>
 
       <Title>
@@ -481,5 +534,11 @@ const HintText = styled.p`
   font-weight: 500;
 `;
 
+const CharacterImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+`;
 
 export default CardDrawPage;

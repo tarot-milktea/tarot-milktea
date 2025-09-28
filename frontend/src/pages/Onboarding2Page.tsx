@@ -14,6 +14,7 @@ import ProgressBar from "../components/common/ProgressBar/ProgressBar";
 import { useProgressStore } from "../store/progressStore";
 import { useTTS } from "../hooks/useTTS";
 import { getTTSSettings } from "../utils/voiceMapping";
+import ReaderVideo from "../components/common/ReaderVideo/ReaderVideo";
 
 function Onboarding2Page() {
   const navigate = useNavigate();
@@ -154,7 +155,23 @@ function Onboarding2Page() {
                   selectedReader?.type === reader.type && (
                     <TTSIndicator>🔊</TTSIndicator>
                   )}
-                {!imageErrors.has(reader.type) ? (
+
+                {/* 선택된 리더이고 TTS 재생 중일 때만 비디오 표시 */}
+                {selectedReader?.type === reader.type &&
+                 isPlaying &&
+                 reader.videoUrl ? (
+                  <ReaderVideo
+                    videoUrl={reader.videoUrl}
+                    readerName={reader.name}
+                    readerType={reader.type}
+                    autoPlay={true}
+                    isPlaying={isPlaying}
+                    size="medium"
+                    shape="rectangle"
+                    showFallback={true}
+                    fallbackImageUrl={reader.imageUrl}
+                  />
+                ) : !imageErrors.has(reader.type) ? (
                   <CharacterImage
                     src={reader.imageUrl}
                     alt={reader.name}
