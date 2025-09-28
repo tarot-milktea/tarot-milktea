@@ -54,8 +54,14 @@ const QuestionInput = forwardRef<HTMLInputElement, QuestionInputProps>(({
 
     onChange(newValue);
 
-    if (isTouched && showLiveValidation) {
+    // 즉시 validation 실행 (값이 있을 때)
+    if (showLiveValidation && newValue.trim()) {
       performValidation(newValue);
+    } else if (showLiveValidation && !newValue.trim()) {
+      // 빈 값일 때도 validation 상태 업데이트
+      const validationError = validateQuestion(newValue);
+      setError(validationError);
+      onValidationChange?.(false, validationError);
     }
   };
 
