@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useTTSStore, parseAudioChunk } from '../store/ttsStore';
+import { useTTSStore, parseAudioChunk, isTTSEnabled } from '../store/ttsStore';
 import { tarotApiService } from '../services/apiService';
 import { preprocessTextForTTS } from '../utils/voiceMapping';
 
@@ -35,6 +35,12 @@ export const useTTS = (options: UseTTSOptions = {}) => {
 
   // SSE 스트리밍으로 TTS 요청
   const requestTTSStream = useCallback(async (text: string, voice: string = 'nova', instructions?: string) => {
+    // TTS 활성화 상태 확인
+    if (!isTTSEnabled()) {
+      console.log('🚫 TTS is disabled, skipping request');
+      return;
+    }
+
     if (isMuted) {
       console.log('🔇 TTS is muted, skipping request');
       return;

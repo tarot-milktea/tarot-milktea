@@ -20,7 +20,6 @@ import { trackOnboardingEnter, trackCardEvent, trackPerformance } from '../utils
 import ProgressBar from '../components/common/ProgressBar/ProgressBar';
 import { useProgressStore } from '../store/progressStore';
 import ReaderVideo from '../components/common/ReaderVideo/ReaderVideo';
-import { useTTS } from '../hooks/useTTS';
 
 // 리더 타입별 로컬 비디오 매핑
 const getLocalVideoUrl = (readerType: string): string | null => {
@@ -45,17 +44,6 @@ function CardDrawPage() {
     return getScreenType();
   });
 
-  // TTS 훅
-  const {
-    requestTTSStream,
-    stopAudio,
-    isPlaying: ttsIsPlaying,
-    isLoading: ttsLoading,
-  } = useTTS({
-    autoPlay: true,
-    onComplete: () => console.log("CardDraw TTS completed"),
-    onError: (error) => console.error("CardDraw TTS error:", error),
-  });
   
   // 카드 위치 계산을 메모이제이션
   const cardPositions = useMemo(() => calculateAllCardPositions(screenType), [screenType]);
@@ -74,13 +62,14 @@ function CardDrawPage() {
     [isReducedMotion]
   );
 
-  // 컴포넌트 마운트 시 세션 데이터 제출 및 TTS 재생
+  // 컴포넌트 마운트 시 진행률 상태 업데이트
   useEffect(() => {
-    // 진행률 상태 업데이트
     setCurrentPage('card-draw');
-    // GA: 카드 뽑기 페이지 진입 추적
     trackOnboardingEnter(6, 'card_selection');
+  }, []); // 빈 의존성 배열로 한 번만 실행
 
+  // 세션 데이터 제출
+  useEffect(() => {
     const submitSession = async () => {
       const startTime = performance.now();
       try {
@@ -95,21 +84,8 @@ function CardDrawPage() {
       }
     };
 
-    // TTS 재생
-    const playTTS = async () => {
-      try {
-        await requestTTSStream(
-          "운명이 당신을 부르고 있습니다. 카드 세 장을 뽑아주세요.",
-          "nova"
-        );
-      } catch (error) {
-        console.error("CardDraw TTS 재생 실패:", error);
-      }
-    };
-
     submitSession();
-    playTTS();
-  }, [submitSessionData, setCurrentPage, requestTTSStream]);
+  }, [submitSessionData]);
 
   useEffect(() => {
     // 접근성을 위한 reduced motion 감지

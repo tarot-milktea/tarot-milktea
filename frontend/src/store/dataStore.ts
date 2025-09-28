@@ -20,6 +20,7 @@ interface Reader {
   name: string;
   description: string;
   imageUrl: string;
+  videoUrl: string;
 }
 
 interface DataState {
