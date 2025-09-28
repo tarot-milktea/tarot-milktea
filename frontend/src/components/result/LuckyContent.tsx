@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import styled from '@emotion/styled';
 import TypingText from '../common/TypingText/TypingText';
 import FlippableLuckyCard from './FlippableLuckyCard';
@@ -15,13 +16,19 @@ function LuckyContent({
   luckyCard,
   title = '🍀 행운 카드'
 }: LuckyContentProps) {
+  const [isCardFlipped, setIsCardFlipped] = useState(false);
+
+  const handleCardFlip = (isFlipped: boolean) => {
+    setIsCardFlipped(isFlipped);
+  };
+
   return (
     <ContentContainer>
       <SectionTitle>{title}</SectionTitle>
       <CardContainer>
-        <FlippableLuckyCard luckyCard={luckyCard} />
+        <FlippableLuckyCard luckyCard={luckyCard} onFlip={handleCardFlip} />
       </CardContainer>
-      {luckyCard && (
+      {luckyCard && isCardFlipped && (
         <CardInfo>
           <CardName>{luckyCard.name}</CardName>
           <CardMessage>
@@ -96,6 +103,7 @@ const CardMessage = styled.p`
   color: var(--color-primary-200);
   margin: 0;
   white-space: pre-wrap;
+  text-align: left;
 
   @media (max-width: 768px) {
     font-size: 1.1rem;
