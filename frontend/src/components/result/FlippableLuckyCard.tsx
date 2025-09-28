@@ -7,14 +7,16 @@ interface FlippableLuckyCardProps {
     message: string;
     imageUrl: string;
   };
+  onFlip?: (isFlipped: boolean) => void;
 }
 
-function FlippableLuckyCard({ luckyCard }: FlippableLuckyCardProps) {
+function FlippableLuckyCard({ luckyCard, onFlip }: FlippableLuckyCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
 
   const handleClick = () => {
-    if (luckyCard) {
+    if (luckyCard && !isFlipped) {
       setIsFlipped(true);
+      onFlip?.(true);
     }
   };
 

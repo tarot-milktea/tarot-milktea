@@ -20,11 +20,18 @@ const Container = styled.div`
   border-radius: 12px;
   padding: 24px;
   min-height: calc(100vh - 120px); /* ProgressBar, ResultHeader 공간 확보 */
+  width: 100%;
   max-width: 600px;
   margin: 20px auto;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  box-sizing: border-box;
+
+  /* 내부 요소들이 전체 너비를 사용하도록 강제 */
+  > * {
+    width: 100%;
+  }
 
   @media (max-width: 768px) {
     padding: 20px;

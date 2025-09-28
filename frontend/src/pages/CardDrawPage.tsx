@@ -34,7 +34,7 @@ const getLocalVideoUrl = (readerType: string): string | null => {
 function CardDrawPage() {
   const navigate = useNavigate();
   const { selectedCards, isRevealing, startReveal, revealCard } = useCardStore();
-  const { predefinedCards, submitSessionData, selectedReader } = useSessionStore();
+  const { predefinedCards, submitSessionData, selectedReader, restoreFromStorage } = useSessionStore();
   const { setCurrentPage, getCurrentStep, getTotalSteps } = useProgressStore();
   const [scale, setScale] = useState(1);
   const [isReducedMotion, setIsReducedMotion] = useState(false);
@@ -64,9 +64,10 @@ function CardDrawPage() {
 
   // 컴포넌트 마운트 시 진행률 상태 업데이트
   useEffect(() => {
+    restoreFromStorage();
     setCurrentPage('card-draw');
     trackOnboardingEnter(6, 'card_selection');
-  }, []); // 빈 의존성 배열로 한 번만 실행
+  }, [restoreFromStorage]); // restoreFromStorage 의존성 추가
 
   // 세션 데이터 제출
   useEffect(() => {

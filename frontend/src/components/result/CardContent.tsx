@@ -138,6 +138,8 @@ const CardInterpretation = styled.div`
   font-size: 1.1rem;
   max-width: 600px;
   white-space: pre-wrap;
+  text-align: left;
+  width: 100%;
 
   @media (max-width: 768px) {
     font-size: 1rem;

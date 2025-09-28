@@ -17,8 +17,8 @@ import { useTTS } from '../hooks/useTTS';
 function Onboarding3Page() {
   const navigate = useNavigate();
   const { styles: globalStyles, getColor } = useColors();
-  const { categories, isLoading, error } = useDataStore();
-  const { selectedCategory, setSelectedCategory, selectedReader } = useSessionStore();
+  const { categories, isLoading, error, initializeData } = useDataStore();
+  const { selectedCategory, setSelectedCategory, selectedReader, restoreFromStorage } = useSessionStore();
   const { setCurrentPage, getCurrentStep, getTotalSteps } = useProgressStore();
 
   // Analytics 훅
@@ -32,8 +32,10 @@ function Onboarding3Page() {
   });
 
   useEffect(() => {
+    restoreFromStorage();
+    initializeData();
     setCurrentPage('onboarding-3');
-  }, [setCurrentPage]);
+  }, [restoreFromStorage, initializeData, setCurrentPage]);
 
   // 타입별 TTS 설정 함수
   const getTTSSettings = (category: Category) => {
