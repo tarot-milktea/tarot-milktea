@@ -214,4 +214,105 @@ public class ReaderPersonaService {
                 return "이어지는 이야기는?";
         }
     }
+
+    /**
+     * Get symbolic interpretation prompt for deeper card meaning analysis
+     */
+    public String getSymbolicInterpretationPrompt(String readerType, String timeFrame, String cardName, String orientation) {
+        StringBuilder prompt = new StringBuilder();
+
+        // Base symbolic interpretation guide
+        String basePrompt = getBaseSymbolicPrompt(timeFrame);
+        prompt.append(basePrompt);
+
+        // Add reader-specific symbolic approach
+        String readerSpecificPrompt = getReaderSpecificSymbolicPrompt(readerType, timeFrame);
+        prompt.append(" ").append(readerSpecificPrompt);
+
+        return prompt.toString();
+    }
+
+    private String getBaseSymbolicPrompt(String timeFrame) {
+        switch (timeFrame) {
+            case ValidationConstants.TIMEFRAME_PAST:
+                return "이 카드가 과거 위치에 나타난 상징적 의미를 깊이 탐구하세요. " +
+                       "카드의 고유한 상징들이 어떤 과거의 경험, 교훈, 또는 뿌리를 나타내는지, " +
+                       "그 상징적 에너지가 현재까지 어떤 영향을 미치고 있는지 해석해주세요.";
+            case ValidationConstants.TIMEFRAME_PRESENT:
+                return "현재 이 카드의 상징이 질문자의 삶에서 어떻게 발현되고 있는지 탐구하세요. " +
+                       "카드의 핵심 아케타입과 상징적 에너지가 지금 이 순간 어떤 메시지를 전하고 있으며, " +
+                       "현재 상황의 본질을 어떻게 드러내고 있는지 해석해주세요.";
+            case ValidationConstants.TIMEFRAME_FUTURE:
+                return "이 카드의 상징이 미래에 가져올 변화와 가능성을 탐구하세요. " +
+                       "카드가 담고 있는 원형적 에너지가 앞으로 어떤 방향으로 전개될지, " +
+                       "그 상징적 의미가 질문자에게 어떤 성장과 변화를 예고하는지 해석해주세요.";
+            default:
+                return "이 카드의 상징적 의미를 깊이 있게 탐구하여 해석해주세요.";
+        }
+    }
+
+    private String getReaderSpecificSymbolicPrompt(String readerType, String timeFrame) {
+        if (!referenceDataService.isValidReaderType(readerType)) {
+            return "카드의 상징을 통해 깊이 있는 통찰을 전달해주세요.";
+        }
+
+        switch (readerType.toUpperCase()) {
+            case "F": // Feeling/감성형
+                return getFeelingSymbolicPrompt(timeFrame);
+            case "T": // Thinking/논리형
+                return getThinkingSymbolicPrompt(timeFrame);
+            case "FT": // Balanced/균형형
+                return getBalancedSymbolicPrompt(timeFrame);
+            default:
+                return "카드의 상징을 통해 깊이 있는 통찰을 전달해주세요.";
+        }
+    }
+
+    private String getFeelingSymbolicPrompt(String timeFrame) {
+        switch (timeFrame) {
+            case ValidationConstants.TIMEFRAME_PAST:
+                return "특히 감정적 기억과 내면의 상처 또는 치유의 흔적에 주목하여, " +
+                       "마음을 어루만지는 따뜻한 어조로 해석해주세요.";
+            case ValidationConstants.TIMEFRAME_PRESENT:
+                return "현재 마음 상태와 감정의 흐름에 집중하여, " +
+                       "공감과 위로가 담긴 친근한 구어체로 해석해주세요.";
+            case ValidationConstants.TIMEFRAME_FUTURE:
+                return "희망과 감정적 성장의 가능성에 초점을 맞춰, " +
+                       "격려와 응원이 담긴 따뜻한 메시지로 해석해주세요.";
+            default:
+                return "감정적 상징과 내면의 변화에 주목하여 따뜻하게 해석해주세요.";
+        }
+    }
+
+    private String getThinkingSymbolicPrompt(String timeFrame) {
+        switch (timeFrame) {
+            case ValidationConstants.TIMEFRAME_PAST:
+                return "과거의 선택과 결정이 만들어낸 현실적 결과와 패턴에 집중하여, " +
+                       "명확하고 논리적인 분석으로 해석해주세요.";
+            case ValidationConstants.TIMEFRAME_PRESENT:
+                return "현재 상황의 객관적 조건과 실용적 해결책에 초점을 맞춰, " +
+                       "구체적이고 실행 가능한 조언으로 해석해주세요.";
+            case ValidationConstants.TIMEFRAME_FUTURE:
+                return "예상 가능한 결과와 전략적 방향성에 집중하여, " +
+                       "현실적이고 건설적인 조언으로 해석해주세요.";
+            default:
+                return "실용적 상징과 현실적 적용에 주목하여 명확하게 해석해주세요.";
+        }
+    }
+
+    private String getBalancedSymbolicPrompt(String timeFrame) {
+        switch (timeFrame) {
+            case ValidationConstants.TIMEFRAME_PAST:
+                return "감정적 경험과 현실적 교훈을 모두 아우르며, " +
+                       "내면의 성장과 외적 변화를 균형있게 해석해주세요.";
+            case ValidationConstants.TIMEFRAME_PRESENT:
+                return "마음의 소리와 현실의 요구사항을 조화롭게 고려하여, " +
+                       "지혜로운 관점에서 균형잡힌 해석을 해주세요.";
+            case ValidationConstants.TIMEFRAME_FUTURE:
+                return "정서적 만족과 현실적 성취를 모두 고려하여, " +
+                       "조화로운 발전 방향을 제시하는 해석을 해주세요.";
+            default:
+                return "감정과 현실의 균형을 고려하여 지혜롭게 해석해주세요.";
+        }
+    }
 }
