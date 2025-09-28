@@ -111,11 +111,11 @@ public class MockDataService {
             "총평: " + questionText + "에 대한 기본 답변입니다."
         );
 
-        // 행운 카드 구성
+        // 럭키 음료카드 구성
         TaroResultResponse.LuckyCardDto luckyCard = new TaroResultResponse.LuckyCardDto(
-            "행운의 별",
-            "당신의 마음속 작은 용기가 큰 변화를 만들어낼 거예요.", // AI 재해석된 메시지
-            "https://example.com/lucky-cards/star.jpg"
+            "요거트 밀크티",
+            "이 부드러운 요거트 밀크티가 당신의 새로운 인연을 달콤하게 만들어줄 거예요.", // 카페 바리스타 컨셉 메시지
+            "https://example.com/drinks/yogurt-milk-tea.jpg"
         );
 
         return new TaroResultResponse(

@@ -253,15 +253,15 @@ public class PromptService {
     }
 
     /**
-     * 행운카드 재해석을 위한 프롬프트 생성
+     * 럭키 음료카드 메시지 생성을 위한 프롬프트 (카페 바리스타 컨셉)
      */
-    public String createLuckyCardPrompt(String summary, String originalLuckyMessage,
+    public String createLuckyCardPrompt(String summary, String drinkName, String originalLuckyMessage,
                                        SubmitRequest request) {
         StringBuilder prompt = new StringBuilder();
 
-        // 시스템 지시사항
-        prompt.append("당신은 전문 타로 리더입니다. ")
-              .append(getReaderStyle(request.getReaderType()))
+        // 시스템 지시사항 - 카페 바리스타 컨셉
+        prompt.append("당신은 신비로운 타로 카페의 바리스타입니다. ")
+              .append("상담자의 타로 해석 결과를 바탕으로 특별한 음료를 건네주며 한 줄 메시지를 전해주세요.")
               .append("\n\n");
 
         // 상담 정보
@@ -270,38 +270,46 @@ public class PromptService {
         prompt.append("- 주제: ").append(getTopicName(request.getTopicCode())).append("\n");
         prompt.append("- 질문: \"").append(request.getQuestionText()).append("\"\n\n");
 
-        // 종합 해석 (총평)
-        prompt.append("종합 타로 해석:\n");
+        // 종합 타로 해석 결과
+        prompt.append("타로 해석 결과:\n");
         prompt.append(summary).append("\n\n");
 
-        // 기존 행운카드 메시지
-        prompt.append("선택된 행운카드의 기본 메시지:\n");
-        prompt.append("\"").append(originalLuckyMessage).append("\"\n\n");
+        // 선택된 럭키 음료카드 정보
+        prompt.append("선택된 럭키 음료: ").append(drinkName).append("\n\n");
 
-        // 리더 타입별 재해석 요청
+        // 리더 타입별 바리스타 스타일
         String readerType = request.getReaderType();
         switch (readerType) {
             case "F":
-                prompt.append("위 종합 해석과 행운카드의 메시지를 마음 깊이 와닿는 따뜻한 한 문장으로 재해석해주세요. ")
-                      .append("'~해요', '~거예요' 같은 부드러운 말투로 상담자의 마음을 어루만져주세요.");
+                prompt.append("따뜻하고 다정한 바리스타로서 이 음료를 건네주며 ")
+                      .append("타로 해석 결과와 연결된 따뜻한 한 줄을 말해주세요. ")
+                      .append("'이 [음료이름]이/가 당신의 [타로결과 연동 메시지] 도와줄 거예요.' 형식으로 ")
+                      .append("'~거예요', '~해요' 같은 부드러운 말투를 사용하세요.");
                 break;
             case "T":
-                prompt.append("위 종합 해석과 행운카드의 메시지를 실용적이고 명확한 한 문장으로 재해석해주세요. ")
-                      .append("'~입니다', '~하세요' 같은 현실적인 말투로 구체적인 행동 지침을 담아주세요.");
+                prompt.append("전문적이고 정확한 바리스타로서 이 음료를 건네주며 ")
+                      .append("타로 해석 결과와 연결된 명확한 한 줄을 말해주세요. ")
+                      .append("'이 [음료이름]이/가 당신의 [타로결과 연동 메시지] 도와줄 겁니다.' 형식으로 ")
+                      .append("'~겁니다', '~할 수 있습니다' 같은 정확한 말투를 사용하세요.");
                 break;
             case "FT":
-                prompt.append("위 종합 해석과 행운카드의 메시지를 지혜롭고 균형잡힌 한 문장으로 재해석해주세요. ")
-                      .append("'~죠', '~인 것 같아요' 같은 편안한 말투로 감정과 현실을 조화롭게 담아주세요.");
+                prompt.append("지혜롭고 친근한 바리스타로서 이 음료를 건네주며 ")
+                      .append("타로 해석 결과와 연결된 균형잡힌 한 줄을 말해주세요. ")
+                      .append("'이 [음료이름]이/가 당신의 [타로결과 연동 메시지] 도와줄 것 같아요.' 형식으로 ")
+                      .append("'~것 같아요', '~죠' 같은 편안한 말투를 사용하세요.");
                 break;
             default:
-                prompt.append("위 종합 해석과 행운카드의 메시지를 개인화된 한 문장으로 재해석해주세요. ")
-                      .append("친근한 구어체로 상담자에게 딱 맞는 메시지를 전달해주세요.");
+                prompt.append("친근한 바리스타로서 이 음료를 건네주며 ")
+                      .append("타로 해석 결과와 연결된 개인화된 한 줄을 말해주세요. ")
+                      .append("'이 [음료이름]이/가 당신의 [타로결과 연동 메시지] 도와줄 거예요.' 형식으로 ")
+                      .append("따뜻하고 친근한 구어체를 사용하세요.");
         }
 
         prompt.append("\n\n반드시 한 문장으로만 답변해주세요.");
 
         return prompt.toString();
     }
+
 
     // 헬퍼 메서드: 포지션 이름 변환
     private String getPositionName(int position) {
