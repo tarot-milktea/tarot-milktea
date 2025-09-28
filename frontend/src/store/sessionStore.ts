@@ -21,6 +21,7 @@ export interface Reader {
   name: string;
   description: string;
   imageUrl: string;
+  videoUrl: string;
 }
 
 export interface PredefinedCard {

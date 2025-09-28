@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useTTSStore, parseAudioChunk } from '../store/ttsStore';
 import { tarotApiService } from '../services/apiService';
+import { preprocessTextForTTS } from '../utils/voiceMapping';
 
 export interface UseTTSOptions {
   onComplete?: () => void;
@@ -52,7 +53,7 @@ export const useTTS = (options: UseTTSOptions = {}) => {
     }
 
     // 첫 번째 청크 잘림 방지를 위해 앞에 더미 글자 추가
-    const processedText = '음 ' + text.trim();
+    const processedText = '음 ' + preprocessTextForTTS(text.trim());
 
     // 기존 작업이 있으면 중단
     stopAudio();
