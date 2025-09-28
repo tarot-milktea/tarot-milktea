@@ -5,6 +5,7 @@ import { trackError } from '../utils/analytics';
 export interface ResultData {
   nickname?: string;
   questionText?: string;
+  readerType?: string; // 리더 타입 (T, F, FT 등)
   interpretations?: {
     past?: string;
     present?: string;
