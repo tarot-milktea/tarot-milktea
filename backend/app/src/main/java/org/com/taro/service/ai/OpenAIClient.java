@@ -215,9 +215,7 @@ public class OpenAIClient {
             "messages", List.of(
                 Map.of("role", "system", "content", systemMessage),
                 Map.of("role", "user", "content", userMessage)
-            ),
-            "max_tokens", openAIConfig.getMaxTokens(),
-            "temperature", openAIConfig.getTemperature()
+            )
         );
     }
 
@@ -293,9 +291,7 @@ public class OpenAIClient {
 
         return Map.of(
             "model", openAIConfig.getModel(),
-            "messages", apiMessages,
-            "max_tokens", openAIConfig.getMaxTokens(),
-            "temperature", openAIConfig.getTemperature()
+            "messages", apiMessages
         );
     }
 
