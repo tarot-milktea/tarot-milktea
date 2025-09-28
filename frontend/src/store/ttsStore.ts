@@ -176,6 +176,21 @@ const saveMutedState = (isMuted: boolean): void => {
   }
 };
 
+// localStorage에서 TTS 활성화 설정 로드
+const loadTTSEnabledState = (): boolean => {
+  try {
+    const saved = localStorage.getItem('ttsEnable');
+    return saved ? JSON.parse(saved) : false; // 기본값: false (비활성화)
+  } catch {
+    return false;
+  }
+};
+
+// TTS 활성화 상태 확인 함수
+export const isTTSEnabled = (): boolean => {
+  return loadTTSEnabledState();
+};
+
 const initialState: TTSState = {
   status: 'idle',
   error: null,
