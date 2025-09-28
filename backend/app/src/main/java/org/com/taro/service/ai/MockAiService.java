@@ -71,6 +71,30 @@ public class MockAiService {
     }
 
     /**
+     * Mock implementation of lucky card message reinterpretation
+     */
+    public String generateLuckyCardMessage(String prompt) {
+        logger.info("🎭 Mock AI - Generating lucky card message reinterpretation");
+
+        // Simulate API call delay (1-2 seconds)
+        simulateApiDelay(1000, 2000);
+
+        String[] luckyMessages = {
+                "당신의 마음속 작은 용기가 큰 변화를 만들어낼 거예요.",
+                "지금 이 순간이야말로 새로운 시작을 위한 완벽한 타이밍입니다.",
+                "따뜻한 마음과 현명한 판단이 행운을 불러올 것입니다.",
+                "오늘의 작은 선택이 내일의 큰 기쁨으로 이어질 거예요.",
+                "당신 안의 빛이 주변을 환하게 비추며 좋은 에너지를 끌어올 것입니다.",
+                "진정한 마음으로 다가가면 원하는 것을 얻을 수 있어요.",
+                "지금 걷고 있는 길이 행복으로 가는 올바른 방향입니다.",
+                "당신의 긍정적인 에너지가 모든 것을 좋은 방향으로 이끌어갈 거예요."
+        };
+
+        Random random = new Random();
+        return luckyMessages[random.nextInt(luckyMessages.length)];
+    }
+
+    /**
      * Simulate API call delay with random duration
      */
     private void simulateApiDelay(int minMs, int maxMs) {

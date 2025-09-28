@@ -300,6 +300,48 @@ public class OpenAIClient {
     }
 
     /**
+     * Generate lucky card message reinterpretation
+     */
+    @Retryable(
+        value = {Exception.class},
+        maxAttempts = 3,
+        backoff = @Backoff(delay = 1000, multiplier = 2)
+    )
+    public String generateLuckyCardMessage(String prompt) {
+        try {
+            logger.debug("행운카드 메시지 재해석 시작");
+
+            String response = webClient
+                .post()
+                .uri("/chat/completions")
+                .bodyValue(buildCardRequestBody(prompt))
+                .retrieve()
+                .bodyToMono(String.class)
+                .timeout(Duration.ofSeconds(openAIConfig.getTimeoutSeconds()))
+                .block();
+
+            if (response == null || response.trim().isEmpty()) {
+                throw new RuntimeException("OpenAI API 응답이 비어있습니다");
+            }
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode jsonNode = mapper.readTree(response);
+
+            if (!jsonNode.has("choices") || jsonNode.get("choices").size() == 0) {
+                throw new RuntimeException("OpenAI API 응답 형식이 올바르지 않습니다");
+            }
+
+            String content = jsonNode.get("choices").get(0).get("message").get("content").asText();
+            logger.debug("행운카드 메시지 재해석 성공 - 길이: {}", content.length());
+            return content;
+
+        } catch (Exception e) {
+            logger.error("행운카드 메시지 재해석 실패", e);
+            throw new RuntimeException("행운카드 메시지 재해석 실패: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Deprecated - This was for the old all-at-once processing approach
      */
 }

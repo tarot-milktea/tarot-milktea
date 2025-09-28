@@ -293,7 +293,8 @@ public class TaroServiceImpl implements TaroService {
             luckyCard = referenceDataService.findLuckyCardById(taroReading.getLuckyCardId())
                 .map(card -> new TaroResultResponse.LuckyCardDto(
                     card.getName(),
-                    card.getMessage(),
+                    taroReading.getResultImageText() != null ?
+                        taroReading.getResultImageText() : card.getMessage(), // AI 재해석된 메시지가 있으면 사용, 없으면 기본 메시지
                     card.getImageUrl()
                 ))
                 .orElse(null);
