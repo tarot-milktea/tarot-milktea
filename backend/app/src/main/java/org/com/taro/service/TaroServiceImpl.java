@@ -322,6 +322,7 @@ public class TaroServiceImpl implements TaroService {
             sessionId,
             session.getNickname(),
             taroReading.getQuestionText(),
+            taroReading.getReaderType(),
             status,
             interpretations,
             responseCards,

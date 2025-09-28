@@ -122,6 +122,7 @@ public class MockDataService {
             sessionId,
             "테스트 닉네임",
             "테스트 질문입니다",
+            "F",
             "COMPLETED",
             interpretations,
             cards,
