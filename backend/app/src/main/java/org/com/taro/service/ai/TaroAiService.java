@@ -352,26 +352,33 @@ public class TaroAiService {
      */
     private String generateLuckyCardMessage(String summary, Integer luckyCardId, SubmitRequest request) {
         try {
-            // 기존 행운카드 메시지 조회
-            String originalLuckyMessage = referenceDataService.findLuckyCardById(luckyCardId)
-                    .map(luckyCard -> luckyCard.getMessage())
-                    .orElse("당신의 앞날에 행운이 가득하기를 바랍니다.");
-
-            // 행운카드 재해석 프롬프트 생성
-            String prompt = promptService.createLuckyCardPrompt(summary, originalLuckyMessage, request);
-
-            if (mockEnabled) {
-                logger.info("🎭 Mock 모드: 행운카드 메시지 재해석 중...");
-                return mockAiService.generateLuckyCardMessage(prompt);
-            } else {
-                return openAIClient.generateLuckyCardMessage(prompt);
-            }
-        } catch (Exception e) {
-            logger.error("행운카드 메시지 재해석 실패: {}", e.getMessage(), e);
-            // 기본 행운카드 메시지 반환
+            // 행운카드 정보 조회
             return referenceDataService.findLuckyCardById(luckyCardId)
-                    .map(luckyCard -> luckyCard.getMessage())
+                    .map(luckyCard -> {
+                        try {
+                            // 행운카드 재해석 프롬프트 생성
+                            String prompt = promptService.createLuckyCardPrompt(
+                                    summary,
+                                    luckyCard.getName(),  // 음료 이름
+                                    luckyCard.getMessage(),  // 기존 메시지
+                                    request
+                            );
+
+                            if (mockEnabled) {
+                                logger.info("🎭 Mock 모드: 행운카드 메시지 재해석 중...");
+                                return mockAiService.generateLuckyCardMessage(prompt);
+                            } else {
+                                return openAIClient.generateLuckyCardMessage(prompt);
+                            }
+                        } catch (Exception e) {
+                            logger.error("행운카드 메시지 재해석 실패: {}", e.getMessage(), e);
+                            return luckyCard.getMessage(); // fallback
+                        }
+                    })
                     .orElse("오늘 하루도 행복하고 좋은 일만 가득하세요!");
+        } catch (Exception e) {
+            logger.error("행운카드 조회 실패: {}", e.getMessage(), e);
+            return "오늘 하루도 행복하고 좋은 일만 가득하세요!";
         }
     }
 
