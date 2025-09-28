@@ -20,6 +20,7 @@ function Onboarding5Page() {
   const { selectedTopic, selectedQuestion, setSelectedQuestion, createSession, selectedReader } = useSessionStore();
   const { setCurrentPage, getCurrentStep, getTotalSteps } = useProgressStore();
   const [customQuestion, setCustomQuestion] = useState('');
+  const [isQuestionValid, setIsQuestionValid] = useState(false);
 
   // Analytics 훅
   const { trackComplete, trackSelection } = useOnboardingTracking(5, 'question_input');
@@ -93,6 +94,11 @@ function Onboarding5Page() {
       }
     }
   };
+
+  // validation 상태 변경 핸들러
+  const handleValidationChange = useCallback((isValid: boolean) => {
+    setIsQuestionValid(isValid);
+  }, []);
 
   // 커스텀 질문 TTS debounced 함수
   const debouncedTTS = useCallback((text: string) => {
@@ -207,6 +213,7 @@ function Onboarding5Page() {
           inputSize="medium"
           value={customQuestion}
           onChange={handleCustomQuestionChange}
+          onValidationChange={handleValidationChange}
           showLiveValidation={true}
         />
       </CustomInput>
@@ -223,7 +230,7 @@ function Onboarding5Page() {
           variant="primary"
           size="large"
           onClick={handleNext}
-          disabled={!selectedQuestion.trim()}
+          disabled={!selectedQuestion.trim() || (customQuestion.length > 0 && !isQuestionValid)}
         >
           다음
         </Button>

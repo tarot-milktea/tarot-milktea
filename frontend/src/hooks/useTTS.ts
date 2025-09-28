@@ -51,6 +51,9 @@ export const useTTS = (options: UseTTSOptions = {}) => {
       return;
     }
 
+    // 첫 번째 청크 잘림 방지를 위해 앞에 더미 글자 추가
+    const processedText = '음 ' + text.trim();
+
     // 기존 작업이 있으면 중단
     stopAudio();
 
@@ -83,7 +86,7 @@ export const useTTS = (options: UseTTSOptions = {}) => {
     setHasAudioData(false);
 
     try {
-      const response = await tarotApiService.requestTTSStream(text, voice, instructions);
+      const response = await tarotApiService.requestTTSStream(processedText, voice, instructions);
 
       if (!response.body) {
         throw new Error('Response body가 없습니다');
