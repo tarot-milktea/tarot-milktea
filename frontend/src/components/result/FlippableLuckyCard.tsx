@@ -59,20 +59,14 @@ const CardContainer = styled.div<{ isClickable: boolean }>`
   width: 240px;
   height: 320px;
   cursor: ${props => props.isClickable ? 'pointer' : 'default'};
-  transition: transform 0.3s ease;
-
-  ${props => props.isClickable && `
-    &:hover {
-      transform: translateY(-5px);
-    }
-  `}
+  transition: none;
 `;
 
 const CardInner = styled.div<{ isFlipped: boolean }>`
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
-  transition: transform 0.8s ease;
+  transition: none;
   position: relative;
 
   ${props => props.isFlipped && `
@@ -114,13 +108,8 @@ const CardFront = styled.div`
   height: 100%;
   backface-visibility: hidden;
   transform: rotateY(180deg);
-  border-radius: 16px;
-  background: linear-gradient(
-    135deg,
-    var(--color-background) 0%,
-    var(--color-primary-900) 100%
-  );
-  border: 3px solid var(--color-accent-300);
+  border: none;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -235,7 +224,6 @@ const CardImage = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 16px;
 `;
 
 
