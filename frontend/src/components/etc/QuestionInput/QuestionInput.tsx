@@ -2,10 +2,10 @@ import React, { useState, useEffect, useCallback, forwardRef } from 'react';
 import styled from '@emotion/styled';
 import { useColors } from '../../../hooks/useColors';
 import Input from '../../common/Input/Input';
-import { validateNickname } from '../../../utils/nicknameGenerator';
+import { validateQuestion } from '../../../utils/questionValidator';
 import { showToast } from '../../common/Toast';
 
-interface NicknameInputProps {
+interface QuestionInputProps {
   value: string;
   onChange: (value: string) => void;
   onValidationChange?: (isValid: boolean, error?: string) => void;
@@ -17,7 +17,7 @@ interface NicknameInputProps {
   showLiveValidation?: boolean;
 }
 
-const NicknameInput = forwardRef<HTMLInputElement, NicknameInputProps>(({
+const QuestionInput = forwardRef<HTMLInputElement, QuestionInputProps>(({
   value,
   onChange,
   onValidationChange,
@@ -34,8 +34,8 @@ const NicknameInput = forwardRef<HTMLInputElement, NicknameInputProps>(({
   const [isTouched, setIsTouched] = useState<boolean>(false);
 
   // 유효성 검사 실행
-  const performValidation = useCallback((nickname: string) => {
-    const validationError = validateNickname(nickname);
+  const performValidation = useCallback((question: string) => {
+    const validationError = validateQuestion(question);
     setError(validationError);
 
     const isValid = !validationError;
@@ -47,8 +47,8 @@ const NicknameInput = forwardRef<HTMLInputElement, NicknameInputProps>(({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
 
-    // 203자 초과 방지 (UI에서 입력 자체를 막음)
-    if (newValue.length > 203) {
+    // 200자 초과 방지 (UI에서 입력 자체를 막음)
+    if (newValue.length > 200) {
       return;
     }
 
@@ -81,7 +81,7 @@ const NicknameInput = forwardRef<HTMLInputElement, NicknameInputProps>(({
   const hasError = isTouched && showLiveValidation && error;
 
   return (
-    <NicknameInputContainer className={className}>
+    <QuestionInputContainer className={className}>
       <Input
         ref={ref}
         as="textarea"
@@ -121,13 +121,13 @@ const NicknameInput = forwardRef<HTMLInputElement, NicknameInputProps>(({
           <MaxCount>/200</MaxCount>
         </CharCount>
       </InputMeta>
-    </NicknameInputContainer>
+    </QuestionInputContainer>
   );
 });
 
-NicknameInput.displayName = 'NicknameInput';
+QuestionInput.displayName = 'QuestionInput';
 
-const NicknameInputContainer = styled.div`
+const QuestionInputContainer = styled.div`
   position: relative;
   width: 100%;
 `;
@@ -182,4 +182,4 @@ const ErrorIcon = styled.span`
   font-size: 0.875rem;
 `;
 
-export default NicknameInput;
+export default QuestionInput;
