@@ -246,8 +246,17 @@ public class TaroAiService {
                     : cardEntity.getMeaningReversed();
             prompt.append("- 기본 의미: ").append(meaning).append("\n\n");
 
+            // 상징적 해석 가이드 추가
+            String symbolicPrompt = readerPersonaService.getSymbolicInterpretationPrompt(
+                    request.getReaderType(), timeFrame, cardEntity.getNameKo(), orientation);
+            prompt.append("상징적 해석 가이드:\n").append(symbolicPrompt).append("\n\n");
+
         } catch (Exception e) {
             prompt.append("카드 정보: ").append(timeFrame).append(" 카드\n\n");
+            // 카드 정보를 가져올 수 없는 경우 기본 상징적 프롬프트 추가
+            String fallbackSymbolicPrompt = readerPersonaService.getSymbolicInterpretationPrompt(
+                    request.getReaderType(), timeFrame, "알 수 없는 카드", "정방향");
+            prompt.append("상징적 해석 가이드:\n").append(fallbackSymbolicPrompt).append("\n\n");
         }
 
         // 리더 타입별 특화 프롬프트 추가
@@ -255,8 +264,9 @@ public class TaroAiService {
                 timeFrame, hasPreviousContext);
         prompt.append(readerSpecificPrompt);
 
-        // 구어체 및 3줄 제한 추가 강조
-        prompt.append("\n\n반드시 '요', '네요', '죠' 등의 구어체로 3줄을 넘지 말고 답변해주세요.");
+        // 구어체 및 3줄 제한 추가 강조 - 상징적 해석을 반영하도록 수정
+        prompt.append("\n\n위 상징적 관점을 바탕으로, 표면적 의미를 넘어서는 깊이 있는 통찰을 ");
+        prompt.append("'요', '네요', '죠' 등의 친근한 구어체로 3줄 이내로 전달해주세요.");
 
         return prompt.toString();
     }
