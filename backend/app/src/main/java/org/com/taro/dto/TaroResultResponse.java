@@ -106,7 +106,7 @@ public class TaroResultResponse {
         @Schema(description = "카드 이름")
         private String name;
 
-        @Schema(description = "카드 메시지")
+        @Schema(description = "AI 재해석된 개인 맞춤 메시지")
         private String message;
 
         @Schema(description = "카드 이미지 URL")

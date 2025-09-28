@@ -131,16 +131,12 @@ public class TaroAiService {
             Integer fortuneScore = calculateFortuneScore(summary);
             taroReading.setFortuneScore(fortuneScore);
 
+            // 6. 행운카드 메시지 재해석
             updateProcessingStatus(sessionId, TaroSession.ProcessingStatus.SUMMARY_COMPLETED);
             sseManager.sendSummaryEvent(sessionId, summary);
 
-            // 6. 이미지 생성
-            updateProcessingStatus(sessionId, TaroSession.ProcessingStatus.IMAGE_PROCESSING);
-            sseManager.sendStatusEvent(sessionId, StatusConstants.STATUS_IMAGE_PROCESSING, "조언 이미지를 생성하고 있습니다...", 90);
-
-            ImageGenerationResult imageResult = generateAdviceImage(summary, request, sessionId);
-            taroReading.setResultImageUrl(imageResult.getImageUrl());
-            taroReading.setResultImageText(imageResult.getTextDescription());
+            String customLuckyMessage = generateLuckyCardMessage(summary, taroReading.getLuckyCardId(), request);
+            taroReading.setResultImageText(customLuckyMessage); // 행운카드 재해석 메시지를 resultImageText에 저장
             taroReadingRepository.save(taroReading);
 
             // 7. 완료 처리
@@ -148,7 +144,6 @@ public class TaroAiService {
             session.setStatus(TaroSession.SessionStatus.COMPLETED);
             taroSessionRepository.save(session);
 
-            sseManager.sendImageEvent(sessionId, imageResult.getImageUrl());
             sseManager.sendCompletedEvent(sessionId);
 
             logger.info("순차적 AI 처리 완료 - 세션: {}", sessionId);
@@ -349,6 +344,34 @@ public class TaroAiService {
         } catch (Exception e) {
             logger.error("총평 생성 실패: {}", e.getMessage(), e);
             return "세 카드가 합쳐져 당신의 앞날에 대한 희망과 안내의 메시지를 전합니다. 그들이 주는 지혜를 신뢰하세요.";
+        }
+    }
+
+    /**
+     * 행운카드 메시지 AI 재해석
+     */
+    private String generateLuckyCardMessage(String summary, Integer luckyCardId, SubmitRequest request) {
+        try {
+            // 기존 행운카드 메시지 조회
+            String originalLuckyMessage = referenceDataService.findLuckyCardById(luckyCardId)
+                    .map(luckyCard -> luckyCard.getMessage())
+                    .orElse("당신의 앞날에 행운이 가득하기를 바랍니다.");
+
+            // 행운카드 재해석 프롬프트 생성
+            String prompt = promptService.createLuckyCardPrompt(summary, originalLuckyMessage, request);
+
+            if (mockEnabled) {
+                logger.info("🎭 Mock 모드: 행운카드 메시지 재해석 중...");
+                return mockAiService.generateLuckyCardMessage(prompt);
+            } else {
+                return openAIClient.generateLuckyCardMessage(prompt);
+            }
+        } catch (Exception e) {
+            logger.error("행운카드 메시지 재해석 실패: {}", e.getMessage(), e);
+            // 기본 행운카드 메시지 반환
+            return referenceDataService.findLuckyCardById(luckyCardId)
+                    .map(luckyCard -> luckyCard.getMessage())
+                    .orElse("오늘 하루도 행복하고 좋은 일만 가득하세요!");
         }
     }
 

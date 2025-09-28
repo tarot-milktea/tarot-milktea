@@ -114,7 +114,7 @@ public class MockDataService {
         // 행운 카드 구성
         TaroResultResponse.LuckyCardDto luckyCard = new TaroResultResponse.LuckyCardDto(
             "행운의 별",
-            "오늘은 새로운 시작을 위한 완벽한 날입니다. 용기를 내어 한 걸음 내딛어보세요.",
+            "당신의 마음속 작은 용기가 큰 변화를 만들어낼 거예요.", // AI 재해석된 메시지
             "https://example.com/lucky-cards/star.jpg"
         );
 
