@@ -215,7 +215,8 @@ public class OpenAIClient {
             "messages", List.of(
                 Map.of("role", "system", "content", systemMessage),
                 Map.of("role", "user", "content", userMessage)
-            )
+            ),
+            "max_tokens", openAIConfig.getMaxTokens()
         );
     }
 
@@ -291,7 +292,8 @@ public class OpenAIClient {
 
         return Map.of(
             "model", openAIConfig.getModel(),
-            "messages", apiMessages
+            "messages", apiMessages,
+            "max_tokens", openAIConfig.getMaxTokens()
         );
     }
 
