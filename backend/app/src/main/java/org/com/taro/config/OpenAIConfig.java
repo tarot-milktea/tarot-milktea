@@ -9,7 +9,7 @@ public class OpenAIConfig {
     
     private String apiKey;
     private String baseUrl = "https://gms.ssafy.io/gmsapi/api.openai.com/v1";
-    private String model = "gpt-4.1";
+    private String model = "gpt-5-mini";
     private int maxTokens = 1500;
     private double temperature = 0.7;
     private int timeoutSeconds = 30;
