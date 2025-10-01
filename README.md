@@ -2,6 +2,8 @@
 
 ## 서비스 소개
 
+[ 🧋타로밀크티 바로가기 ](https://tarotmilk.com)
+
 >
 > "신비로운 타로의 세계에서 당신만의 이야기를 발견하세요!"
 >
@@ -52,20 +54,28 @@
 ## 기술 스택
 
 🖥️ **Backend**
-Spring Boot · AI 기반 타로 해석 시스템 · 프롬프트 엔지니어링된 AI 모델
+Spring Boot , Mysql, JPA, Gradle : AI 기반 타로 해석 시스템 · 프롬프트 엔지니어링된 AI 모델
+
 
 💻 **Frontend**
 React (19.1) · TypeScript · Zustand (5.0.8) · Emotion (11.14.0) · Framer Motion (12.23.12) · Vite (7.1.2)
+
+🖥️ **Infra**
+Ec2, Nginx, Jenkins, Docker
+
+🖥️ **AI**
+Openai (Gpt, Sora), Gemini (Veo2, Veo3)
+
 
 🔊 **Additional Features**
 TTS (Text-to-Speech) · AI 이미지 생성 · 한국어 비속어 필터링 (badwords-ko)
 
 ## 팀원 소개
 
-| 👑 [김서현](https://github.com/username) | [허민권](https://github.com/username) | [장아영](https://github.com/username) |
-| --- | --- | --- |
-| Leader, AI<br/>팀 리더십, AI 모델 설계 및 구현, 영상 | Full Stack<br/>풀스택 개발, 시스템 통합 | BE, Infra<br/>백엔드 개발, 인프라 구축 |
-
-| [이현석](https://github.com/username) | [이소미](https://github.com/username) | [김유리](https://github.com/username) |
-| --- | --- | --- |
-| FE, Design<br/>프론트엔드 개발, UI/UX 디자인 | PM, Design<br/>프로젝트 매니지먼트, 디자인 | QA<br/>품질 보증, 테스팅 |
+## 팀원 소개
+| 이름 | 역할|
+| --- | --- |
+| 👑 [김서현](https://github.com/se0hyun) | Leader, AI<br/>팀 리더십, AI 모델 설계 및 구현, 영상 |
+| [이현석](https://github.com/ppower-dev) |  FE, Design<br/>프론트엔드 개발, UI/UX 디자인 |
+| [장아영](https://github.com/yellowjang) | BE, Infra<br/>백엔드 개발, 인프라 구축 |
+| [허민권](https://github.com/initcatcher) | Full Stack<br/>풀스택 개발, 시스템 통합 |
