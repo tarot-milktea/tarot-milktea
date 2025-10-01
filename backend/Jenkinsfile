@@ -1,0 +1,286 @@
+pipeline {
+  agent any
+
+  environment {
+    SERVICE_NAME   = "spring-app"                      // compose 서비스명
+    CONTAINER_NAME = "backend-app"                     // 컨테이너명
+    IMAGE_NAME     = "taro-backend"                    // Docker 이미지명
+    COMPOSE_FILE   = "${WORKSPACE}/backend/docker-compose.yml"
+    COMPOSE_CMD    = "docker compose -f ${WORKSPACE}/backend/docker-compose.yml"
+    LAST_SUCCESS_FILE = "/tmp/last_successful_build.txt"
+  }
+
+  stages {
+    stage('Checkout') {
+      steps { checkout scm }
+    }
+
+    stage('Sanity: docker reachable') {
+      steps {
+        sh '''
+          docker ps
+          docker compose version
+          test -f "$COMPOSE_FILE" && echo "[OK] compose file found: $COMPOSE_FILE" || (echo "[ERR] compose file missing"; exit 14)
+        '''
+      }
+    }
+
+    stage('Prepare Build') {
+      steps {
+        script {
+          // Git 커밋 해시 가져오기
+          def gitCommit = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+          env.BUILD_TAG = "${BUILD_NUMBER}-${gitCommit}"
+          env.CURRENT_TAG = env.BUILD_TAG
+          
+          echo "[INFO] Current build tag: ${env.CURRENT_TAG}"
+          
+          // 이전 성공 태그 확인
+          sh '''
+            if [ -f "$LAST_SUCCESS_FILE" ]; then
+              LAST_SUCCESS_TAG=$(cat $LAST_SUCCESS_FILE)
+              echo "[INFO] Last successful build tag: $LAST_SUCCESS_TAG"
+            else
+              echo "[INFO] No previous successful build found"
+            fi
+          '''
+        }
+      }
+    }
+
+    stage('Ensure MySQL is Running') {
+      steps {
+        sh '''
+          if ! docker ps --format '{{.Names}}' | grep -q '^mysql-prod$'; then
+            echo "[INFO] Starting MySQL via compose..."
+            $COMPOSE_CMD up -d mysql
+
+            echo "[INFO] Waiting for MySQL to be healthy..."
+            for i in {1..18}; do
+              if [ "$(docker inspect -f '{{.State.Health.Status}}' mysql-prod 2>/dev/null)" = "healthy" ]; then
+                echo "[INFO] MySQL is healthy."
+                break
+              fi
+              sleep 5
+            done
+          else
+            echo "[INFO] MySQL is already running."
+          fi
+        '''
+      }
+    }
+
+    stage('Build & Tag Image') {
+      steps {
+        script {
+          sh """
+            echo "[INFO] Building image with tag: ${env.CURRENT_TAG}"
+            
+            # 현재 컨테이너 안전하게 중지 및 제거
+            echo "[INFO] Stopping and removing existing containers..."
+            docker stop ${env.CONTAINER_NAME} 2>/dev/null || echo "[INFO] Container ${env.CONTAINER_NAME} was not running"
+            docker rm ${env.CONTAINER_NAME} 2>/dev/null || echo "[INFO] Container ${env.CONTAINER_NAME} was not found"
+            
+            # 컨테이너 정리 완료 확인
+            if docker ps -a --format '{{.Names}}' | grep -q "^${env.CONTAINER_NAME}\$"; then
+              echo "[WARNING] Container still exists, forcing removal..."
+              docker rm -f ${env.CONTAINER_NAME} || true
+            fi
+            
+            # 새 이미지 빌드
+            cd ${env.WORKSPACE}/backend
+            docker build -t ${env.IMAGE_NAME}:${env.CURRENT_TAG} .
+            docker tag ${env.IMAGE_NAME}:${env.CURRENT_TAG} ${env.IMAGE_NAME}:latest
+            
+            echo "[INFO] Image built successfully: ${env.IMAGE_NAME}:${env.CURRENT_TAG}"
+          """
+        }
+      }
+    }
+
+    stage('Deploy with New Image') {
+      steps {
+        script {
+          sh """
+            echo "[INFO] Deploying with image: ${env.IMAGE_NAME}:${env.CURRENT_TAG}"
+            
+            # docker-compose.yml에서 이미지 태그 업데이트 (임시 파일 사용)
+            sed "s|image: ${env.IMAGE_NAME}.*|image: ${env.IMAGE_NAME}:${env.CURRENT_TAG}|g" ${env.COMPOSE_FILE} > ${env.COMPOSE_FILE}.tmp
+            mv ${env.COMPOSE_FILE}.tmp ${env.COMPOSE_FILE}
+            
+            # 기존 서비스 정리 (compose를 통해)
+            echo "[INFO] Stopping existing services..."
+            ${env.COMPOSE_CMD} down ${env.SERVICE_NAME} 2>/dev/null || echo "[INFO] Service was not running"
+            
+            # 새 서비스 시작
+            echo "[INFO] Starting new service..."
+            ${env.COMPOSE_CMD} up -d ${env.SERVICE_NAME}
+            
+            # 서비스 상태 확인
+            ${env.COMPOSE_CMD} ps
+            
+            # 컨테이너가 실제로 시작되었는지 확인
+            sleep 5
+            if ! docker ps --format '{{.Names}}' | grep -q "^${env.CONTAINER_NAME}\$"; then
+              echo "[ERROR] Container ${env.CONTAINER_NAME} failed to start"
+              exit 1
+            else
+              echo "[INFO] Container ${env.CONTAINER_NAME} started successfully"
+            fi
+          """
+        }
+      }
+    }
+
+    stage('Health Check') {
+      steps {
+        script {
+          timeout(time: 1, unit: 'MINUTES') {
+            waitUntil {
+              script {
+                def rc = sh(
+                  script: '''
+                    set -e
+                    HOST_IP=$(ip -4 route show default | awk '{print $3}')
+                    echo "[INFO] Checking health at http://$HOST_IP:8080/actuator/health"
+                    curl -fsS http://$HOST_IP:8080/actuator/health | grep -q UP
+                  ''',
+                  returnStatus: true
+                )
+                return rc == 0
+              }
+            }
+          }
+        }
+      }
+      post {
+        failure {
+          script {
+            echo "[ERROR] Health check failed! Initiating rollback..."
+            // 헬스체크 실패 시 즉시 롤백 실행
+            sh """
+              if [ -f "${env.LAST_SUCCESS_FILE}" ]; then
+                ROLLBACK_TAG=\$(cat ${env.LAST_SUCCESS_FILE})
+                echo "[INFO] Rolling back to previous successful version: \$ROLLBACK_TAG"
+                
+                # 실패한 컨테이너 안전하게 중지
+                echo "[INFO] Stopping failed container..."
+                ${env.COMPOSE_CMD} down ${env.SERVICE_NAME} 2>/dev/null || echo "[INFO] Service was not running"
+                docker stop ${env.CONTAINER_NAME} 2>/dev/null || echo "[INFO] Container was not running"
+                docker rm ${env.CONTAINER_NAME} 2>/dev/null || echo "[INFO] Container was not found"
+                
+                # 이전 성공 이미지로 롤백
+                sed "s|image: ${env.IMAGE_NAME}.*|image: ${env.IMAGE_NAME}:\$ROLLBACK_TAG|g" ${env.COMPOSE_FILE} > ${env.COMPOSE_FILE}.tmp
+                mv ${env.COMPOSE_FILE}.tmp ${env.COMPOSE_FILE}
+                
+                # 롤백된 서비스 시작
+                echo "[INFO] Starting rollback service..."
+                ${env.COMPOSE_CMD} up -d ${env.SERVICE_NAME}
+                
+                echo "[INFO] Rollback completed to: \$ROLLBACK_TAG"
+              else
+                echo "[ERROR] No previous successful build found for rollback!"
+                exit 1
+              fi
+            """
+          }
+        }
+      }
+    }
+
+    stage('Save Successful Build') {
+      steps {
+        script {
+          sh """
+            echo "[INFO] Saving successful build tag: ${env.CURRENT_TAG}"
+            echo "${env.CURRENT_TAG}" > ${env.LAST_SUCCESS_FILE}
+            
+            # 오래된 이미지 정리 (최근 3개 버전만 유지)
+            docker images ${env.IMAGE_NAME} --format "table {{.Tag}}" | grep -v "TAG" | grep -v "latest" | sort -rn | tail -n +4 | xargs -r -I {} docker rmi ${env.IMAGE_NAME}:{} || true
+          """
+        }
+      }
+    }
+
+    stage('DB Schema Update') {
+      steps {
+        sh '''
+          echo "[INFO] DB schema migration handled by app (JPA/Flyway)."
+        '''
+      }
+    }
+  }
+
+  post {
+    success {
+      script {
+        echo "Backend deployment successful! Database preserved."
+        sh """
+          echo "[SUCCESS] Build ${env.CURRENT_TAG} deployed successfully"
+          ${env.COMPOSE_CMD} logs --tail=100 ${env.SERVICE_NAME} || true
+        """
+      }
+    }
+    failure {
+      script {
+        echo "Backend deployment failed!"
+        
+        // 항상 롤백 시도
+        sh """
+          echo "[ERROR] Build failed! Attempting rollback..."
+          
+          if [ -f "${env.LAST_SUCCESS_FILE}" ]; then
+            ROLLBACK_TAG=\$(cat ${env.LAST_SUCCESS_FILE})
+            echo "[INFO] Rolling back to: \$ROLLBACK_TAG"
+              
+            # 실패한 컨테이너 안전하게 정리
+            echo "[INFO] Cleaning up failed deployment..."
+            ${env.COMPOSE_CMD} down ${env.SERVICE_NAME} 2>/dev/null || echo "[INFO] Service was not running"
+            docker stop ${env.CONTAINER_NAME} 2>/dev/null || echo "[INFO] Container was not running"
+            docker rm ${env.CONTAINER_NAME} 2>/dev/null || echo "[INFO] Container was not found"
+            
+            # 실패한 이미지 정리 (존재하는 경우에만)
+            if docker images ${env.IMAGE_NAME}:${env.CURRENT_TAG} -q | grep -q .; then
+              docker rmi ${env.IMAGE_NAME}:${env.CURRENT_TAG} || echo "[WARNING] Failed to remove image"
+            fi
+            
+            # 이전 성공 이미지로 롤백
+            sed "s|image: ${env.IMAGE_NAME}.*|image: ${env.IMAGE_NAME}:\$ROLLBACK_TAG|g" ${env.COMPOSE_FILE} > ${env.COMPOSE_FILE}.tmp
+            mv ${env.COMPOSE_FILE}.tmp ${env.COMPOSE_FILE}
+            
+            # 롤백된 서비스 시작
+            echo "[INFO] Starting rollback service..."
+            ${env.COMPOSE_CMD} up -d ${env.SERVICE_NAME}
+            
+            echo "[INFO] Emergency rollback completed to: \$ROLLBACK_TAG"
+            
+            # 롤백 후 간단한 헬스체크
+            sleep 30
+            HOST_IP=\$(ip -4 route show default | awk '{print \$3}')
+            if curl -fsS http://\$HOST_IP:8080/actuator/health | grep -q UP; then
+              echo "[SUCCESS] Service restored successfully after rollback"
+            else
+              echo "[WARNING] Service may still have issues after rollback"
+            fi
+          else
+            echo "[ERROR] No previous successful build for rollback!"
+          fi
+        """
+        
+        sh """
+          ${env.COMPOSE_CMD} logs ${env.SERVICE_NAME} || true
+          docker logs --tail=200 ${env.CONTAINER_NAME} || true
+        """
+      }
+    }
+    always {
+      script {
+        sh """
+          echo "[INFO] Cleaning up workspace..."
+          # 빌드 과정에서 생성된 임시 파일들 정리
+          rm -f ${env.COMPOSE_FILE}.tmp || true
+        """
+      }
+    }
+  }
+}

@@ -1,0 +1,41 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-prod
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: taro1234
+      MYSQL_DATABASE: taro
+      MYSQL_USER: taro
+      MYSQL_PASSWORD: taro1234
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ptaro1234"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  spring-app:
+    image: taro-backend:latest
+    container_name: backend-app
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      - /home/ubuntu/media/images:/app/media/images
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/taro
+      SPRING_DATASOURCE_USERNAME: taro
+      SPRING_DATASOURCE_PASSWORD: taro1234
+      SPRING_PROFILES_ACTIVE: prod
+      MEDIA_IMAGES_PATH: /app/media/images
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
+    external: false
