@@ -1,128 +1,231 @@
-import styled from '@emotion/styled';
-import { useNavigate } from 'react-router-dom';
-import { useColors } from '../hooks/useColors';
-import { useDataStore } from '../store/dataStore';
-import { useSessionStore, type Category } from '../store/sessionStore';
-import Button from '../components/common/Button/Button';
-import ButtonGroup from '../components/common/Button/ButtonGroup';
+import { useState, useEffect } from "react";
+import styled from "@emotion/styled";
+import { useNavigate } from "react-router-dom";
+import { useColors } from "../hooks/useColors";
+import { useDataStore } from "../store/dataStore";
+import { useSessionStore, type Reader } from "../store/sessionStore";
+import Button from "../components/common/Button/Button";
+import ButtonGroup from "../components/common/Button/ButtonGroup";
+import SelectableButton from "../components/common/Button/SelectableButton";
 // import ThemeToggle from '../components/etc/ThemeToggle';
-import { useOnboardingTracking } from '../hooks/useAnalytics';
-import { SELECTION_TYPES } from '../utils/analyticsEvents';
+import { useOnboardingTracking } from "../hooks/useAnalytics";
+import { SELECTION_TYPES } from "../utils/analyticsEvents";
+import ProgressBar from "../components/common/ProgressBar/ProgressBar";
+import { useProgressStore } from "../store/progressStore";
+import { useTTS } from "../hooks/useTTS";
+import { getTTSSettings } from "../utils/voiceMapping";
+import ReaderVideo from "../components/common/ReaderVideo/ReaderVideo";
 
 function Onboarding2Page() {
   const navigate = useNavigate();
   const { styles: globalStyles, getColor } = useColors();
-  const { categories, isLoading, error } = useDataStore();
-  const { selectedCategory, setSelectedCategory } = useSessionStore();
+  const { readers, isLoading, error, initializeData } = useDataStore();
+  const { selectedReader, setSelectedReader, restoreFromStorage } = useSessionStore();
+  const { setCurrentPage, getCurrentStep, getTotalSteps } = useProgressStore();
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
   // Analytics 훅
-  const { trackComplete, trackSelection } = useOnboardingTracking(2, 'category_selection');
+  const { trackComplete, trackSelection } = useOnboardingTracking(
+    2,
+    "reader_selection"
+  );
 
-  const handleCategorySelect = (category: Category) => {
-    // 이미 선택된 카테고리를 다시 클릭하면 선택 해제 (토글)
-    if (selectedCategory?.code === category.code) {
-      setSelectedCategory(null);
+  useEffect(() => {
+    restoreFromStorage();
+    initializeData();
+    setCurrentPage("onboarding-2");
+  }, [restoreFromStorage, initializeData, setCurrentPage]);
+
+  // TTS 훅
+  const {
+    requestTTSStream,
+    stopAudio,
+    isPlaying,
+    isLoading: ttsLoading,
+  } = useTTS({
+    autoPlay: true,
+    onComplete: () => console.log("TTS playback completed"),
+    onError: (error) => console.error("TTS error:", error),
+  });
+
+
+  const handleReaderSelect = async (reader: Reader) => {
+    // TTS 중지
+    stopAudio();
+
+    // 이미 선택된 리더를 다시 클릭하면 선택 해제 (토글)
+    if (selectedReader?.type === reader.type) {
+      setSelectedReader(null);
     } else {
-      setSelectedCategory(category);
+      setSelectedReader(reader);
       // Analytics 추적
-      trackSelection(SELECTION_TYPES.CATEGORY, category.code);
+      trackSelection(SELECTION_TYPES.READER, reader.type);
+
+      // TTS 재생
+      try {
+        const ttsSettings = getTTSSettings(reader.type, reader.name);
+        await requestTTSStream(
+          ttsSettings.text,
+          ttsSettings.voice,
+          ttsSettings.instruction
+        );
+      } catch (error) {
+        console.error("TTS 재생 실패:", error);
+      }
     }
   };
 
   const handleNext = () => {
-    if (selectedCategory) {
+    if (selectedReader) {
+      // TTS 중지
+      stopAudio();
+
       // Analytics 추적
       trackComplete({
-        selected_category: selectedCategory.code,
-        category_name: selectedCategory.name
+        selected_reader: selectedReader.type,
+        reader_name: selectedReader.name,
       });
 
-      navigate('/onboarding/3');
+      navigate("/onboarding/3");
     }
   };
 
   const handlePrev = () => {
-    navigate('/onboarding/1');
+    // TTS 중지
+    stopAudio();
+
+    navigate("/onboarding/1");
+  };
+
+  const handleImageError = (readerType: string) => {
+    setImageErrors((prev) => new Set(prev).add(readerType));
   };
 
   return (
     <Container style={globalStyles.container}>
+      <ProgressBar
+        currentStep={getCurrentStep()}
+        totalSteps={getTotalSteps()}
+      />
       {/* 테마 토글 버튼 */}
       {/* <ThemeToggle position="fixed" /> */}
 
-      <Title 
+      <Title
         style={{
           ...globalStyles.heading,
-          color: getColor('primary', '200')
+          color: getColor("primary", "200"),
         }}
       >
-        어떤 주제로 타로를 보시겠어요?
+        타로를 봐줄 캐릭터를 선택하세요
       </Title>
-      
-      <Description 
+
+      <Description
         style={{
           ...globalStyles.body,
-          color: getColor('primary', '300')
+          color: getColor("primary", "300"),
         }}
       >
-        관심 있는 분야를 선택해주세요
+        어떤 스타일의 해석을 받고 싶으신가요?
       </Description>
 
       {/* 로딩 상태 */}
       {isLoading && (
-        <LoadingText style={{ color: getColor('primary', '300') }}>
-          카테고리를 불러오는 중...
+        <LoadingText style={{ color: getColor("primary", "300") }}>
+          리더 정보를 불러오는 중...
         </LoadingText>
       )}
 
       {/* 에러 상태 */}
       {error && (
-        <ErrorText style={{ color: getColor('error', '400') }}>
-          카테고리를 불러오는데 실패했습니다: {error}
+        <ErrorText style={{ color: getColor("error", "400") }}>
+          리더 정보를 불러오는데 실패했습니다: {error}
         </ErrorText>
       )}
 
-      {/* 카테고리 목록 */}
+      {/* 리더 목록 */}
       {!isLoading && !error && (
-        <TopicGrid>
-          {categories.map((category) => (
-            <TopicButton
-              key={category.code}
-              onClick={() => handleCategorySelect(category)}
-              isSelected={selectedCategory?.code === category.code}
-              style={{
-                ...globalStyles.card,
-                border: `2px solid ${
-                  selectedCategory?.code === category.code
-                    ? getColor('accent', '400')
-                    : getColor('primary', '700')
-                }`,
-                backgroundColor: selectedCategory?.code === category.code
-                  ? getColor('accent', '900')
-                  : 'transparent',
-                color: getColor('primary', '200')
-              }}
+        <CharacterGrid>
+          {readers.map((reader) => (
+            <SelectableButton
+              key={reader.type}
+              onClick={() => handleReaderSelect(reader)}
+              isSelected={selectedReader?.type === reader.type}
             >
-              <CategoryTitle>{category.name}</CategoryTitle>
-              <CategoryDescription>{category.description}</CategoryDescription>
-            </TopicButton>
+              <CharacterAvatar>
+                {/* TTS 로딩 또는 재생 중일 때 표시할 인디케이터 */}
+                {(ttsLoading || isPlaying) &&
+                  selectedReader?.type === reader.type && (
+                    <TTSIndicator>🔊</TTSIndicator>
+                  )}
+
+                {/* 선택된 리더이고 TTS 재생 중일 때만 비디오 표시 */}
+                {selectedReader?.type === reader.type &&
+                 isPlaying &&
+                 reader.videoUrl ? (
+                  <ReaderVideo
+                    videoUrl={reader.videoUrl}
+                    readerName={reader.name}
+                    readerType={reader.type}
+                    autoPlay={true}
+                    isPlaying={isPlaying}
+                    size="medium"
+                    shape="rectangle"
+                    showFallback={true}
+                    fallbackImageUrl={reader.imageUrl}
+                  />
+                ) : !imageErrors.has(reader.type) ? (
+                  <CharacterImage
+                    src={reader.imageUrl}
+                    alt={reader.name}
+                    onError={() => handleImageError(reader.type)}
+                  />
+                ) : (
+                  <FallbackText
+                    style={{
+                      background: `linear-gradient(135deg, ${getColor(
+                        "accent",
+                        "400"
+                      )} 0%, ${getColor("accent", "600")} 100%)`,
+                    }}
+                  >
+                    {reader.type}
+                  </FallbackText>
+                )}
+              </CharacterAvatar>
+
+              <CharacterInfo>
+                <CharacterTitle
+                  style={{
+                    ...globalStyles.subheading,
+                    color: getColor("accent", "300"),
+                  }}
+                >
+                  {reader.name}
+                </CharacterTitle>
+
+                <CharacterDescription
+                  style={{
+                    ...globalStyles.body,
+                    color: getColor("primary", "400"),
+                  }}
+                >
+                  {reader.description}
+                </CharacterDescription>
+              </CharacterInfo>
+            </SelectableButton>
           ))}
-        </TopicGrid>
+        </CharacterGrid>
       )}
 
       <ButtonGroup gap="large">
-        <Button
-          variant="secondary"
-          size="large"
-          onClick={handlePrev}
-        >
+        <Button variant="secondary" size="large" onClick={handlePrev}>
           이전
         </Button>
         <Button
           variant="primary"
           size="large"
           onClick={handleNext}
-          disabled={!selectedCategory}
+          disabled={!selectedReader}
         >
           다음
         </Button>
@@ -151,39 +254,90 @@ const Description = styled.p`
   max-width: 600px;
 `;
 
-const TopicGrid = styled.div`
+const CharacterGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 20px;
-  max-width: 800px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 25px;
+  max-width: 1000px;
   width: 100%;
   margin-bottom: 40px;
 `;
 
-const TopicButton = styled.button<{ isSelected?: boolean }>`
-  padding: 30px 20px;
-  cursor: pointer;
+const CharacterAvatar = styled.div`
+  width: 100%;
+  height: 140px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  overflow: hidden;
+  position: relative;
+`;
+
+const CharacterImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 16px;
   transition: all 0.3s ease;
-  font-size: 1.2rem;
-  background: none;
-  border-radius: 12px;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transform: scale(1.05);
   }
 `;
 
-const CategoryTitle = styled.h3`
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 8px;
+const FallbackText = styled.div`
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: var(--color-primary-900);
 `;
 
-const CategoryDescription = styled.p`
+const CharacterInfo = styled.div`
+  flex: 1;
+`;
+
+const CharacterTitle = styled.h3`
+  font-size: 1.4rem;
+  margin-bottom: 15px;
+`;
+
+const CharacterDescription = styled.p`
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0;
+`;
+
+const TTSIndicator = styled.div`
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: rgba(255, 237, 77, 0.9);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 14px;
-  opacity: 0.8;
-  line-height: 1.4;
+  animation: pulse 1.5s ease-in-out infinite alternate;
+
+  @keyframes pulse {
+    from {
+      opacity: 0.7;
+      transform: scale(1);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+  }
 `;
 
 const LoadingText = styled.p`

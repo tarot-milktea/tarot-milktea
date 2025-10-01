@@ -25,6 +25,9 @@ interface ProcessingStatusInfo {
 interface ResultState {
   // SSE Connection State
   sessionId: string | null;
+  nickname: string | null;
+  questionText: string | null;
+  readerType: string | null; // 리더 타입 (T, F, FT 등)
   isProcessing: boolean;
   processingStatus: ProcessingStatusInfo | null;
   error: string | null;
@@ -41,10 +44,13 @@ interface ResultState {
   summaryReceivedAt: Date | null;
   fortuneScore: number | null;
 
-  // Advice Image
-  adviceImageUrl: string | null;
-  adviceImageText: string | null;
-  imageReceivedAt: Date | null;
+  // Lucky Card
+  luckyCard: {
+    name: string;
+    message: string;
+    imageUrl: string;
+  } | null;
+  luckyCardReceivedAt: Date | null;
 
   // Carousel State
   currentSlide: number;
@@ -53,10 +59,13 @@ interface ResultState {
 
   // Actions
   setSessionId: (sessionId: string) => void;
+  setNickname: (nickname: string) => void;
+  setQuestionText: (questionText: string) => void;
+  setReaderType: (readerType: string) => void;
   setProcessingStatus: (status: ProcessingStatus, message: string, progress: number) => void;
   setCardInterpretation: (cardType: CardType, interpretation: string) => void;
   setSummary: (summary: string, score?: number) => void;
-  setAdviceImage: (imageUrl: string, imageText?: string) => void;
+  setLuckyCard: (name: string, message: string, imageUrl: string) => void;
   setCurrentSlide: (slide: number) => void;
   setAutoProgressEnabled: (enabled: boolean) => void;
   setError: (error: string) => void;
@@ -72,6 +81,9 @@ interface ResultState {
 
 const initialState = {
   sessionId: null,
+  nickname: null,
+  questionText: null,
+  readerType: null,
   isProcessing: false,
   processingStatus: null,
   error: null,
@@ -83,9 +95,8 @@ const initialState = {
   summary: null,
   summaryReceivedAt: null,
   fortuneScore: null,
-  adviceImageUrl: null,
-  adviceImageText: null,
-  imageReceivedAt: null,
+  luckyCard: null,
+  luckyCardReceivedAt: null,
   currentSlide: 0,
   availableSlides: 0,
   autoProgressEnabled: true,
@@ -96,6 +107,18 @@ export const useResultStore = create<ResultState>((set, get) => ({
 
   setSessionId: (sessionId: string) => {
     set({ sessionId, isProcessing: true });
+  },
+
+  setNickname: (nickname: string) => {
+    set({ nickname });
+  },
+
+  setQuestionText: (questionText: string) => {
+    set({ questionText });
+  },
+
+  setReaderType: (readerType: string) => {
+    set({ readerType });
   },
 
   setProcessingStatus: (status: ProcessingStatus, message: string, progress: number) => {
@@ -160,20 +183,23 @@ export const useResultStore = create<ResultState>((set, get) => ({
     }
   },
 
-  setAdviceImage: (imageUrl: string, imageText?: string) => {
+  setLuckyCard: (name: string, message: string, imageUrl: string) => {
     const availableSlides = get().getAvailableSlides();
 
     set({
-      adviceImageUrl: imageUrl,
-      adviceImageText: imageText ?? null,
-      imageReceivedAt: new Date(),
+      luckyCard: {
+        name,
+        message,
+        imageUrl
+      },
+      luckyCardReceivedAt: new Date(),
       availableSlides,
     });
 
     // Auto-progress to final slide
     const state = get();
     if (state.autoProgressEnabled && get().shouldAutoProgress()) {
-      const finalSlideIndex = 4; // Past, Present, Future, Summary, Image
+      const finalSlideIndex = 4; // Past, Present, Future, Summary, LuckyCard
       set({ currentSlide: finalSlideIndex });
     }
   },
@@ -219,8 +245,8 @@ export const useResultStore = create<ResultState>((set, get) => ({
     // Summary slide (3)
     if (state.summary) slides = 4;
 
-    // Advice image slide (4)
-    if (state.adviceImageUrl) slides = 5;
+    // Lucky card slide (4)
+    if (state.luckyCard) slides = 5;
 
     return slides;
   },

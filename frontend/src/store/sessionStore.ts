@@ -21,6 +21,7 @@ export interface Reader {
   name: string;
   description: string;
   imageUrl: string;
+  videoUrl: string;
 }
 
 export interface PredefinedCard {
@@ -75,70 +76,85 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   isSessionConfirmed: false,
 
   setNickname: (nickname) => {
-    const state = { ...get(), nickname };
-    set({ nickname });
-    storageService.saveSessionData(state);
+    set((state) => {
+      const newState = { ...state, nickname };
+      storageService.saveSessionData(newState);
+      return { nickname };
+    });
   },
 
   setSelectedCategory: (selectedCategory) => {
-    const state = {
-      ...get(),
-      selectedCategory,
-      selectedTopic: null,
-      selectedQuestion: ''
-    };
-    set({
-      selectedCategory,
-      selectedTopic: null,
-      selectedQuestion: ''
+    set((state) => {
+      const newState = {
+        ...state,
+        selectedCategory,
+        selectedTopic: null,
+        selectedQuestion: ''
+      };
+      storageService.saveSessionData(newState);
+      return {
+        selectedCategory,
+        selectedTopic: null,
+        selectedQuestion: ''
+      };
     });
-    storageService.saveSessionData(state);
   },
 
   setSelectedTopic: (selectedTopic) => {
-    const state = {
-      ...get(),
-      selectedTopic,
-      selectedQuestion: ''
-    };
-    set({
-      selectedTopic,
-      selectedQuestion: ''
+    set((state) => {
+      const newState = {
+        ...state,
+        selectedTopic,
+        selectedQuestion: ''
+      };
+      storageService.saveSessionData(newState);
+      return {
+        selectedTopic,
+        selectedQuestion: ''
+      };
     });
-    storageService.saveSessionData(state);
   },
 
   setSelectedQuestion: (selectedQuestion) => {
-    const state = { ...get(), selectedQuestion };
-    set({ selectedQuestion });
-    storageService.saveSessionData(state);
+    set((state) => {
+      const newState = { ...state, selectedQuestion };
+      storageService.saveSessionData(newState);
+      return { selectedQuestion };
+    });
   },
 
   setSelectedReader: (selectedReader) => {
-    const state = { ...get(), selectedReader };
-    set({ selectedReader });
-    storageService.saveSessionData(state);
+    set((state) => {
+      const newState = { ...state, selectedReader };
+      storageService.saveSessionData(newState);
+      return { selectedReader };
+    });
   },
 
 
   setSessionId: (sessionId) => {
-    const state = { ...get(), sessionId };
-    const isSessionConfirmed = !!sessionId;
-    set({ sessionId, isSessionConfirmed });
-    storageService.saveSessionData(state);
+    set((state) => {
+      const isSessionConfirmed = !!sessionId;
+      const newState = { ...state, sessionId };
+      storageService.saveSessionData(newState);
+      return { sessionId, isSessionConfirmed };
+    });
   },
 
   setPredefinedCards: (predefinedCards) => {
-    const state = { ...get(), predefinedCards };
-    set({ predefinedCards });
-    storageService.saveSessionData(state);
+    set((state) => {
+      const newState = { ...state, predefinedCards };
+      storageService.saveSessionData(newState);
+      return { predefinedCards };
+    });
   },
 
   createSession: async () => {
     const { nickname } = get();
 
     try {
-      const { sessionId, predefinedCards } = await tarotApiService.createSessionWithCards(nickname);
+      const response = await tarotApiService.createSessionWithCards(nickname);
+      const { sessionId, predefinedCards } = response;
 
       // 상태 업데이트
       get().setSessionId(sessionId);
@@ -207,18 +223,23 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
   restoreFromStorage: () => {
     const saved = storageService.loadSessionData();
+
     if (saved) {
-      const isSessionConfirmed = !!saved.sessionId;
-      set({
+      const current = get();
+      const isSessionConfirmed = !!(current.sessionId || saved.sessionId);
+
+      const restoredState = {
         nickname: saved.nickname || '',
         selectedCategory: saved.selectedCategory || null,
         selectedTopic: saved.selectedTopic || null,
         selectedQuestion: saved.selectedQuestion || '',
         selectedReader: saved.selectedReader || null,
-        sessionId: saved.sessionId || null,
+        sessionId: current.sessionId || saved.sessionId || null,
         predefinedCards: saved.predefinedCards || [],
         isSessionConfirmed,
-      });
+      };
+
+      set(restoredState);
     }
   },
 }));

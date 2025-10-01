@@ -75,26 +75,63 @@ function isValidSelectedCards(data: unknown): data is SelectedCard[] {
   });
 }
 
-// SessionData 검증을 위한 타입 가드
+// SessionData 검증을 위한 타입 가드 (더 관대한 검증으로 수정)
 function isValidSessionData(data: unknown): data is Partial<SessionData> {
-  if (!data || typeof data !== 'object') return false;
+  if (!data || typeof data !== 'object') {
+    return false;
+  }
 
   const obj = data as Record<string, unknown>;
 
-  // 필수 필드들 검증 (optional이 아닌 것들)
-  if (typeof obj.nickname !== 'string') return false;
-  if (typeof obj.selectedQuestion !== 'string') return false;
+  // 더 관대한 검증: 필드가 존재하면 타입을 검사하고, 없으면 허용
+  if (obj.nickname !== undefined && typeof obj.nickname !== 'string') {
+    return false;
+  }
 
-  // optional 필드들은 있으면 타입 검증, 없으면 패스
+  if (obj.selectedQuestion !== undefined && typeof obj.selectedQuestion !== 'string') {
+    return false;
+  }
+
   if (obj.sessionId !== undefined && obj.sessionId !== null && typeof obj.sessionId !== 'string') {
+    return false;
+  }
+
+  // 다른 optional 필드들도 검증
+  if (obj.selectedCategory !== undefined && obj.selectedCategory !== null && typeof obj.selectedCategory !== 'object') {
+    return false;
+  }
+
+  if (obj.selectedTopic !== undefined && obj.selectedTopic !== null && typeof obj.selectedTopic !== 'object') {
+    return false;
+  }
+
+  if (obj.selectedReader !== undefined && obj.selectedReader !== null && typeof obj.selectedReader !== 'object') {
+    return false;
+  }
+
+  if (obj.predefinedCards !== undefined && !Array.isArray(obj.predefinedCards)) {
     return false;
   }
 
   return true;
 }
 
+// 브라우저 호환성 체크 함수들
+function isStorageAvailable(storageType: 'localStorage' | 'sessionStorage'): boolean {
+  try {
+    const storage = window[storageType];
+    const testKey = '__storage_test__';
+    storage.setItem(testKey, 'test');
+    storage.removeItem(testKey);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 // 스토리지 서비스 클래스
 class StorageService {
+  private isSessionStorageAvailable = isStorageAvailable('sessionStorage');
   // 안전한 데이터 저장 (localStorage)
   saveToLocalStorage<T>(key: string, data: T): void {
     try {
@@ -143,17 +180,24 @@ class StorageService {
 
   // sessionStorage 저장 (브라우저 탭을 닫으면 사라지는 저장소)
   saveToSessionStorage<T>(key: string, data: T): void {
+    if (!this.isSessionStorageAvailable) {
+      return;
+    }
+
     try {
       const serializedData = JSON.stringify(data);
       sessionStorage.setItem(key, serializedData);
     } catch (error) {
-      console.error(`Failed to save to sessionStorage (key: ${key}):`, error);
       throw new StorageError(`세션 저장에 실패했습니다: ${key}`, error as Error);
     }
   }
 
   // sessionStorage 불러오기
   loadFromSessionStorage<T>(key: string, validator?: (data: unknown) => data is T): T | null {
+    if (!this.isSessionStorageAvailable) {
+      return null;
+    }
+
     try {
       const serializedData = sessionStorage.getItem(key);
 
@@ -164,23 +208,25 @@ class StorageService {
       const parsedData = JSON.parse(serializedData);
 
       if (validator && !validator(parsedData)) {
-        console.warn(`Invalid session data format for key: ${key}`);
         return null;
       }
 
       return parsedData;
     } catch (error) {
-      console.error(`Failed to load from sessionStorage (key: ${key}):`, error);
       return null;
     }
   }
 
   // sessionStorage 삭제
   removeFromSessionStorage(key: string): void {
+    if (!this.isSessionStorageAvailable) {
+      return;
+    }
+
     try {
       sessionStorage.removeItem(key);
     } catch (error) {
-      console.error(`Failed to remove from sessionStorage (key: ${key}):`, error);
+      // Silent fail
     }
   }
 

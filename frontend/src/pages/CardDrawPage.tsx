@@ -7,8 +7,8 @@ import { useSessionStore } from '../store/sessionStore';
 import TarotCard from '../components/TarotCard/TarotCard';
 import Button from '../components/common/Button/Button';
 import ButtonGroup from '../components/common/Button/ButtonGroup';
-import ThemeToggle from '../components/etc/ThemeToggle';
-import { calculateAllCardPositions, getResponsiveScale, calculateAnimationDelay, getScreenType } from '../utils/cardLayout';
+// import ThemeToggle from '../components/etc/ThemeToggle';
+import { calculateAllCardPositions, getResponsiveScale, calculateAnimationDelay, getScreenType, calculateLayoutHeight } from '../utils/cardLayout';
 import {
   cardContainerVariants,
   cardVariants,
@@ -17,11 +17,25 @@ import {
   reducedMotionCardVariants
 } from '../utils/animations';
 import { trackOnboardingEnter, trackCardEvent, trackPerformance } from '../utils/analytics';
+import ProgressBar from '../components/common/ProgressBar/ProgressBar';
+import { useProgressStore } from '../store/progressStore';
+import ReaderVideo from '../components/common/ReaderVideo/ReaderVideo';
+
+// 리더 타입별 로컬 비디오 매핑
+const getLocalVideoUrl = (readerType: string): string | null => {
+  const videoMap: Record<string, string> = {
+    'f': '/f.webm',
+    't': '/t.webm',
+    'tf': '/tf.webm'
+  };
+  return videoMap[readerType] || null;
+};
 
 function CardDrawPage() {
   const navigate = useNavigate();
   const { selectedCards, isRevealing, startReveal, revealCard } = useCardStore();
-  const { predefinedCards, submitSessionData } = useSessionStore();
+  const { predefinedCards, submitSessionData, selectedReader, restoreFromStorage } = useSessionStore();
+  const { setCurrentPage, getCurrentStep, getTotalSteps } = useProgressStore();
   const [scale, setScale] = useState(1);
   const [isReducedMotion, setIsReducedMotion] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
@@ -29,9 +43,13 @@ function CardDrawPage() {
     if (typeof window === 'undefined') return 'desktop';
     return getScreenType();
   });
+
   
   // 카드 위치 계산을 메모이제이션
   const cardPositions = useMemo(() => calculateAllCardPositions(screenType), [screenType]);
+
+  // 레이아웃 높이 계산을 메모이제이션
+  const layoutHeight = useMemo(() => calculateLayoutHeight(screenType), [screenType]);
   
   // 애니메이션 variants를 메모이제이션
   const containerVariants = useMemo(() => 
@@ -44,11 +62,15 @@ function CardDrawPage() {
     [isReducedMotion]
   );
 
-  // 컴포넌트 마운트 시 세션 데이터 제출
+  // 컴포넌트 마운트 시 진행률 상태 업데이트
   useEffect(() => {
-    // GA: 카드 뽑기 페이지 진입 추적
+    restoreFromStorage();
+    setCurrentPage('card-draw');
     trackOnboardingEnter(6, 'card_selection');
+  }, [restoreFromStorage]); // restoreFromStorage 의존성 추가
 
+  // 세션 데이터 제출
+  useEffect(() => {
     const submitSession = async () => {
       const startTime = performance.now();
       try {
@@ -112,11 +134,28 @@ function CardDrawPage() {
 
   return (
     <Container>
+      <ProgressBar currentStep={getCurrentStep()} totalSteps={getTotalSteps()} />
       {/* 테마 토글 버튼 */}
-      <ThemeToggle position="fixed" />
+      {/* <ThemeToggle position="fixed" /> */}
 
       <Character>
-        🔮
+        {selectedReader && getLocalVideoUrl(selectedReader.type) ? (
+          <ReaderVideo
+            videoUrl={getLocalVideoUrl(selectedReader.type)!}
+            readerName={selectedReader.name}
+            readerType={selectedReader.type}
+            autoPlay={true}
+            isPlaying={true}
+            size="large"
+            shape="rectangle"
+            showFallback={true}
+            fallbackImageUrl={selectedReader.imageUrl}
+          />
+        ) : selectedReader ? (
+          <CharacterImage src={selectedReader.imageUrl} alt={selectedReader.name} />
+        ) : (
+          "🔮"
+        )}
       </Character>
 
       <Title>
@@ -152,9 +191,9 @@ function CardDrawPage() {
             style={{
               position: 'relative',
               width: '100%',
-              height: '600px', // 높이 증가로 위로 이동된 카드들 수용
-              maxWidth: '1200px',
-              margin: '0 auto 80px auto', // 하단 마진 추가로 버튼과 안전 거리 확보
+              height: `${layoutHeight * scale - 110}px`, // 실제 카드 배치에 필요한 높이만 사용
+              maxWidth: screenType === 'tablet' ? '95vw' : '1200px', // 태블릿에서 좌우 여백 더 줄임
+              margin: `0 auto ${Math.max(40, 80 * scale)}px auto`, // 하단 마진도 스케일에 비례하여 조정
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -276,10 +315,20 @@ const Container = styled.div`
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 60px 20px;
+  padding: 40px 20px 60px 20px; // 상단 패딩 줄이고 하단 패딩은 유지
   min-height: 100vh;
   background-color: var(--color-background);
   color: var(--color-text);
+
+  // 모바일에서 패딩 조정 - 상하 여백 더 줄임
+  @media (max-width: 768px) {
+    padding: 0px 16px 20px 16px;
+  }
+
+  // 태블릿에서 패딩 조정 - 좌우 여백 더 줄임
+  @media (min-width: 769px) and (max-width: 1023px) {
+    padding: 30px 8px 50px 8px;
+  }
 `;
 
 const Character = styled.div`
@@ -291,11 +340,29 @@ const Character = styled.div`
   justify-content: center;
   font-size: 4rem;
   margin-bottom: 40px;
-  background: linear-gradient(135deg, 
-    var(--color-accent-400) 0%, 
+  background: linear-gradient(135deg,
+    var(--color-accent-400) 0%,
     var(--color-accent-600) 100%
   );
   box-shadow: 0 0 50px var(--color-accent-400);
+
+  // 모바일에서 크기 조정 - 마진 더 줄임
+  @media (max-width: 768px) {
+    width: 120px;
+    height: 120px;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    box-shadow: 0 0 30px var(--color-accent-400);
+  }
+
+  // 태블릿에서 크기 조정
+  @media (min-width: 769px) and (max-width: 1023px) {
+    width: 160px;
+    height: 160px;
+    font-size: 3rem;
+    margin-bottom: 30px;
+    box-shadow: 0 0 40px var(--color-accent-400);
+  }
 `;
 
 const Title = styled.h1`
@@ -303,6 +370,18 @@ const Title = styled.h1`
   margin-bottom: 20px;
   color: var(--color-primary-200);
   font-weight: 700;
+
+  // 모바일에서 폰트 크기 조정 - 마진 더 줄임
+  @media (max-width: 768px) {
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+  }
+
+  // 태블릿에서 폰트 크기 조정
+  @media (min-width: 769px) and (max-width: 1023px) {
+    font-size: 2.2rem;
+    margin-bottom: 18px;
+  }
 `;
 
 const Description = styled.p`
@@ -311,6 +390,21 @@ const Description = styled.p`
   max-width: 600px;
   color: var(--color-primary-300);
   line-height: 1.6;
+
+  // 모바일에서 폰트 크기 조정 - 마진 더 줄임
+  @media (max-width: 768px) {
+    font-size: 1rem;
+    margin-bottom: 10px;
+    max-width: 90%;
+    line-height: 1.5;
+  }
+
+  // 태블릿에서 폰트 크기 조정
+  @media (min-width: 769px) and (max-width: 1023px) {
+    font-size: 1.1rem;
+    margin-bottom: 22px;
+    max-width: 95%; // 좌우 여백 더 줄임
+  }
 `;
 
 const MysticText = styled.p`
@@ -321,6 +415,18 @@ const MysticText = styled.p`
   line-height: 1.5;
   font-style: italic;
   text-shadow: 0 0 10px var(--color-accent-400);
+
+  // 모바일에서 마진 더 줄임
+  @media (max-width: 768px) {
+    margin-bottom: 15px;
+    max-width: 90%;
+    font-size: 0.9rem;
+  }
+
+  // 태블릿에서 좌우 여백 줄임
+  @media (min-width: 769px) and (max-width: 1023px) {
+    max-width: 95%;
+  }
 `;
 
 const RevealSubtitle = styled.p`
@@ -374,7 +480,7 @@ const RevealCardContainer = styled.div`
 
 
 const Hint = styled.div<{ isClickable: boolean }>`
-  margin-top: 30px;
+  margin-top: 60px;
   padding: 20px;
   border-radius: 12px;
   background: rgba(255, 237, 77, 0.15);
@@ -405,5 +511,11 @@ const HintText = styled.p`
   font-weight: 500;
 `;
 
+const CharacterImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+`;
 
 export default CardDrawPage;

@@ -11,14 +11,20 @@ export const useResultData = (resultId?: string) => {
 
   const {
     setSessionId,
+    setNickname,
+    setQuestionText,
+    setReaderType,
     setCardInterpretation,
     setSummary,
-    setAdviceImage,
+    setLuckyCard,
     setProcessingStatus,
     cardInterpretations,
     summary,
     fortuneScore,
-    adviceImageUrl,
+    luckyCard,
+    nickname,
+    questionText,
+    readerType,
     error: resultError
   } = useResultStore();
 
@@ -86,9 +92,22 @@ export const useResultData = (resultId?: string) => {
         setSummary(data.interpretations.summary, data.fortuneScore || 0);
       }
 
-      // 결과 이미지 업데이트
-      if (data.resultImage?.url) {
-        setAdviceImage(data.resultImage.url, data.resultImage.description);
+      // 닉네임 업데이트
+      if (data.nickname) {
+        setNickname(data.nickname);
+      }
+      // 질문 텍스트 업데이트
+      if (data.questionText) {
+        setQuestionText(data.questionText);
+      }
+      // 리더 타입 업데이트
+      if (data.readerType) {
+        setReaderType(data.readerType);
+      }
+
+      // 행운 카드 업데이트
+      if (data.luckyCard?.name && data.luckyCard?.message && data.luckyCard?.imageUrl) {
+        setLuckyCard(data.luckyCard.name, data.luckyCard.message, data.luckyCard.imageUrl);
       }
 
       // 처리 상태 업데이트
@@ -122,8 +141,11 @@ export const useResultData = (resultId?: string) => {
     resultId,
     setCardInterpretation,
     setSummary,
-    setAdviceImage,
-    setProcessingStatus
+    setLuckyCard,
+    setProcessingStatus,
+    setNickname,
+    setQuestionText,
+    setReaderType
   ]);
 
   return {
@@ -131,8 +153,11 @@ export const useResultData = (resultId?: string) => {
     cardInterpretations,
     summary,
     fortuneScore,
-    adviceImageUrl,
+    luckyCard,
     predefinedCards,
+    nickname,
+    questionText,
+    readerType,
 
     // 상태
     isLoading: !cardInterpretations.past && !cardInterpretations.present && !cardInterpretations.future,

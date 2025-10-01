@@ -3,19 +3,35 @@ import styled from '@emotion/styled';
 interface ResultHeaderProps {
   title?: string;
   subtitle?: string;
+  nickname?: string;
   error?: string | null | undefined;
 }
 
 function ResultHeader({
   title = '🔮 타로 해석 결과',
   subtitle = 'AI가 실시간으로 생성하는 맞춤형 타로 해석',
+  nickname,
   error
 }: ResultHeaderProps) {
+  const getMysticalSubtitle = (nickname?: string) => {
+    if (!nickname) return subtitle;
+
+    const mysticalMessages = [
+      `${nickname}님의 운명이 별빛 속에서 속삭입니다`,
+      `시공간을 넘나드는 ${nickname}님만의 신비로운 이야기`,
+      `우주가 ${nickname}님에게 전하는 깊은 메시지`,
+      `${nickname}님의 영혼이 선택한 신성한 길잡이`,
+      `달빛이 비추는 ${nickname}님의 운명적 순간들`
+    ];
+
+    return mysticalMessages[Math.floor(Math.random() * mysticalMessages.length)];
+  };
+
   return (
     <>
       <Header>
         <Title>{title}</Title>
-        <Subtitle>{subtitle}</Subtitle>
+        <Subtitle>{getMysticalSubtitle(nickname)}</Subtitle>
       </Header>
 
       {/* 오류 표시 */}

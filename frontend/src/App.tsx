@@ -9,8 +9,11 @@ import CardDrawPage from './pages/CardDrawPage';
 import LoadingPage from './pages/LoadingPage';
 import LoadingPageDemo from './pages/LoadingPageDemo';
 import ResultPage from './pages/ResultPage';
+import SharePage from './pages/SharePage';
 import ErrorPage from './pages/ErrorPage';
+import TTSTestPage from './pages/TTSTestPage';
 import ParticleBackground from './components/common/ParticleBackground/ParticleBackground';
+import TTSControl from './components/common/TTSControl';
 import { initializeGA, trackPageView, debugGA } from './utils/analytics';
 
 // 페이지뷰 추적 컴포넌트
@@ -37,6 +40,9 @@ function App() {
       {/* GA 페이지뷰 추적 */}
       <GAPageTracker />
 
+      {/* 전역 TTS 컨트롤 */}
+      <TTSControl />
+
       <Routes>
         {/* 온보딩 라우팅 */}
         <Route path="/" element={<Onboarding1Page />} />
@@ -53,6 +59,12 @@ function App() {
 
         {/* 결과 페이지 */}
         <Route path="/result/:resultId" element={<ResultPage />} />
+
+        {/* 공유 페이지 */}
+        <Route path="/share/:sessionId" element={<SharePage />} />
+
+        {/* TTS 테스트 페이지 */}
+        <Route path="/tts" element={<TTSTestPage />} />
 
         {/* 에러 페이지 */}
         <Route path="*" element={<ErrorPage />} />
